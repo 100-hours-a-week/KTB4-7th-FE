@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom'
 import { solutionFixtures } from '../entities/solution/model/fixtures'
-import { AppHeader } from '../shared/ui/AppHeader'
+import { AppShell } from '../shared/ui/AppShell'
 export function SolutionPage() {
   const summary = solutionFixtures.available
   const primary = summary.solutions[0]
   return (
-    <div className="app-shell">
-      <AppHeader />
-      <main className="solution-page">
+    <AppShell title="솔루션">
+      <div className="solution-page">
         <section className="solution-lead">
           <p>오늘의 우선순위</p>
           <h1>
@@ -33,7 +32,7 @@ export function SolutionPage() {
             </Link>
           ))}
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

@@ -1,12 +1,11 @@
 import { Link, useParams } from 'react-router-dom'
 import { getSolutionById } from '../entities/solution/model/fixtures'
-import { AppHeader } from '../shared/ui/AppHeader'
+import { AppShell } from '../shared/ui/AppShell'
 export function SolutionDetailPage() {
   const solution = getSolutionById(useParams().solutionId ?? '')
   return (
-    <div className="app-shell">
-      <AppHeader />
-      <main className="detail-page">
+    <AppShell title="솔루션 상세">
+      <div className="detail-page">
         {!solution ? (
           <>
             <h1>솔루션을 찾을 수 없습니다</h1>
@@ -35,7 +34,7 @@ export function SolutionDetailPage() {
             </Link>
           </>
         )}
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }
