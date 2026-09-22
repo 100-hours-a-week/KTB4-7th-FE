@@ -18,8 +18,8 @@ export type SignupAccountResponse = { signupToken: string; expiresAt: string }
 export type BusinessHours = {
   dayOfWeek: string
   isClosed: boolean
-  openTime: string
-  closeTime: string
+  openTime: string | null
+  closeTime: string | null
 }
 export type SignupBusinessRequest = {
   storeName: string
@@ -34,6 +34,15 @@ export type SignupBusinessResponse = {
   user: { id: number; email: string }
   store: { id: number; storeName: string }
   next: string
+}
+export type AddressSearchItem = {
+  postalCode: string
+  roadAddress: string
+  jibunAddress: string
+}
+export type AddressSearchResult = {
+  addresses: AddressSearchItem[]
+  nextCursor: string | null
 }
 
 export async function requestSignupAccount(request: SignupAccountRequest) {
@@ -50,6 +59,14 @@ export async function verifyBusinessNumber(businessRegNumber: string) {
     await http.post<
       ApiResponse<{ businessVerificationId: number; expiresAt: string }>
     >('/v1/auth/business-verifications', { businessRegNumber })
+  ).data.data
+}
+
+export async function searchAddress(query: string, cursor?: string) {
+  return (
+    await http.get<ApiResponse<AddressSearchResult>>('/v1/addresses/search', {
+      params: { query, cursor, size: 10 },
+    })
   ).data.data
 }
 

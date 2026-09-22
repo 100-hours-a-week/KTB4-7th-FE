@@ -1,9 +1,28 @@
 import { Link } from 'react-router-dom'
 import { dashboardFixtures } from '../entities/dashboard/model/fixtures'
+import { getSolutionById } from '../entities/solution/model/fixtures'
 import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
+import { useUiStore } from '../shared/store/useUiStore'
+
 export function MySolutionsPage() {
-  const savedSolutions = dashboardFixtures.savedSolutions
+  const savedSolutionIds = useUiStore((state) => state.savedSolutionIds)
+
+  const defaultSaved = dashboardFixtures.savedSolutions
+  const extraSaved = savedSolutionIds
+    .filter((id) => !defaultSaved.some((solution) => solution.id === id))
+    .map((id) => getSolutionById(id))
+    .filter((solution): solution is NonNullable<typeof solution> =>
+      Boolean(solution),
+    )
+    .map((solution) => ({
+      id: solution.id,
+      title: solution.title,
+      summary: solution.summary,
+    }))
+
+  const savedSolutions = [...defaultSaved, ...extraSaved]
+
   return (
     <AppShell title="내 솔루션">
       {savedSolutions.length === 0 ? (

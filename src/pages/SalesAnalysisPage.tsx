@@ -1,15 +1,35 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { dashboardFixtures } from '../entities/dashboard/model/fixtures'
 import { EmptyState } from '../shared/ui/EmptyState'
-import { SectionCard } from '../shared/ui/SectionCard'
 import { AppShell } from '../shared/ui/AppShell'
 
 type SalesFixture = typeof dashboardFixtures.sales
+
+const periods = [
+  { id: 'today', label: '오늘' },
+  { id: 'week', label: '이번 주' },
+  { id: 'month', label: '이번 달' },
+] as const
+
+function TrendBadge({ change }: { change: string }) {
+  const isPositive = change.trim().startsWith('+')
+  return (
+    <span
+      className={isPositive ? 'trend-badge trend-up' : 'trend-badge trend-down'}
+    >
+      {isPositive ? '▲' : '▼'} {change.replace(/^[+-]/, '')}
+    </span>
+  )
+}
+
 export function SalesAnalysisPage({
   sales = dashboardFixtures.sales,
 }: {
   sales?: SalesFixture | null
 }) {
+  const [period, setPeriod] = useState<(typeof periods)[number]['id']>('month')
+
   if (!sales) {
     return (
       <AppShell title="매출 분석">
@@ -21,30 +41,100 @@ export function SalesAnalysisPage({
       </AppShell>
     )
   }
+
   return (
     <AppShell title="매출 분석">
       <div className="page-stack sales-analysis-page">
-        <header className="page-title">
-          <p>THIS WEEK</p>
-          <h1>이번 주 매출 흐름</h1>
-          <span>업로드된 매출 데이터를 바탕으로 만든 목업 분석입니다.</span>
-        </header>
-        <SectionCard eyebrow="TOTAL SALES" title={sales.total}>
-          <p className="positive-change">지난주보다 {sales.change}</p>
-          <div className="sales-chart" aria-label="최근 7일 매출 추이">
-            {sales.daily.map((value, index) => (
-              <span key={index} style={{ height: `${value}%` }} />
+        <header className="page-title analysis-page-title">
+          <div>
+            <p>SALES ANALYSIS</p>
+            <h1>매출 분석</h1>
+            <span>기간별 매출 흐름을 한눈에 확인해보세요</span>
+          </div>
+          <div className="period-tabs" role="tablist" aria-label="분석 기간">
+            {periods.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={period === item.id}
+                className={period === item.id ? 'active' : ''}
+                onClick={() => setPeriod(item.id)}
+              >
+                {item.label}
+              </button>
             ))}
           </div>
-        </SectionCard>
-        <div className="metric-grid">
-          <SectionCard eyebrow="ORDERS" title={sales.orders}>
-            <p>이번 주 주문 수</p>
-          </SectionCard>
-          <SectionCard eyebrow="AVERAGE" title={sales.averageOrder}>
-            <p>평균 객단가</p>
-          </SectionCard>
+        </header>
+
+        <div className="stat-card-grid">
+          <div className="stat-card">
+            <small>총 매출</small>
+            <strong>{sales.total}</strong>
+            <TrendBadge change={sales.change} />
+            <span className="stat-card-caption">지난달 대비</span>
+          </div>
+          <div className="stat-card">
+            <small>주문 건수</small>
+            <strong>{sales.orders}</strong>
+            <TrendBadge change={sales.ordersChange} />
+            <span className="stat-card-caption">지난달 대비</span>
+          </div>
+          <div className="stat-card">
+            <small>평균 객단가</small>
+            <strong>{sales.averageOrder}</strong>
+            <TrendBadge change={sales.averageOrderChange} />
+            <span className="stat-card-caption">지난달 대비</span>
+          </div>
         </div>
+
+        <div className="ai-insight-box">
+          <h2>AI가 발견했어요</h2>
+          <ul>
+            {sales.insights.map((insight) => (
+              <li key={insight}>{insight}</li>
+            ))}
+          </ul>
+        </div>
+
+        <section className="analysis-chart-section">
+          <h2>분석 그래프</h2>
+          <div className="chart-carousel">
+            <button
+              type="button"
+              className="chart-carousel-arrow"
+              aria-label="이전 그래프"
+            >
+              ‹
+            </button>
+            <div className="section-card chart-card">
+              <h3>요일별 매출</h3>
+              <div className="sales-chart" aria-label="요일별 매출">
+                {sales.daily.map((value, index) => (
+                  <span
+                    key={index}
+                    className={index === sales.flaggedDayIndex ? 'flagged' : ''}
+                    style={{ height: `${value}%` }}
+                  />
+                ))}
+              </div>
+              <p className="chart-caption">{sales.daily7DayCaption}</p>
+            </div>
+            <button
+              type="button"
+              className="chart-carousel-arrow"
+              aria-label="다음 그래프"
+            >
+              ›
+            </button>
+          </div>
+          <div className="chart-dots" aria-hidden="true">
+            <span className="active" />
+            <span />
+            <span />
+          </div>
+        </section>
+
         <Link className="secondary-action" to="/sales/upload">
           다른 파일 선택
         </Link>

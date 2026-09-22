@@ -6,12 +6,22 @@ export type NotificationFixture = {
   read: boolean
 }
 
+export type UploadHistoryFixture = {
+  id: string
+  date: string
+  fileName: string
+  count: number
+  status: 'success' | 'failed'
+}
+
 export const dashboardFixtures = {
   profile: {
     storeName: '맴매 베이커리',
     ownerName: '김맴매',
     email: 'owner@memme.kr',
     businessNumber: '123-45-67890',
+    phone: '010-0000-0000',
+    joinedAt: '2026년 3월',
   },
   notifications: [
     {
@@ -37,10 +47,41 @@ export const dashboardFixtures = {
     },
   ],
   sales: {
-    total: '₩2,840,000',
-    change: '+12.4%',
-    orders: '286건',
-    averageOrder: '₩9,930',
-    daily: [42, 56, 48, 71, 64, 83, 74],
+    total: '₩7,920,000',
+    change: '+4.2%',
+    orders: '923건',
+    ordersChange: '+2.6%',
+    averageOrder: '₩8,582',
+    averageOrderChange: '-0.8%',
+    daily: [42, 34, 56, 48, 64, 83, 74],
+    flaggedDayIndex: 1,
+    daily7DayCaption: '3주 연속 줄고 있는 화요일을 붉게 표시했습니다.',
+    insights: [
+      '최근 화요일 매출이 3주 연속 감소하고 있어요.',
+      '오후 3~5시는 다른 시간대보다 매출이 크게 낮아요.',
+    ],
+  },
+  salesConnection: {
+    lastUploadDate: '08.27',
+    totalRecords: 3204,
+    forecastEndDate: '10.01',
+    forecastNote:
+      '직전 업로드(08.27)로 만든 35일 예측이 10월 1일에 끝나요. 그 전에 새 파일을 올리면 분석이 끊기지 않습니다.',
+    history: [
+      {
+        id: 'upload-202608',
+        date: '08.27',
+        fileName: '202608_매출.xlsx',
+        count: 482,
+        status: 'success',
+      },
+      {
+        id: 'upload-202607',
+        date: '07.28',
+        fileName: '202607_매출.xlsx',
+        count: 0,
+        status: 'failed',
+      },
+    ] satisfies UploadHistoryFixture[],
   },
 }
