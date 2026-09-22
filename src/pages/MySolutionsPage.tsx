@@ -1,12 +1,35 @@
+import { Link } from 'react-router-dom'
+import { dashboardFixtures } from '../entities/dashboard/model/fixtures'
+import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
 export function MySolutionsPage() {
+  const savedSolutions = dashboardFixtures.savedSolutions
   return (
     <AppShell title="내 솔루션">
-      <main className="empty-page">
-        <p>memme</p>
-        <h1>저장한 솔루션이 없습니다</h1>
-        <span>필요한 솔루션을 저장하면 이곳에서 다시 볼 수 있습니다.</span>
-      </main>
+      {savedSolutions.length === 0 ? (
+        <EmptyState
+          title="저장한 솔루션이 없습니다"
+          description="필요한 솔루션을 저장하면 이곳에서 다시 볼 수 있습니다."
+          action={<Link to="/solution">오늘의 솔루션 보기</Link>}
+        />
+      ) : (
+        <div className="page-stack">
+          <header className="page-title">
+            <p>SAVED SOLUTIONS</p>
+            <h1>다시 보고 싶은 일</h1>
+            <span>필요한 순간에 바로 실행할 수 있도록 저장했어요.</span>
+          </header>
+          <div className="saved-solution-list">
+            {savedSolutions.map((solution) => (
+              <Link key={solution.id} to={`/solution/${solution.id}`}>
+                <small>저장한 솔루션</small>
+                <strong>{solution.title}</strong>
+                <span>{solution.summary}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </AppShell>
   )
 }
