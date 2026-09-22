@@ -19,6 +19,9 @@ export function HomePage() {
               <Link className="dark-button" to="/signup">
                 무료로 시작하기
               </Link>
+              <Link className="light-button" to="/login">
+                로그인
+              </Link>
               <Link className="light-button" to="/solution">
                 솔루션 미리 보기
               </Link>
