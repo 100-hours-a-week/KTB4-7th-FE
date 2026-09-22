@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getSolutionById } from '../entities/solution/model/fixtures'
-import { AppHeader } from '../shared/ui/AppHeader'
+import { AppShell } from '../shared/ui/AppShell'
 export function SolutionChatPage() {
   const solution = getSolutionById(useParams().solutionId ?? '')
   const [value, setValue] = useState('')
@@ -21,9 +21,8 @@ export function SolutionChatPage() {
     }
   }
   return (
-    <div className="app-shell">
-      <AppHeader />
-      <main className="chat-page">
+    <AppShell title="AI 채팅">
+      <div className="chat-page">
         <p>MEMME AI</p>
         <h1>{solution.title}</h1>
         <div>
@@ -49,7 +48,7 @@ export function SolutionChatPage() {
           </label>
           <button>전송</button>
         </form>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   )
 }

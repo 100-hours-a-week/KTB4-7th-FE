@@ -5,6 +5,121 @@
   color: #111;
   background: #f3ece6;
 }
+
+.mobile-onboarding {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 20px 96px;
+  background: #f7f7f5;
+}
+.mobile-onboarding .signup-intro {
+  padding-top: 48px;
+}
+.mobile-onboarding .signup-intro h1 {
+  font-size: clamp(44px, 10vw, 72px);
+  white-space: normal;
+  line-height: 0.94;
+}
+.mobile-onboarding form {
+  width: 100%;
+  margin-top: 28px;
+}
+.mobile-onboarding .signup-button {
+  border-radius: 12px;
+}
+.mobile-app-shell {
+  min-height: 100dvh;
+  background: #f7f7f5;
+  color: #141716;
+}
+.app-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  display: flex;
+  width: 220px;
+  flex-direction: column;
+  gap: 48px;
+  padding: 30px 22px;
+  background: #fff;
+  border-right: 1px solid #e3e7e5;
+}
+.app-sidebar nav {
+  display: grid;
+  gap: 7px;
+}
+.app-sidebar nav a {
+  padding: 12px;
+  border-radius: 10px;
+  color: #525856;
+  text-decoration: none;
+}
+.app-sidebar nav a[aria-current='page'] {
+  background: #dff5ee;
+  color: #075b4e;
+  font-weight: 700;
+}
+.mobile-app-header {
+  display: none;
+}
+.app-content {
+  margin-left: 220px;
+  min-height: 100dvh;
+  padding: 42px clamp(24px, 5vw, 84px);
+}
+.bottom-tabs {
+  display: none;
+}
+@media (max-width: 768px) {
+  .app-sidebar {
+    display: none;
+  }
+  .app-content {
+    margin: 0;
+    padding: 72px 16px 84px;
+  }
+  .mobile-app-header {
+    position: fixed;
+    z-index: 5;
+    inset: 0 0 auto;
+    display: flex;
+    height: 56px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid #e3e7e5;
+  }
+  .mobile-app-header a {
+    color: #111;
+    text-decoration: none;
+    font-weight: 800;
+  }
+  .mobile-app-header button {
+    border: 0;
+    background: transparent;
+  }
+  .bottom-tabs {
+    position: fixed;
+    z-index: 5;
+    inset: auto 0 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    height: 64px;
+    background: #fff;
+    border-top: 1px solid #e3e7e5;
+  }
+  .bottom-tabs a {
+    display: grid;
+    place-items: center;
+    color: #68716e;
+    font-size: 12px;
+    text-decoration: none;
+  }
+  .bottom-tabs a[aria-current='page'] {
+    color: #075b4e;
+    font-weight: 700;
+  }
+}
 body {
   margin: 0;
   min-width: 320px;

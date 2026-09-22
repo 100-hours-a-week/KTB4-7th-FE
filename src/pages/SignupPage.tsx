@@ -180,7 +180,7 @@ export function SignupPage() {
   }
 
   return (
-    <main className="signup-page">
+    <main className="signup-page mobile-onboarding">
       <header>
         <a href="/" className="signup-brand">
           memme
