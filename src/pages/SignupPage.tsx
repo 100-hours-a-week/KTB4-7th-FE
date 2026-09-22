@@ -508,6 +508,7 @@ export function SignupPage() {
                 매장명 <em aria-hidden="true">*</em>
               </span>
               <input
+                aria-label="매장명"
                 autoComplete="organization"
                 placeholder="매장명을 입력해주세요"
                 {...business.register('storeName', { required: true })}
@@ -519,6 +520,7 @@ export function SignupPage() {
               </span>
               <div className="signup-inline-field">
                 <input
+                  aria-label="사업자등록번호"
                   autoComplete="off"
                   placeholder="- 없이 숫자 10자리를 입력해주세요"
                   {...business.register('businessRegNumber', {
