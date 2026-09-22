@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { App } from './App'
 
-test('서비스 이름을 표시한다', () => {
+test('랜딩 메시지를 표시한다', () => {
   render(<App />)
 
-  expect(screen.getByRole('heading', { name: '맴매' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('heading', { name: '오늘의 매장을 더 가볍게' }),
+  ).toBeInTheDocument()
 })
