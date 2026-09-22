@@ -1,8 +1,19 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getSolutionById } from '../entities/solution/model/fixtures'
 import { AppShell } from '../shared/ui/AppShell'
+import { useUiStore } from '../shared/store/useUiStore'
+
 export function SolutionDetailPage() {
   const solution = getSolutionById(useParams().solutionId ?? '')
+  const navigate = useNavigate()
+  const saveSolution = useUiStore((state) => state.saveSolution)
+
+  const handleSave = () => {
+    if (!solution) return
+    saveSolution(solution.id)
+    navigate('/my-solutions')
+  }
+
   return (
     <AppShell title="솔루션 상세">
       <div className="detail-page">
@@ -29,9 +40,21 @@ export function SolutionDetailPage() {
                 </article>
               ))}
             </section>
-            <Link className="dark-button" to={`/solution/${solution.id}/chat`}>
-              AI에게 질문하기
-            </Link>
+            <div className="detail-page-actions">
+              <Link
+                className="dark-button"
+                to={`/solution/${solution.id}/chat`}
+              >
+                AI에게 질문하기
+              </Link>
+              <button
+                type="button"
+                className="light-button"
+                onClick={handleSave}
+              >
+                솔루션 저장하기
+              </button>
+            </div>
           </>
         )}
       </div>
