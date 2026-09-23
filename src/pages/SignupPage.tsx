@@ -58,6 +58,13 @@ const accountFieldMap: Record<string, FieldPath<Account>> = {
   'agreements.termsOfService': 'terms',
   'agreements.privacyPolicy': 'privacy',
 }
+const businessFieldMap: Record<string, FieldPath<Business>> = {
+  storeName: 'storeName',
+  businessRegNumber: 'businessRegNumber',
+  postalCode: 'postalCode',
+  address: 'address',
+  addressDetail: 'addressDetail',
+}
 const policies: Record<
   PolicyType,
   { title: string; heading: string; paragraphs: string[] }
@@ -109,6 +116,7 @@ export function SignupPage() {
   )
   const [isSearchingAddress, setIsSearchingAddress] = useState(false)
   const [addressError, setAddressError] = useState('')
+  const [businessHoursError, setBusinessHoursError] = useState('')
   const [closedDays, setClosedDays] = useState<Set<string>>(new Set())
   const account = useForm<Account>({ mode: 'onChange' })
   const business = useForm<Business>({
@@ -174,6 +182,7 @@ export function SignupPage() {
   })
 
   const verify = async () => {
+    business.clearErrors('businessRegNumber')
     try {
       const businessRegNumber = business.getValues('businessRegNumber')
       setVerificationId(
@@ -181,7 +190,17 @@ export function SignupPage() {
       )
       setVerifiedRegNumber(businessRegNumber)
       setError('')
-    } catch {
+    } catch (requestError) {
+      const fieldError = getApiFieldErrors(requestError).find(
+        ({ field }) => field === 'businessRegNumber',
+      )
+      if (fieldError) {
+        business.setError('businessRegNumber', {
+          type: 'server',
+          message: fieldError.message,
+        })
+        return
+      }
       setError('사업자 인증에 실패했습니다.')
     }
   }
@@ -231,8 +250,14 @@ export function SignupPage() {
       const result = await searchAddress(addressQuery.trim(), addressNextCursor)
       setAddressResults((previous) => [...previous, ...result.addresses])
       setAddressNextCursor(result.nextCursor)
-    } catch {
-      setAddressError('주소 검색에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    } catch (requestError) {
+      const fieldError = getApiFieldErrors(requestError).find(
+        ({ field }) => field === 'query',
+      )
+      setAddressError(
+        fieldError?.message ??
+          '주소 검색에 실패했습니다. 잠시 후 다시 시도해주세요.',
+      )
     } finally {
       setIsSearchingAddress(false)
     }
@@ -257,11 +282,15 @@ export function SignupPage() {
           setAddressResults(result.addresses)
           setAddressNextCursor(result.nextCursor)
         })
-        .catch(() => {
+        .catch((requestError) => {
+          const fieldError = getApiFieldErrors(requestError).find(
+            ({ field }) => field === 'query',
+          )
           setAddressResults([])
           setAddressNextCursor(null)
           setAddressError(
-            '주소 검색에 실패했습니다. 잠시 후 다시 시도해주세요.',
+            fieldError?.message ??
+              '주소 검색에 실패했습니다. 잠시 후 다시 시도해주세요.',
           )
         })
         .finally(() => setIsSearchingAddress(false))
@@ -273,6 +302,10 @@ export function SignupPage() {
   const submitBusiness = business.handleSubmit(async (values) => {
     if (!isBusinessVerified)
       return setError('사업자 인증을 먼저 완료해 주세요.')
+
+    setError('')
+    setBusinessHoursError('')
+    business.clearErrors()
 
     const { openTime, closeTime, ...businessFields } = values
 
@@ -292,8 +325,18 @@ export function SignupPage() {
       })
       setStep(3)
       business.setValue('storeName', data.store.storeName)
-    } catch {
-      setError('가입 시간이 만료되었거나 입력값이 올바르지 않습니다.')
+    } catch (requestError) {
+      const fieldErrors = getApiFieldErrors(requestError)
+
+      fieldErrors.forEach(({ field, message }) => {
+        const businessField = businessFieldMap[field]
+        if (businessField)
+          business.setError(businessField, { type: 'server', message })
+        if (field === 'businessHours') setBusinessHoursError(message)
+      })
+
+      if (fieldErrors.length === 0)
+        setError('가입 시간이 만료되었거나 입력값이 올바르지 않습니다.')
     }
   })
 
@@ -513,6 +556,11 @@ export function SignupPage() {
                 placeholder="매장명을 입력해주세요"
                 {...business.register('storeName', { required: true })}
               />
+              {business.formState.errors.storeName && (
+                <small role="alert">
+                  {business.formState.errors.storeName.message}
+                </small>
+              )}
             </label>
             <label>
               <span className="signup-field-label">
@@ -593,7 +641,9 @@ export function SignupPage() {
               {(business.formState.errors.postalCode ||
                 business.formState.errors.address) && (
                 <small role="alert">
-                  주소 검색으로 매장 주소를 입력해주세요.
+                  {business.formState.errors.postalCode?.message ??
+                    business.formState.errors.address?.message ??
+                    '주소 검색으로 매장 주소를 입력해주세요.'}
                 </small>
               )}
             </label>
@@ -604,6 +654,11 @@ export function SignupPage() {
                 placeholder="동/호수 등 상세 주소를 입력해주세요"
                 {...business.register('addressDetail')}
               />
+              {business.formState.errors.addressDetail && (
+                <small role="alert">
+                  {business.formState.errors.addressDetail.message}
+                </small>
+              )}
             </label>
           </section>
 
@@ -697,6 +752,9 @@ export function SignupPage() {
                 입력한 시간이 매일 동일하게 적용돼요. 요일별 설정은 매장
                 정보에서 다시 바꿀 수 있어요.
               </small>
+            )}
+            {businessHoursError && (
+              <small role="alert">{businessHoursError}</small>
             )}
             <div className="signup-days-block">
               <span className="signup-field-label">휴무일</span>
