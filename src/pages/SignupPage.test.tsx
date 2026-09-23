@@ -114,11 +114,11 @@ test('매장 정보 입력칸에는 계정 자동완성이 적용되지 않는�
   fireEvent.click(screen.getByLabelText(/개인정보.*동의/))
   fireEvent.click(screen.getByRole('button', { name: '다음' }))
 
-  expect(await screen.findByLabelText('매장명')).toHaveAttribute(
+  expect(await screen.findByLabelText(/매장명/)).toHaveAttribute(
     'autocomplete',
     'organization',
   )
-  expect(screen.getByLabelText('사업자등록번호')).toHaveAttribute(
+  expect(screen.getByLabelText(/사업자등록번호/)).toHaveAttribute(
     'autocomplete',
     'off',
   )
