@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
+import { ClearableInput } from '../shared/ui/ClearableInput'
 import {
   requestPasswordResetEmail,
   resetPassword,
@@ -71,7 +72,7 @@ function EmailRequestForm() {
         {error && <p role="alert">{error}</p>}
         <label>
           이메일
-          <input
+          <ClearableInput
             aria-label="이메일"
             type="email"
             placeholder="이메일 주소"
@@ -193,7 +194,7 @@ function NewPasswordForm({ token }: { token: string }) {
         )}
         <label>
           새 비밀번호
-          <input
+          <ClearableInput
             aria-label="새 비밀번호"
             type="password"
             placeholder="새 비밀번호를 입력해주세요"
@@ -216,7 +217,7 @@ function NewPasswordForm({ token }: { token: string }) {
         </label>
         <label>
           새 비밀번호 확인
-          <input
+          <ClearableInput
             aria-label="새 비밀번호 확인"
             type="password"
             placeholder="새 비밀번호를 다시 입력해주세요"

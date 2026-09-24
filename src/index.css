@@ -1251,6 +1251,10 @@ input {
   flex: 1;
   min-width: 0;
 }
+.signup-inline-field .clearable-input {
+  flex: 1;
+  min-width: 0;
+}
 .signup-inline-field input[readonly] {
   cursor: pointer;
 }
@@ -1277,7 +1281,7 @@ input {
   display: grid;
   gap: 14px;
 }
-.signup-address-search > input {
+.signup-address-search input {
   box-sizing: border-box;
   width: 100%;
   min-height: 44px;
@@ -1956,4 +1960,48 @@ input {
   color: #a3aaa7;
   font-size: 12px;
   line-height: 1.6;
+}
+
+/* --- Clearable / password-visibility input controls (shared across auth + signup forms) --- */
+.clearable-input {
+  position: relative;
+  display: block;
+}
+.clearable-input input {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 38px;
+}
+.clearable-input-password input {
+  padding-right: 68px;
+}
+.clearable-input-actions {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
+}
+.clearable-input-clear,
+.clearable-input-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #9aa39e;
+  cursor: pointer;
+}
+.clearable-input-clear:hover,
+.clearable-input-toggle:hover {
+  color: #45514c;
+  background: rgba(17, 17, 17, 0.06);
+}
+.clearable-input-clear:active,
+.clearable-input-toggle:active {
+  transform: translateY(1px);
 }

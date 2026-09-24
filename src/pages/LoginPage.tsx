@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { login } from '../features/auth/api/loginApi'
+import { ClearableInput } from '../shared/ui/ClearableInput'
 
 type LoginForm = {
   email: string
@@ -74,7 +75,7 @@ export function LoginPage() {
           {error && <p role="alert">{error}</p>}
           <label>
             이메일
-            <input
+            <ClearableInput
               aria-label="이메일"
               type="email"
               placeholder="이메일 주소"
@@ -95,7 +96,7 @@ export function LoginPage() {
           </label>
           <label>
             비밀번호
-            <input
+            <ClearableInput
               aria-label="비밀번호"
               type="password"
               placeholder="비밀번호"
