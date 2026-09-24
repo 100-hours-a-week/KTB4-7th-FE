@@ -458,6 +458,29 @@ input {
   width: 100%;
   margin-top: 10px;
 }
+.auth-page [role='alert'] {
+  margin: 0;
+  color: #9f473b;
+}
+.login-form > [role='alert'] {
+  font-size: 13px;
+}
+.login-form label small[role='alert'] {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.login-forgot-password {
+  justify-self: end;
+  margin-top: -8px;
+  color: #68716e;
+  font-size: 13px;
+  text-decoration: none;
+}
+.form-success {
+  margin: 0 0 18px;
+  color: #2f7a5c;
+  font-size: 14px;
+}
 .auth-footer {
   margin-top: 20px;
   color: #68716e;
