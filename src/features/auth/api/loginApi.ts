@@ -19,3 +19,22 @@ export async function login(request: LoginRequest) {
 export async function logout() {
   await http.post('/v1/auth/logout')
 }
+
+export type PasswordResetEmailRequest = {
+  email: string
+}
+export type PasswordResetRequest = {
+  token: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export async function requestPasswordResetEmail(
+  request: PasswordResetEmailRequest,
+) {
+  await http.post<ApiResponse<null>>('/v1/auth/password-reset/email', request)
+}
+
+export async function resetPassword(request: PasswordResetRequest) {
+  await http.patch<ApiResponse<null>>('/v1/auth/password-reset', request)
+}

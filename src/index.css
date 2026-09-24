@@ -458,6 +458,78 @@ input {
   width: 100%;
   margin-top: 10px;
 }
+.auth-page [role='alert'] {
+  margin: 0;
+  color: #9f473b;
+}
+.login-form > [role='alert'] {
+  font-size: 13px;
+}
+.login-form label small[role='alert'] {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.login-forgot-password {
+  justify-self: end;
+  margin-top: -8px;
+  color: #68716e;
+  font-size: 13px;
+  text-decoration: none;
+}
+.form-success {
+  margin: 0 0 18px;
+  color: #2f7a5c;
+  font-size: 14px;
+}
+.auth-modal-backdrop {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 23, 22, 0.5);
+}
+.auth-modal {
+  width: min(100%, 300px);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 48px rgba(15, 22, 20, 0.25);
+}
+.auth-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 18px 0 22px;
+}
+.auth-modal header strong {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.auth-modal header button {
+  border: 0;
+  background: transparent;
+  color: #a2aba6;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+.auth-modal > div {
+  padding: 12px 22px 22px;
+}
+.auth-modal p {
+  margin: 0 0 20px;
+  color: #45514c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.auth-modal .primary-action {
+  width: 100%;
+  margin: 0;
+}
 .auth-footer {
   margin-top: 20px;
   color: #68716e;
@@ -1179,6 +1251,10 @@ input {
   flex: 1;
   min-width: 0;
 }
+.signup-inline-field .clearable-input {
+  flex: 1;
+  min-width: 0;
+}
 .signup-inline-field input[readonly] {
   cursor: pointer;
 }
@@ -1205,7 +1281,7 @@ input {
   display: grid;
   gap: 14px;
 }
-.signup-address-search > input {
+.signup-address-search input {
   box-sizing: border-box;
   width: 100%;
   min-height: 44px;
@@ -1884,4 +1960,48 @@ input {
   color: #a3aaa7;
   font-size: 12px;
   line-height: 1.6;
+}
+
+/* --- Clearable / password-visibility input controls (shared across auth + signup forms) --- */
+.clearable-input {
+  position: relative;
+  display: block;
+}
+.clearable-input input {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 38px;
+}
+.clearable-input-password input {
+  padding-right: 68px;
+}
+.clearable-input-actions {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
+}
+.clearable-input-clear,
+.clearable-input-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #9aa39e;
+  cursor: pointer;
+}
+.clearable-input-clear:hover,
+.clearable-input-toggle:hover {
+  color: #45514c;
+  background: rgba(17, 17, 17, 0.06);
+}
+.clearable-input-clear:active,
+.clearable-input-toggle:active {
+  transform: translateY(1px);
 }

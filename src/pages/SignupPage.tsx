@@ -7,6 +7,7 @@ import {
   verifyBusinessNumber,
   type AddressSearchItem,
 } from '../features/signup/api/signupApi'
+import { ClearableInput } from '../shared/ui/ClearableInput'
 
 type Account = {
   email: string
@@ -400,7 +401,7 @@ export function SignupPage() {
             <span className="signup-field-label">
               이메일 <em aria-hidden="true">*</em>
             </span>
-            <input
+            <ClearableInput
               aria-label="이메일"
               type="email"
               placeholder="이메일 주소를 입력해주세요"
@@ -423,7 +424,7 @@ export function SignupPage() {
             <span className="signup-field-label">
               비밀번호 <em aria-hidden="true">*</em>
             </span>
-            <input
+            <ClearableInput
               aria-label="비밀번호"
               type="password"
               placeholder="비밀번호를 입력해주세요"
@@ -448,7 +449,7 @@ export function SignupPage() {
             <span className="signup-field-label">
               비밀번호 확인 <em aria-hidden="true">*</em>
             </span>
-            <input
+            <ClearableInput
               aria-label="비밀번호 확인"
               type="password"
               placeholder="비밀번호를 다시 입력해주세요"
@@ -470,7 +471,7 @@ export function SignupPage() {
             <span className="signup-field-label">
               휴대폰 번호 <em aria-hidden="true">*</em>
             </span>
-            <input
+            <ClearableInput
               aria-label="휴대폰 번호"
               placeholder="휴대폰 번호를 입력해주세요"
               autoComplete="tel"
@@ -550,7 +551,7 @@ export function SignupPage() {
               <span className="signup-field-label">
                 매장명 <em aria-hidden="true">*</em>
               </span>
-              <input
+              <ClearableInput
                 aria-label="매장명"
                 autoComplete="organization"
                 placeholder="매장명을 입력해주세요"
@@ -567,7 +568,7 @@ export function SignupPage() {
                 사업자등록번호 <em aria-hidden="true">*</em>
               </span>
               <div className="signup-inline-field">
-                <input
+                <ClearableInput
                   aria-label="사업자등록번호"
                   autoComplete="off"
                   placeholder="- 없이 숫자 10자리를 입력해주세요"
@@ -649,7 +650,7 @@ export function SignupPage() {
             </label>
             <label>
               <span className="signup-field-label">상세 주소</span>
-              <input
+              <ClearableInput
                 autoComplete="address-line2"
                 placeholder="동/호수 등 상세 주소를 입력해주세요"
                 {...business.register('addressDetail')}
@@ -862,7 +863,7 @@ export function SignupPage() {
               </button>
             </header>
             <div className="signup-address-search">
-              <input
+              <ClearableInput
                 type="search"
                 placeholder="도로명, 건물명 또는 지번으로 검색해주세요"
                 value={addressQuery}

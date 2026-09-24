@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { login } from '../features/auth/api/loginApi'
+import { ClearableInput } from '../shared/ui/ClearableInput'
 
 type LoginForm = {
   email: string
   password: string
 }
 type ApiErrorResponse = { message?: string }
+type LocationState = { passwordResetComplete?: boolean } | null
 
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (typeof error !== 'object' || error === null || !('response' in error))
@@ -20,12 +22,17 @@ function getApiErrorMessage(error: unknown, fallback: string) {
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [error, setError] = useState('')
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ mode: 'onChange' })
+
+  const passwordResetComplete = Boolean(
+    (location.state as LocationState)?.passwordResetComplete,
+  )
 
   const submitLogin = handleSubmit(async (values) => {
     setError('')
@@ -59,11 +66,16 @@ export function LoginPage() {
             <br />한 가지를 찾으세요.
           </h1>
         </section>
+        {passwordResetComplete && (
+          <p className="form-success">
+            비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
+          </p>
+        )}
         <form className="login-form" onSubmit={submitLogin} noValidate>
           {error && <p role="alert">{error}</p>}
           <label>
             이메일
-            <input
+            <ClearableInput
               aria-label="이메일"
               type="email"
               placeholder="이메일 주소"
@@ -84,7 +96,7 @@ export function LoginPage() {
           </label>
           <label>
             비밀번호
-            <input
+            <ClearableInput
               aria-label="비밀번호"
               type="password"
               placeholder="비밀번호"
@@ -95,6 +107,9 @@ export function LoginPage() {
               <small role="alert">비밀번호를 입력해주세요.</small>
             )}
           </label>
+          <Link className="login-forgot-password" to="/password-reset">
+            비밀번호를 잃어버리셨나요?
+          </Link>
           <button
             className="primary-action"
             type="submit"
