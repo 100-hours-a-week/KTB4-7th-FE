@@ -1,9 +1,20 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { dashboardFixtures } from '../entities/dashboard/model/fixtures'
+import { logout } from '../features/auth/api/loginApi'
 import { AppShell } from '../shared/ui/AppShell'
 
 export function ProfilePage() {
   const { profile } = dashboardFixtures
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } finally {
+      navigate('/')
+    }
+  }
+
   return (
     <AppShell title="마이페이지">
       <div className="page-stack">
@@ -35,9 +46,13 @@ export function ProfilePage() {
           <Link to="/notifications">
             알림 설정 <span>›</span>
           </Link>
-          <Link to="/">
+          <button
+            type="button"
+            className="profile-menu-action"
+            onClick={handleLogout}
+          >
             로그아웃 <span>›</span>
-          </Link>
+          </button>
           <Link to="/" className="danger-link">
             회원탈퇴 <span>›</span>
           </Link>
