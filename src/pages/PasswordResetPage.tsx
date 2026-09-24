@@ -56,18 +56,6 @@ function EmailRequestForm() {
     }
   })
 
-  if (isSent) {
-    return (
-      <div className="auth-page">
-        <h1>메일을 확인해주세요</h1>
-        <p>입력하신 이메일로 비밀번호 재설정 안내를 보냈습니다.</p>
-        <Link className="signup-button" to="/login">
-          로그인으로 이동
-        </Link>
-      </div>
-    )
-  }
-
   return (
     <div className="auth-page">
       <section className="auth-intro">
@@ -113,6 +101,38 @@ function EmailRequestForm() {
       <p className="auth-footer">
         <Link to="/login">로그인으로 돌아가기</Link>
       </p>
+      {isSent && (
+        <div
+          className="signup-modal-backdrop"
+          role="presentation"
+          onMouseDown={() => setIsSent(false)}
+        >
+          <section
+            className="signup-policy-modal password-reset-sent-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="메일을 확인해주세요"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <header>
+              <strong>메일을 확인해주세요</strong>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={() => setIsSent(false)}
+              >
+                ×
+              </button>
+            </header>
+            <div>
+              <p>입력하신 이메일로 비밀번호 재설정 안내를 보냈습니다.</p>
+              <Link className="signup-button" to="/login">
+                로그인으로 이동
+              </Link>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
