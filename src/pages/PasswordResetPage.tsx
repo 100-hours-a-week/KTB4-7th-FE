@@ -103,12 +103,12 @@ function EmailRequestForm() {
       </p>
       {isSent && (
         <div
-          className="signup-modal-backdrop"
+          className="auth-modal-backdrop"
           role="presentation"
           onMouseDown={() => setIsSent(false)}
         >
           <section
-            className="signup-policy-modal password-reset-sent-modal"
+            className="auth-modal"
             role="dialog"
             aria-modal="true"
             aria-label="메일을 확인해주세요"
@@ -126,7 +126,7 @@ function EmailRequestForm() {
             </header>
             <div>
               <p>입력하신 이메일로 비밀번호 재설정 안내를 보냈습니다.</p>
-              <Link className="signup-button" to="/login">
+              <Link className="primary-action" to="/login">
                 로그인으로 이동
               </Link>
             </div>

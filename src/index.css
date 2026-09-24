@@ -481,6 +481,55 @@ input {
   color: #2f7a5c;
   font-size: 14px;
 }
+.auth-modal-backdrop {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 23, 22, 0.5);
+}
+.auth-modal {
+  width: min(100%, 300px);
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 48px rgba(15, 22, 20, 0.25);
+}
+.auth-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 22px 18px 0 22px;
+}
+.auth-modal header strong {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.auth-modal header button {
+  border: 0;
+  background: transparent;
+  color: #a2aba6;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+.auth-modal > div {
+  padding: 12px 22px 22px;
+}
+.auth-modal p {
+  margin: 0 0 20px;
+  color: #45514c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.auth-modal .primary-action {
+  width: 100%;
+  margin: 0;
+}
 .auth-footer {
   margin-top: 20px;
   color: #68716e;
