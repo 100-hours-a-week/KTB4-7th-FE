@@ -100,7 +100,7 @@ export function ProfilePage() {
         )}
         <header className="profile-hero">
           <span>{profile.storeName.slice(0, 1)}</span>
-          <p>{profile.storeName}님, 안녕하세요</p>
+          <p>안녕하세요</p>
           <h1>{profile.storeName} 사장님</h1>
         </header>
 
