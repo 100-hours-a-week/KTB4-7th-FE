@@ -382,18 +382,26 @@ input {
   border-radius: 16px;
   background: #fff;
 }
-.profile-menu a {
+.profile-menu a,
+.profile-menu .profile-menu-action {
   display: flex;
+  width: 100%;
   min-height: 52px;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
+  border: 0;
   border-bottom: 1px solid #edf0ee;
+  background: none;
   color: #141716;
+  font-family: inherit;
   font-size: 14px;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
-.profile-menu a:last-child {
+.profile-menu a:last-child,
+.profile-menu .profile-menu-action:last-child {
   border-bottom: 0;
 }
 .profile-menu span {
