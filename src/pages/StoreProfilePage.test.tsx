@@ -81,7 +81,7 @@ test('매장 정보를 불러와 폼에 채운다', async () => {
   expect(await screen.findByLabelText('매장명')).toHaveValue('맴매 베이커리')
   expect(screen.getByDisplayValue('123-45-67890')).toBeInTheDocument()
   expect(
-    screen.getByText('[12345] 서울시 강남구 테헤란로 1'),
+    screen.getByDisplayValue('[12345] 서울시 강남구 테헤란로 1'),
   ).toBeInTheDocument()
 })
 
