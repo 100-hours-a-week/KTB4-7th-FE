@@ -2005,3 +2005,100 @@ input {
 .clearable-input-toggle:active {
   transform: translateY(1px);
 }
+
+/* --- Store profile edit page: per-day business hours editor + shared form tweaks --- */
+.login-form select {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid #d7ddda;
+  border-radius: 10px;
+  background: #fff;
+  color: #141716;
+  font-size: 14px;
+}
+.login-form input[readonly],
+.login-form input:disabled {
+  color: #68716e;
+  background: #f2f4f3;
+  cursor: default;
+}
+.login-form .signup-inline-action-btn {
+  border-radius: 10px;
+}
+.auth-modal-wide {
+  width: min(100%, 380px);
+  max-height: 78dvh;
+  display: flex;
+  flex-direction: column;
+}
+.auth-modal-wide > div {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.store-hours-list {
+  display: grid;
+  gap: 10px;
+}
+.store-hours-row {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #e4e8e6;
+  border-radius: 14px;
+  background: #fff;
+}
+.store-hours-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 14px;
+}
+.store-hours-closed-toggle {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d7ddda;
+  border-radius: 999px;
+  background: transparent;
+  color: #68716e;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+.store-hours-closed-toggle.active {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+.store-hours-times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.store-hours-times .signup-time-selects {
+  flex: 1;
+}
+.store-hours-dash {
+  color: #9aa39e;
+  font-size: 13px;
+}
+.danger-action {
+  display: inline-flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #b64134;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.danger-action:disabled {
+  background: #d9a79f;
+  cursor: not-allowed;
+}

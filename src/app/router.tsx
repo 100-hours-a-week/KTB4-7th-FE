@@ -9,6 +9,8 @@ import { LoginPage } from '../pages/LoginPage'
 import { PasswordResetPage } from '../pages/PasswordResetPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
 import { ProfilePage } from '../pages/ProfilePage'
+import { PasswordChangePage } from '../pages/PasswordChangePage'
+import { StoreProfilePage } from '../pages/StoreProfilePage'
 import { SalesUploadPage } from '../pages/SalesUploadPage'
 import { SalesAnalysisPage } from '../pages/SalesAnalysisPage'
 
@@ -29,6 +31,8 @@ export const router = createBrowserRouter([
   { path: '/my-solutions', element: <MySolutionsPage /> },
   { path: '/notifications', element: <NotificationsPage /> },
   { path: '/profile', element: <ProfilePage /> },
+  { path: '/profile/password', element: <PasswordChangePage /> },
+  { path: '/profile/store', element: <StoreProfilePage /> },
   { path: '/sales/upload', element: <SalesUploadPage /> },
   { path: '/sales/analysis', element: <SalesAnalysisPage /> },
 ])
