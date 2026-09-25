@@ -62,3 +62,39 @@ test('GET 요청에는 XSRF 헤더를 추가하지 않는다', async () => {
 
   expect(request?.headers?.['X-XSRF-TOKEN']).toBeUndefined()
 })
+
+test('CSRF 토큰 발급이 끝나기 전에 상태 변경 요청이 오면, 발급을 기다렸다가 헤더를 채운다', async () => {
+  let resolveGet: (() => void) | undefined
+  const get = vi.spyOn(http, 'get').mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        resolveGet = () => {
+          document.cookie = 'XSRF-TOKEN=late-csrf-value; Path=/'
+          resolve({} as never)
+        }
+      }) as never,
+  )
+
+  let request: AxiosRequestConfig | undefined
+  http.defaults.adapter = async (config) => {
+    request = config
+    return {
+      config,
+      data: null,
+      headers: {},
+      status: 204,
+      statusText: 'No Content',
+    }
+  }
+
+  // main.tsx처럼 발급 요청을 기다리지 않고(fire-and-forget) 바로 회원가입
+  // 요청을 보내는 상황을 재현한다.
+  initializeCsrfToken()
+  const postPromise = http.post('/v1/auth/signup/account', {})
+
+  expect(get).toHaveBeenCalledWith('/v1/auth/csrf-token')
+  resolveGet?.()
+  await postPromise
+
+  expect(request?.headers?.['X-XSRF-TOKEN']).toBe('late-csrf-value')
+})
