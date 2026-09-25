@@ -79,7 +79,7 @@ export function PasswordChangePage() {
   })
 
   return (
-    <AppShell title="비밀번호 수정">
+    <AppShell title="비밀번호 수정" backTo="/profile">
       <div className="page-stack">
         <header className="page-title">
           <p>PASSWORD</p>

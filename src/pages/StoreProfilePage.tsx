@@ -270,7 +270,7 @@ export function StoreProfilePage() {
   })
 
   return (
-    <AppShell title="사업자 정보">
+    <AppShell title="사업자 정보" backTo="/profile">
       <div className="page-stack">
         <header className="page-title">
           <p>STORE INFO</p>
