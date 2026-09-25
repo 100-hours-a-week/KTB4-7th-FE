@@ -2102,3 +2102,16 @@ input {
   background: #d9a79f;
   cursor: not-allowed;
 }
+
+/* --- 마이페이지 하위 화면 뒤로가기 버튼 --- */
+.mobile-app-shell .mobile-app-header a.app-back-button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 400;
+}
+.mobile-app-shell .mobile-app-header a.app-back-button:hover {
+  background: #f2f4f3;
+}

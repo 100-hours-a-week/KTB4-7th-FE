@@ -21,11 +21,31 @@ function BellIcon() {
   )
 }
 
+function BackIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  )
+}
+
 export function AppShell({
   title,
+  backTo,
   children,
 }: {
   title: string
+  backTo?: string
   children: ReactNode
 }) {
   const hasUnread = dashboardFixtures.notifications.some(
@@ -35,9 +55,15 @@ export function AppShell({
     <div className="mobile-app-shell">
       <div className="device-notch" aria-hidden="true" />
       <header className="mobile-app-header">
-        <Link to="/" aria-label="홈">
-          memme
-        </Link>
+        {backTo ? (
+          <Link to={backTo} className="app-back-button" aria-label="뒤로가기">
+            <BackIcon />
+          </Link>
+        ) : (
+          <Link to="/" aria-label="홈">
+            memme
+          </Link>
+        )}
         <strong>{title}</strong>
         <Link
           to="/notifications"
