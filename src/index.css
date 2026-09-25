@@ -464,10 +464,12 @@ input {
 }
 .login-form > [role='alert'] {
   font-size: 13px;
+  color: #b64134;
 }
 .login-form label small[role='alert'] {
   font-size: 12px;
   line-height: 1.4;
+  color: #b64134;
 }
 .login-forgot-password {
   justify-self: end;
