@@ -8,6 +8,7 @@ import { SolutionChatPage } from '../pages/SolutionChatPage'
 import { LoginPage } from '../pages/LoginPage'
 import { PasswordResetPage } from '../pages/PasswordResetPage'
 import { NotificationsPage } from '../pages/NotificationsPage'
+import { NotificationSettingsPage } from '../pages/NotificationSettingsPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { PasswordChangePage } from '../pages/PasswordChangePage'
 import { StoreProfilePage } from '../pages/StoreProfilePage'
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
   { path: '/solution/:solutionId/chat', element: <SolutionChatPage /> },
   { path: '/my-solutions', element: <MySolutionsPage /> },
   { path: '/notifications', element: <NotificationsPage /> },
+  { path: '/notifications/settings', element: <NotificationSettingsPage /> },
   { path: '/profile', element: <ProfilePage /> },
   { path: '/profile/password', element: <PasswordChangePage /> },
   { path: '/profile/store', element: <StoreProfilePage /> },

@@ -1,7 +1,24 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { expect, test } from 'vitest'
+import { beforeEach, expect, test, vi } from 'vitest'
 import { AppShell } from './AppShell'
+
+const { getNotifications } = vi.hoisted(() => ({
+  getNotifications: vi.fn(),
+}))
+
+vi.mock('../../features/notifications/api/notificationApi', () => ({
+  getNotifications,
+}))
+
+beforeEach(() => {
+  getNotifications.mockReset()
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: { items: [] },
+  })
+})
 
 test('모바일 하단 탐색과 화면 제목을 표시한다', () => {
   render(
@@ -56,4 +73,56 @@ test('backTo가 있으면 홈 링크 대신 뒤로가기 버튼을 보여준다'
     '/profile',
   )
   expect(screen.queryByRole('link', { name: '홈' })).not.toBeInTheDocument()
+})
+
+test('읽지 않은 알림이 있으면 알림 배지를 표시한다', async () => {
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: {
+      items: [
+        {
+          id: 1,
+          type: 'SOLUTION_READY',
+          title: '알림',
+          content: '내용',
+          relatedEntityType: null,
+          relatedEntityId: null,
+          sentAt: '2026-09-26T08:00:00+09:00',
+          readAt: null,
+        },
+      ],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <AppShell title="솔루션">내용</AppShell>
+    </MemoryRouter>,
+  )
+
+  await waitFor(() =>
+    expect(getNotifications).toHaveBeenCalledWith({
+      readStatus: 'UNREAD',
+      size: 1,
+    }),
+  )
+  expect(await screen.findByRole('link', { name: '알림' })).toContainHTML(
+    'notification-dot',
+  )
+})
+
+test('읽지 않은 알림이 없으면 알림 배지를 표시하지 않는다', async () => {
+  render(
+    <MemoryRouter>
+      <AppShell title="솔루션">내용</AppShell>
+    </MemoryRouter>,
+  )
+
+  await waitFor(() => expect(getNotifications).toHaveBeenCalled())
+  expect(
+    screen
+      .getByRole('link', { name: '알림' })
+      .querySelector('.notification-dot'),
+  ).not.toBeInTheDocument()
 })
