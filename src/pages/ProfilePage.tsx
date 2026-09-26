@@ -122,7 +122,7 @@ export function ProfilePage() {
           <Link to="/profile/store">
             사업자 정보 확인 및 수정 <span>›</span>
           </Link>
-          <Link to="/notifications">
+          <Link to="/notifications/settings">
             알림 설정 <span>›</span>
           </Link>
           <button

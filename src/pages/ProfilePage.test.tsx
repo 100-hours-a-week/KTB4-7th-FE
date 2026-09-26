@@ -3,12 +3,14 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { ProfilePage } from './ProfilePage'
 
-const { getMyProfile, withdraw, logout, navigate } = vi.hoisted(() => ({
-  getMyProfile: vi.fn(),
-  withdraw: vi.fn(),
-  logout: vi.fn(),
-  navigate: vi.fn(),
-}))
+const { getMyProfile, withdraw, logout, navigate, getNotifications } =
+  vi.hoisted(() => ({
+    getMyProfile: vi.fn(),
+    withdraw: vi.fn(),
+    logout: vi.fn(),
+    navigate: vi.fn(),
+    getNotifications: vi.fn(),
+  }))
 
 vi.mock('../features/auth/api/userApi', () => ({
   getMyProfile,
@@ -17,6 +19,10 @@ vi.mock('../features/auth/api/userApi', () => ({
 
 vi.mock('../features/auth/api/loginApi', () => ({
   logout,
+}))
+
+vi.mock('../features/notifications/api/notificationApi', () => ({
+  getNotifications,
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -30,6 +36,12 @@ beforeEach(() => {
   withdraw.mockReset()
   logout.mockReset()
   navigate.mockReset()
+  getNotifications.mockReset()
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: { items: [] },
+  })
 })
 
 test('프로필 정보를 불러와 매장명 기반으로 표시한다', async () => {
