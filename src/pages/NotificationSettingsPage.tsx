@@ -101,8 +101,8 @@ export function NotificationSettingsPage() {
               <div>
                 <strong>매출 데이터 업로드 알림</strong>
                 <p>
-                  예측 종료일이 다가오면 업로드 전까지 매일 오전 8시에
-                  알려드려요
+                  전달 마지막일부터 예측 종료 전까지, 매출 파일을 업로드하기
+                  전이면 매일 오전 8시에 알려드려요
                 </p>
               </div>
               <ToggleSwitch
