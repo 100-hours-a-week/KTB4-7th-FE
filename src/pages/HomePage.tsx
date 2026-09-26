@@ -1,6 +1,25 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getMyProfile } from '../features/auth/api/userApi'
 import { AppShell } from '../shared/ui/AppShell'
+
 export function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    let ignore = false
+    getMyProfile()
+      .then(() => {
+        if (!ignore) setIsAuthenticated(true)
+      })
+      .catch(() => {
+        // 로그인하지 않은 사용자는 게스트용 랜딩을 그대로 봅니다.
+      })
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   return (
     <AppShell title="맴매">
       <div className="landing-page">
@@ -16,12 +35,16 @@ export function HomePage() {
                 맴매는 사장님의 매장 데이터를 읽고, 오늘 바로 실행할 수 있는
                 다음 한 가지를 제안합니다.
               </span>
-              <Link className="dark-button" to="/signup">
-                무료로 시작하기
-              </Link>
-              <Link className="light-button" to="/login">
-                로그인
-              </Link>
+              {!isAuthenticated && (
+                <>
+                  <Link className="dark-button" to="/signup">
+                    무료로 시작하기
+                  </Link>
+                  <Link className="light-button" to="/login">
+                    로그인
+                  </Link>
+                </>
+              )}
               <Link className="light-button" to="/solution">
                 솔루션 미리 보기
               </Link>
