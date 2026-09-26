@@ -100,7 +100,10 @@ export function NotificationSettingsPage() {
             <div className="notification-preference-row">
               <div>
                 <strong>매출 데이터 업로드 알림</strong>
-                <p>매월 말일, 매월 1~3일 오전 8시, 업로드 전이면 알려드려요</p>
+                <p>
+                  예측 종료일이 다가오면 업로드 전까지 매일 오전 8시에
+                  알려드려요
+                </p>
               </div>
               <ToggleSwitch
                 label="매출 데이터 업로드 알림"
