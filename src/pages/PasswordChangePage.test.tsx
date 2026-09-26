@@ -3,13 +3,18 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { PasswordChangePage } from './PasswordChangePage'
 
-const { changePassword, navigate } = vi.hoisted(() => ({
+const { changePassword, navigate, getNotifications } = vi.hoisted(() => ({
   changePassword: vi.fn(),
   navigate: vi.fn(),
+  getNotifications: vi.fn(),
 }))
 
 vi.mock('../features/auth/api/userApi', () => ({
   changePassword,
+}))
+
+vi.mock('../features/notifications/api/notificationApi', () => ({
+  getNotifications,
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -21,6 +26,12 @@ vi.mock('react-router-dom', async () => {
 beforeEach(() => {
   changePassword.mockReset()
   navigate.mockReset()
+  getNotifications.mockReset()
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: { items: [] },
+  })
 })
 
 test('비밀번호 변경에 성공하면 마이페이지로 이동한다', async () => {

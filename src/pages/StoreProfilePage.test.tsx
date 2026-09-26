@@ -3,11 +3,13 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { StoreProfilePage } from './StoreProfilePage'
 
-const { getMyStore, updateMyStore, searchAddress } = vi.hoisted(() => ({
-  getMyStore: vi.fn(),
-  updateMyStore: vi.fn(),
-  searchAddress: vi.fn(),
-}))
+const { getMyStore, updateMyStore, searchAddress, getNotifications } =
+  vi.hoisted(() => ({
+    getMyStore: vi.fn(),
+    updateMyStore: vi.fn(),
+    searchAddress: vi.fn(),
+    getNotifications: vi.fn(),
+  }))
 
 vi.mock('../features/store/api/storeApi', () => ({
   getMyStore,
@@ -16,6 +18,10 @@ vi.mock('../features/store/api/storeApi', () => ({
 
 vi.mock('../features/signup/api/signupApi', () => ({
   searchAddress,
+}))
+
+vi.mock('../features/notifications/api/notificationApi', () => ({
+  getNotifications,
 }))
 
 const storeFixture = {
@@ -67,6 +73,12 @@ beforeEach(() => {
   getMyStore.mockReset()
   updateMyStore.mockReset()
   searchAddress.mockReset()
+  getNotifications.mockReset()
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: { items: [] },
+  })
 })
 
 test('매장 정보를 불러와 폼에 채운다', async () => {

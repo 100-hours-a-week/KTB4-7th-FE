@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { dashboardFixtures } from '../../entities/dashboard/model/fixtures'
+import { getNotifications } from '../../features/notifications/api/notificationApi'
 
 function BellIcon() {
   return (
@@ -48,9 +48,22 @@ export function AppShell({
   backTo?: string
   children: ReactNode
 }) {
-  const hasUnread = dashboardFixtures.notifications.some(
-    (notification) => !notification.read,
-  )
+  const [hasUnread, setHasUnread] = useState(false)
+
+  useEffect(() => {
+    let ignore = false
+    getNotifications({ readStatus: 'UNREAD', size: 1 })
+      .then((response) => {
+        if (!ignore) setHasUnread(response.data.items.length > 0)
+      })
+      .catch(() => {
+        // 알림 배지는 부가 정보라 실패해도 화면 동작에 영향을 주지 않는다.
+      })
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   return (
     <div className="mobile-app-shell">
       <div className="device-notch" aria-hidden="true" />
