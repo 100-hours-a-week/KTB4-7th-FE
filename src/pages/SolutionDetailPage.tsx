@@ -18,18 +18,19 @@ function isUnauthorized(error: unknown) {
 
 export function SolutionDetailPage() {
   const params = useParams()
-  const bundleId = Number(params.solutionId)
+  const bundleId = Number(params.bundleId)
+  const cardId = Number(params.cardId)
   const navigate = useNavigate()
 
-  const [items, setItems] = useState<SolutionCard[]>([])
+  const [item, setItem] = useState<SolutionCard | null>(null)
   const [expirationNotice, setExpirationNotice] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [savingCardId, setSavingCardId] = useState<number | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
-    if (!Number.isFinite(bundleId)) {
+    if (!Number.isFinite(bundleId) || !Number.isFinite(cardId)) {
       setIsLoading(false)
       setNotFound(true)
       return
@@ -40,7 +41,14 @@ export function SolutionDetailPage() {
     getSolutionBundleDetail(bundleId)
       .then((response) => {
         if (ignore) return
-        setItems(response.data.solutionBundle.items)
+        const found = response.data.solutionBundle.items.find(
+          (candidate) => candidate.id === cardId,
+        )
+        if (!found) {
+          setNotFound(true)
+          return
+        }
+        setItem(found)
         setExpirationNotice(response.data.solutionBundle.expirationNotice)
       })
       .catch((requestError) => {
@@ -57,26 +65,22 @@ export function SolutionDetailPage() {
     return () => {
       ignore = true
     }
-  }, [bundleId, navigate])
+  }, [bundleId, cardId, navigate])
 
-  const handleSave = async (cardId: number) => {
-    if (savingCardId !== null) return
-    const target = items.find((item) => item.id === cardId)
-    if (!target || target.isSaved) return
-    setSavingCardId(cardId)
+  const handleSave = async () => {
+    if (!item || isSaving || item.isSaved) return
+    setIsSaving(true)
     setSaveError('')
     try {
-      const response = await saveSolutionCard(cardId)
-      setItems((current) =>
-        current.map((item) =>
-          item.id === cardId
-            ? {
-                ...item,
-                isSaved: true,
-                savedId: response.data.savedSolution.id,
-              }
-            : item,
-        ),
+      const response = await saveSolutionCard(item.id)
+      setItem((current) =>
+        current
+          ? {
+              ...current,
+              isSaved: true,
+              savedId: response.data.savedSolution.id,
+            }
+          : current,
       )
     } catch (requestError) {
       if (isUnauthorized(requestError)) {
@@ -85,7 +89,7 @@ export function SolutionDetailPage() {
       }
       setSaveError('솔루션 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      setSavingCardId(null)
+      setIsSaving(false)
     }
   }
 
@@ -97,7 +101,7 @@ export function SolutionDetailPage() {
     )
   }
 
-  if (notFound || items.length === 0) {
+  if (notFound || !item) {
     return (
       <AppShell title="솔루션 상세">
         <div className="detail-page">
@@ -121,30 +125,28 @@ export function SolutionDetailPage() {
           </p>
         )}
         <section>
-          {items.map((item) => (
-            <article key={item.id}>
-              <small>0{item.rankNo}</small>
-              <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
-              <h2>{item.title}</h2>
-              <p>{item.summaryText}</p>
-              <p>{item.detailText}</p>
-              {item.evidence && <p>{item.evidence}</p>}
-              <div className="detail-page-actions">
-                <button
-                  type="button"
-                  className="light-button"
-                  onClick={() => handleSave(item.id)}
-                  disabled={savingCardId === item.id || item.isSaved}
-                >
-                  {item.isSaved
-                    ? '저장됨'
-                    : savingCardId === item.id
-                      ? '저장 중...'
-                      : '이 솔루션 저장하기'}
-                </button>
-              </div>
-            </article>
-          ))}
+          <article>
+            <small>0{item.rankNo}</small>
+            <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
+            <h2>{item.title}</h2>
+            <p>{item.summaryText}</p>
+            <p>{item.detailText}</p>
+            {item.evidence && <p>{item.evidence}</p>}
+            <div className="detail-page-actions">
+              <button
+                type="button"
+                className="light-button"
+                onClick={handleSave}
+                disabled={isSaving || item.isSaved}
+              >
+                {item.isSaved
+                  ? '저장됨'
+                  : isSaving
+                    ? '저장 중...'
+                    : '이 솔루션 저장하기'}
+              </button>
+            </div>
+          </article>
         </section>
       </div>
     </AppShell>

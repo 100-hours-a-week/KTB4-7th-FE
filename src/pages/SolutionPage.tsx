@@ -156,13 +156,16 @@ export function SolutionPage() {
           <span>우선 실행</span>
           <h2>{primary.title}</h2>
           <p>{primary.summaryText}</p>
-          <Link className="dark-button" to={`/solution/${bundleId}`}>
+          <Link
+            className="dark-button"
+            to={`/solution/${bundleId}/${primary.id}`}
+          >
             솔루션 상세 보기
           </Link>
         </article>
         <div className="solution-list">
           {cards.slice(1).map((card, index) => (
-            <Link key={card.id} to={`/solution/${bundleId}`}>
+            <Link key={card.id} to={`/solution/${bundleId}/${card.id}`}>
               0{index + 2}
               <strong>{card.title}</strong>
               <small>{card.summaryText}</small>
