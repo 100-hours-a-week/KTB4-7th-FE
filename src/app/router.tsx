@@ -28,7 +28,7 @@ export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/password-reset', element: <PasswordResetPage /> },
   { path: '/solution', element: <SolutionPage /> },
-  { path: '/solution/:solutionId', element: <SolutionDetailPage /> },
+  { path: '/solution/:bundleId/:cardId', element: <SolutionDetailPage /> },
   { path: '/solution/chat', element: <SolutionChatPage /> },
   { path: '/my-solutions', element: <MySolutionsPage /> },
   { path: '/my-solutions/:savedId', element: <MySolutionDetailPage /> },

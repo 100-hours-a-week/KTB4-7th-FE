@@ -28,11 +28,14 @@ beforeEach(() => {
   navigate.mockReset()
 })
 
-function renderDetail(bundleId: string) {
+function renderDetail(bundleId: string, cardId: string) {
   return render(
-    <MemoryRouter initialEntries={[`/solution/${bundleId}`]}>
+    <MemoryRouter initialEntries={[`/solution/${bundleId}/${cardId}`]}>
       <Routes>
-        <Route path="/solution/:solutionId" element={<SolutionDetailPage />} />
+        <Route
+          path="/solution/:bundleId/:cardId"
+          element={<SolutionDetailPage />}
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -86,7 +89,32 @@ function mockDetail(overrides: { items?: Record<string, unknown>[] } = {}) {
   })
 }
 
-test('솔루션 상세 카드 3개를 보여주고 카드별로 개별 저장한다', async () => {
+test('클릭한 카드 하나만 상세로 보여준다', async () => {
+  mockDetail()
+
+  renderDetail('12', '1')
+
+  expect(await screen.findByText('재고 점검')).toBeInTheDocument()
+  expect(screen.getByText('상세1')).toBeInTheDocument()
+  expect(screen.queryByText('재방문 혜택')).not.toBeInTheDocument()
+  expect(screen.queryByText('메뉴 구성')).not.toBeInTheDocument()
+
+  const saveButtons = screen.getAllByRole('button', { name: /저장/ })
+  expect(saveButtons).toHaveLength(1)
+})
+
+test('다른 카드 id로 들어가면 그 카드만 보여준다', async () => {
+  mockDetail()
+
+  renderDetail('12', '3')
+
+  expect(await screen.findByText('메뉴 구성')).toBeInTheDocument()
+  expect(screen.queryByText('재고 점검')).not.toBeInTheDocument()
+  // 세 번째 카드는 이미 저장돼 있어서 버튼이 비활성 "저장됨" 상태여야 한다
+  expect(screen.getByRole('button', { name: '저장됨' })).toBeDisabled()
+})
+
+test('저장 버튼을 누르면 해당 카드만 저장 상태로 바뀐다', async () => {
   mockDetail()
   saveSolutionCard.mockResolvedValue({
     message: '솔루션이 저장되었습니다.',
@@ -101,36 +129,31 @@ test('솔루션 상세 카드 3개를 보여주고 카드별로 개별 저장한
     },
   })
 
-  renderDetail('12')
+  renderDetail('12', '1')
 
-  expect(await screen.findByText('재고 점검')).toBeInTheDocument()
-  expect(screen.getByText('재방문 혜택')).toBeInTheDocument()
-  expect(screen.getByText('메뉴 구성')).toBeInTheDocument()
-
-  // 세 번째 카드는 이미 저장돼 있어서 버튼이 비활성 "저장됨" 상태여야 한다
-  const saveButtons = screen.getAllByRole('button', { name: /저장/ })
-  expect(saveButtons).toHaveLength(3)
-  expect(screen.getByRole('button', { name: '저장됨' })).toBeDisabled()
-
-  const [firstSaveButton] = screen.getAllByRole('button', {
+  const saveButton = await screen.findByRole('button', {
     name: '이 솔루션 저장하기',
   })
-  fireEvent.click(firstSaveButton)
+  fireEvent.click(saveButton)
 
   await waitFor(() => expect(saveSolutionCard).toHaveBeenCalledWith(1))
-  // 첫 번째 카드만 저장됨으로 바뀌고, 다른 카드는 여전히 저장 가능해야 한다
-  expect(await screen.findAllByRole('button', { name: '저장됨' })).toHaveLength(
-    2,
-  )
+  expect(await screen.findByRole('button', { name: '저장됨' })).toBeDisabled()
+})
+
+test('존재하지 않는 카드 id면 안내 문구를 보여준다', async () => {
+  mockDetail()
+
+  renderDetail('12', '999')
+
   expect(
-    screen.getByRole('button', { name: '이 솔루션 저장하기' }),
+    await screen.findByText('솔루션을 찾을 수 없습니다'),
   ).toBeInTheDocument()
 })
 
 test('찾을 수 없는 솔루션이면 안내 문구를 보여준다', async () => {
   getSolutionBundleDetail.mockRejectedValue(new Error('not found'))
 
-  renderDetail('999')
+  renderDetail('999', '1')
 
   expect(
     await screen.findByText('솔루션을 찾을 수 없습니다'),

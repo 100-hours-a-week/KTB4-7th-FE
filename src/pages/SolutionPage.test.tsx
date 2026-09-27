@@ -70,10 +70,10 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
   expect(screen.getByText('메뉴 구성')).toBeInTheDocument()
   expect(
     screen.getByRole('link', { name: '솔루션 상세 보기' }),
-  ).toHaveAttribute('href', '/solution/12')
+  ).toHaveAttribute('href', '/solution/12/1')
   expect(screen.getByText('재방문 혜택').closest('a')).toHaveAttribute(
     'href',
-    '/solution/12',
+    '/solution/12/2',
   )
   expect(screen.getByRole('link', { name: 'AI에게 질문하기' })).toHaveAttribute(
     'href',
