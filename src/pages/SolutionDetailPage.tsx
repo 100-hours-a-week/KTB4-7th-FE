@@ -1,62 +1,137 @@
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getSolutionById } from '../entities/solution/model/fixtures'
+import {
+  getSolutionBundleDetail,
+  saveSolutionBundle,
+  type SolutionCard,
+} from '../features/solution/api/solutionApi'
 import { AppShell } from '../shared/ui/AppShell'
-import { useUiStore } from '../shared/store/useUiStore'
+
+function isUnauthorized(error: unknown) {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    (error as { response?: { status?: number } }).response?.status === 401
+  )
+}
 
 export function SolutionDetailPage() {
-  const solution = getSolutionById(useParams().solutionId ?? '')
+  const params = useParams()
+  const bundleId = Number(params.solutionId)
   const navigate = useNavigate()
-  const saveSolution = useUiStore((state) => state.saveSolution)
 
-  const handleSave = () => {
-    if (!solution) return
-    saveSolution(solution.id)
-    navigate('/my-solutions')
+  const [items, setItems] = useState<SolutionCard[]>([])
+  const [isSaved, setIsSaved] = useState(false)
+  const [expirationNotice, setExpirationNotice] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+
+  useEffect(() => {
+    if (!Number.isFinite(bundleId)) {
+      setIsLoading(false)
+      setNotFound(true)
+      return
+    }
+    let ignore = false
+    setIsLoading(true)
+    setNotFound(false)
+    getSolutionBundleDetail(bundleId)
+      .then((response) => {
+        if (ignore) return
+        setItems(response.data.solutionBundle.items)
+        setIsSaved(response.data.solutionBundle.isSaved)
+        setExpirationNotice(response.data.solutionBundle.expirationNotice)
+      })
+      .catch((requestError) => {
+        if (ignore) return
+        if (isUnauthorized(requestError)) {
+          navigate('/login')
+          return
+        }
+        setNotFound(true)
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false)
+      })
+    return () => {
+      ignore = true
+    }
+  }, [bundleId, navigate])
+
+  const handleSave = async () => {
+    if (!Number.isFinite(bundleId) || isSaving || isSaved) return
+    setIsSaving(true)
+    setSaveError('')
+    try {
+      await saveSolutionBundle(bundleId)
+      setIsSaved(true)
+    } catch (requestError) {
+      if (isUnauthorized(requestError)) {
+        navigate('/login')
+        return
+      }
+      setSaveError('솔루션 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <AppShell title="솔루션 상세">
+        <p>불러오는 중...</p>
+      </AppShell>
+    )
+  }
+
+  if (notFound || items.length === 0) {
+    return (
+      <AppShell title="솔루션 상세">
+        <div className="detail-page">
+          <h1>솔루션을 찾을 수 없습니다</h1>
+          <Link to="/solution">← 솔루션 요약</Link>
+        </div>
+      </AppShell>
+    )
   }
 
   return (
     <AppShell title="솔루션 상세">
       <div className="detail-page">
-        {!solution ? (
-          <>
-            <h1>솔루션을 찾을 수 없습니다</h1>
-            <Link to="/solution">솔루션 요약으로</Link>
-          </>
-        ) : (
-          <>
-            <Link to="/solution">← 솔루션 요약</Link>
-            <p>오늘의 실행 가이드</p>
-            <h1>{solution.title}</h1>
-            <p>{solution.summary}</p>
-            <section>
-              {solution.actions.map((action, index) => (
-                <article key={action.id}>
-                  <small>0{index + 1}</small>
-                  <b>
-                    {action.priority === 'high' ? '우선 실행' : '함께 확인'}
-                  </b>
-                  <h2>{action.title}</h2>
-                  <p>{action.detail}</p>
-                </article>
-              ))}
-            </section>
-            <div className="detail-page-actions">
-              <Link
-                className="dark-button"
-                to={`/solution/${solution.id}/chat`}
-              >
-                AI에게 질문하기
-              </Link>
-              <button
-                type="button"
-                className="light-button"
-                onClick={handleSave}
-              >
-                솔루션 저장하기
-              </button>
-            </div>
-          </>
+        <Link to="/solution">← 솔루션 요약</Link>
+        <p>오늘의 실행 가이드</p>
+        <h1>오늘의 솔루션</h1>
+        {expirationNotice && <p>{expirationNotice}</p>}
+        <section>
+          {items.map((item) => (
+            <article key={item.id}>
+              <small>0{item.rankNo}</small>
+              <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
+              <h2>{item.title}</h2>
+              <p>{item.summaryText}</p>
+              <p>{item.detailText}</p>
+              {item.evidence && <p>{item.evidence}</p>}
+            </article>
+          ))}
+        </section>
+        {saveError && (
+          <p className="form-error" role="alert">
+            {saveError}
+          </p>
         )}
+        <div className="detail-page-actions">
+          <button
+            type="button"
+            className="light-button"
+            onClick={handleSave}
+            disabled={isSaving || isSaved}
+          >
+            {isSaved ? '저장됨' : isSaving ? '저장 중...' : '솔루션 저장하기'}
+          </button>
+        </div>
       </div>
     </AppShell>
   )
