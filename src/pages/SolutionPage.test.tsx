@@ -75,4 +75,8 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
     'href',
     '/solution/12/2',
   )
+  expect(screen.getByRole('link', { name: 'AI에게 질문하기' })).toHaveAttribute(
+    'href',
+    '/solution/chat',
+  )
 })
