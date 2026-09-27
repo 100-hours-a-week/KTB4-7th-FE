@@ -6,11 +6,11 @@ export const http = axios.create({
   withCredentials: true,
 })
 
-const csrfCookieName = 'XSRF-TOKEN'
-const csrfHeaderName = 'X-XSRF-TOKEN'
+export const csrfCookieName = 'XSRF-TOKEN'
+export const csrfHeaderName = 'X-XSRF-TOKEN'
 const stateChangingMethods = new Set(['post', 'put', 'patch', 'delete'])
 
-function getCookieValue(name: string) {
+export function getCookieValue(name: string) {
   if (typeof document === 'undefined') return undefined
 
   return document.cookie

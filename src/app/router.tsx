@@ -29,7 +29,7 @@ export const router = createBrowserRouter([
   { path: '/password-reset', element: <PasswordResetPage /> },
   { path: '/solution', element: <SolutionPage /> },
   { path: '/solution/:solutionId', element: <SolutionDetailPage /> },
-  { path: '/solution/:solutionId/chat', element: <SolutionChatPage /> },
+  { path: '/solution/chat', element: <SolutionChatPage /> },
   { path: '/my-solutions', element: <MySolutionsPage /> },
   { path: '/my-solutions/:savedId', element: <MySolutionDetailPage /> },
   { path: '/notifications', element: <NotificationsPage /> },
