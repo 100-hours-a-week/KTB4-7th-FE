@@ -112,7 +112,7 @@ test('솔루션 상세 카드 3개를 보여주고 카드별로 개별 저장한
   expect(saveButtons).toHaveLength(3)
   expect(screen.getByRole('button', { name: '저장됨' })).toBeDisabled()
 
-  const firstSaveButton = screen.getByRole('button', {
+  const [firstSaveButton] = screen.getAllByRole('button', {
     name: '이 솔루션 저장하기',
   })
   fireEvent.click(firstSaveButton)
