@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
   type SalesAnalysisData,
+  type SalesDailyPoint,
   type SalesPeriodType,
 } from '../features/sales/api/salesApi'
 import { EmptyState } from '../shared/ui/EmptyState'
@@ -43,6 +44,14 @@ function formatChange(rate: number | null) {
   return `${sign}${rate.toFixed(1)}%`
 }
 
+function formatShortDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${month}.${day}`
+}
+
 function TrendBadge({ change }: { change: string | null }) {
   if (!change) return <span className="trend-badge trend-neutral">-</span>
   const isPositive = change.trim().startsWith('+')
@@ -52,6 +61,55 @@ function TrendBadge({ change }: { change: string | null }) {
     >
       {isPositive ? '▲' : '▼'} {change.replace(/^[+-]/, '')}
     </span>
+  )
+}
+
+function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
+  if (data.length === 0) {
+    return <p className="chart-empty">표시할 일별 매출 데이터가 없습니다.</p>
+  }
+
+  const maxAmount = Math.max(1, ...data.map((item) => item.salesAmount))
+  const coords = data.map((item, index) => ({
+    x: data.length > 1 ? (index / (data.length - 1)) * 300 : 150,
+    y: 96 - (item.salesAmount / maxAmount) * 84,
+    item,
+  }))
+  const linePath = coords
+    .map(
+      (point, index) =>
+        `${index === 0 ? 'M' : 'L'}${point.x.toFixed(1)},${point.y.toFixed(1)}`,
+    )
+    .join(' ')
+  const lastPoint = coords[coords.length - 1]
+  const firstPoint = coords[0]
+  const areaPath = `${linePath} L${lastPoint.x.toFixed(1)},100 L${firstPoint.x.toFixed(1)},100 Z`
+
+  return (
+    <div className="daily-trend-chart">
+      <svg
+        viewBox="0 0 300 100"
+        preserveAspectRatio="none"
+        aria-label="일별 매출 추이"
+        role="img"
+      >
+        <path d={areaPath} className="daily-trend-area" />
+        <path d={linePath} className="daily-trend-line" fill="none" />
+        {coords.map((point) => (
+          <circle
+            key={point.item.date}
+            cx={point.x}
+            cy={point.y}
+            r={2.4}
+            className="daily-trend-dot"
+          />
+        ))}
+      </svg>
+      <div className="daily-trend-range">
+        <span>{formatShortDate(data[0].date)}</span>
+        <span>{formatShortDate(data[data.length - 1].date)}</span>
+      </div>
+    </div>
   )
 }
 
@@ -111,6 +169,12 @@ export function SalesAnalysisPage() {
 
   const weekdayMax = data
     ? Math.max(1, ...data.weekdaySales.map((item) => item.salesAmount))
+    : 1
+  const hourlyMax = data
+    ? Math.max(1, ...data.hourlySales.map((item) => item.salesAmount))
+    : 1
+  const menuMax = data
+    ? Math.max(1, ...data.menuRankings.map((item) => item.salesAmount))
     : 1
 
   return (
@@ -182,6 +246,40 @@ export function SalesAnalysisPage() {
 
             <section className="analysis-chart-section">
               <h2>분석 그래프</h2>
+
+              <div className="section-card chart-card">
+                <h3>시간대별 매출</h3>
+                {data.hourlySales.length === 0 ? (
+                  <p className="chart-empty">
+                    표시할 시간대별 매출 데이터가 없습니다.
+                  </p>
+                ) : (
+                  <>
+                    <div className="sales-chart" aria-label="시간대별 매출">
+                      {data.hourlySales.map((item) => (
+                        <span
+                          key={item.hour}
+                          style={{
+                            height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
+                          }}
+                          aria-label={`${item.hour}시 ${formatCurrency(item.salesAmount)}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="sales-chart-labels">
+                      {data.hourlySales.map((item) => (
+                        <span key={item.hour}>{item.hour}시</span>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="section-card chart-card">
+                <h3>일별 매출 추이</h3>
+                <DailyTrendChart data={data.dailySales} />
+              </div>
+
               <div className="section-card chart-card">
                 <h3>요일별 매출</h3>
                 <div className="sales-chart" aria-label="요일별 매출">
@@ -202,6 +300,36 @@ export function SalesAnalysisPage() {
                     </span>
                   ))}
                 </div>
+              </div>
+
+              <div className="section-card chart-card">
+                <h3>메뉴별 매출 순위</h3>
+                {data.menuRankings.length === 0 ? (
+                  <p className="chart-empty">
+                    표시할 메뉴별 매출 데이터가 없습니다.
+                  </p>
+                ) : (
+                  <ol className="menu-ranking-list">
+                    {data.menuRankings.map((item) => (
+                      <li key={item.rank}>
+                        <span className="menu-rank-number">{item.rank}</span>
+                        <div className="menu-rank-body">
+                          <div className="menu-rank-row">
+                            <strong>{item.menuName}</strong>
+                            <span>{formatCurrency(item.salesAmount)}</span>
+                          </div>
+                          <div className="menu-rank-bar">
+                            <span
+                              style={{
+                                width: `${Math.max(4, (item.salesAmount / menuMax) * 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </div>
             </section>
 
