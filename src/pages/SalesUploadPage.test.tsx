@@ -155,3 +155,63 @@ test('업로드에 실패하면 오류 메시지를 보여준다', async () => {
     '매출 파일 업로드에 실패했습니다. 다시 시도해 주세요.',
   )
 })
+
+test('업로드 기록이 여러 페이지면 다음/이전 버튼으로 페이지를 넘긴다', async () => {
+  const pageOne = {
+    connection: {
+      lastUploadedAt: '2026-09-27T00:00:00+09:00',
+      totalAppliedRecordCount: 20,
+      latestStatus: 'COMPLETED',
+    },
+    items: [
+      {
+        uploadId: 2,
+        fileName: '202609_매출.xlsx',
+        uploadedAt: '2026-09-27T00:00:00+09:00',
+        recordCount: 10,
+        appliedRecordCount: 10,
+        status: 'COMPLETED',
+        failReason: null,
+      },
+    ],
+    page: 1,
+    size: 10,
+    totalPages: 2,
+    totalCount: 11,
+  }
+  const pageTwo = {
+    ...pageOne,
+    items: [
+      {
+        uploadId: 1,
+        fileName: '202608_매출.xlsx',
+        uploadedAt: '2026-08-27T00:00:00+09:00',
+        recordCount: 10,
+        appliedRecordCount: 10,
+        status: 'COMPLETED',
+        failReason: null,
+      },
+    ],
+    page: 2,
+  }
+  getSalesUploadHistory.mockImplementation(({ page } = {}) =>
+    Promise.resolve(page === 2 ? pageTwo : pageOne),
+  )
+
+  render(
+    <MemoryRouter>
+      <SalesUploadPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByText('202609_매출.xlsx')).toBeInTheDocument()
+  expect(screen.getByText('1 / 2')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '이전' })).toBeDisabled()
+
+  fireEvent.click(screen.getByRole('button', { name: '다음' }))
+
+  expect(await screen.findByText('202608_매출.xlsx')).toBeInTheDocument()
+  expect(getSalesUploadHistory).toHaveBeenLastCalledWith({ page: 2 })
+  expect(screen.getByText('2 / 2')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
+})

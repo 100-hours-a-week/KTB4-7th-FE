@@ -9,6 +9,7 @@ import {
 import { AppShell } from '../shared/ui/AppShell'
 
 const supportedExtensions = ['csv', 'xlsx', 'xls']
+const MAX_REQUESTABLE_PAGE = 5
 
 function isUnauthorized(error: unknown) {
   return (
@@ -63,13 +64,15 @@ export function SalesUploadPage() {
   const [history, setHistory] = useState<SalesUploadHistoryResponse | null>(
     null,
   )
+  const [historyPage, setHistoryPage] = useState(1)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
   useEffect(() => {
     let ignore = false
-    getSalesUploadHistory()
+    setIsLoadingHistory(true)
+    getSalesUploadHistory({ page: historyPage })
       .then((response) => {
         if (!ignore) setHistory(response)
       })
@@ -87,7 +90,7 @@ export function SalesUploadPage() {
     return () => {
       ignore = true
     }
-  }, [navigate])
+  }, [navigate, historyPage])
 
   const selectFile = (file?: File) => {
     if (!file) return
@@ -121,6 +124,9 @@ export function SalesUploadPage() {
   }
 
   const connection = history?.connection
+  const maxNavigablePage = history
+    ? Math.min(history.totalPages, MAX_REQUESTABLE_PAGE)
+    : 1
 
   return (
     <AppShell title="매출 데이터 연결">
@@ -232,6 +238,29 @@ export function SalesUploadPage() {
               </p>
             )}
           </div>
+          {!isLoadingHistory && history && maxNavigablePage > 1 && (
+            <div className="upload-history-pagination">
+              <button
+                type="button"
+                disabled={historyPage <= 1}
+                onClick={() => setHistoryPage((prev) => Math.max(1, prev - 1))}
+              >
+                이전
+              </button>
+              <span>
+                {historyPage} / {maxNavigablePage}
+              </span>
+              <button
+                type="button"
+                disabled={historyPage >= maxNavigablePage}
+                onClick={() =>
+                  setHistoryPage((prev) => Math.min(maxNavigablePage, prev + 1))
+                }
+              >
+                다음
+              </button>
+            </div>
+          )}
         </section>
       </div>
     </AppShell>

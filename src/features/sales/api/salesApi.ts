@@ -156,3 +156,13 @@ export async function getSalesAnalysis(params: {
     await http.get<SalesAnalysisResponse>('/v1/sales/analyses', { params })
   ).data
 }
+
+export type SalesAvailableMonthsResponse = {
+  months: string[]
+}
+
+export async function getSalesAvailableMonths() {
+  return (
+    await http.get<SalesAvailableMonthsResponse>('/v1/sales/analyses/months')
+  ).data
+}

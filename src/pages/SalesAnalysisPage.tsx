@@ -2,18 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
+  getSalesAvailableMonths,
   type SalesAnalysisData,
   type SalesDailyPoint,
-  type SalesPeriodType,
 } from '../features/sales/api/salesApi'
 import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
-
-const periods = [
-  { id: 'TODAY', label: '오늘' },
-  { id: 'THIS_WEEK', label: '이번 주' },
-  { id: 'THIS_MONTH', label: '이번 달' },
-] as const satisfies readonly { id: SalesPeriodType; label: string }[]
 
 const weekdayLabels: Record<string, string> = {
   MONDAY: '월',
@@ -50,6 +44,22 @@ function formatShortDate(value: string) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${month}.${day}`
+}
+
+function formatMonthLabel(month: string) {
+  const [year, monthNumber] = month.split('-')
+  return `${year}년 ${Number(monthNumber)}월`
+}
+
+function monthRange(month: string) {
+  const [yearText, monthText] = month.split('-')
+  const year = Number(yearText)
+  const monthIndex = Number(monthText) - 1
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate()
+  return {
+    startDate: `${yearText}-${monthText}-01`,
+    endDate: `${yearText}-${monthText}-${String(lastDay).padStart(2, '0')}`,
+  }
 }
 
 function TrendBadge({ change }: { change: string | null }) {
@@ -115,17 +125,45 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
 
 export function SalesAnalysisPage() {
   const navigate = useNavigate()
-  const [period, setPeriod] = useState<SalesPeriodType>('THIS_MONTH')
+  const [availableMonths, setAvailableMonths] = useState<string[] | null>(null)
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [status, setStatus] = useState<'COMPLETED' | 'EMPTY' | null>(null)
   const [data, setData] = useState<SalesAnalysisData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingMonths, setIsLoadingMonths] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
     let ignore = false
+    getSalesAvailableMonths()
+      .then((response) => {
+        if (ignore) return
+        setAvailableMonths(response.months)
+        setSelectedMonth(response.months[response.months.length - 1] ?? null)
+      })
+      .catch((requestError) => {
+        if (ignore) return
+        if (isUnauthorized(requestError)) {
+          navigate('/login')
+          return
+        }
+        setError('매출 분석을 불러오지 못했습니다.')
+      })
+      .finally(() => {
+        if (!ignore) setIsLoadingMonths(false)
+      })
+    return () => {
+      ignore = true
+    }
+  }, [navigate])
+
+  useEffect(() => {
+    if (!selectedMonth) return
+    let ignore = false
+    const { startDate, endDate } = monthRange(selectedMonth)
     setIsLoading(true)
     setError('')
-    getSalesAnalysis({ periodType: period })
+    getSalesAnalysis({ periodType: 'CUSTOM', startDate, endDate })
       .then((response) => {
         if (ignore) return
         setStatus(response.status)
@@ -145,9 +183,21 @@ export function SalesAnalysisPage() {
     return () => {
       ignore = true
     }
-  }, [navigate, period])
+  }, [navigate, selectedMonth])
 
-  if (!isLoading && (status === 'EMPTY' || error)) {
+  if (!isLoadingMonths && (!availableMonths || availableMonths.length === 0)) {
+    return (
+      <AppShell title="매출 분석">
+        <EmptyState
+          title="분석할 매출 데이터가 없습니다"
+          description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
+          action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
+        />
+      </AppShell>
+    )
+  }
+
+  if (!isLoadingMonths && !isLoading && (status === 'EMPTY' || error)) {
     return (
       <AppShell title="매출 분석">
         <EmptyState
@@ -184,25 +234,25 @@ export function SalesAnalysisPage() {
           <div>
             <p>SALES ANALYSIS</p>
             <h1>매출 분석</h1>
-            <span>기간별 매출 흐름을 한눈에 확인해보세요</span>
+            <span>월을 선택해서 매출 흐름을 한눈에 확인해보세요</span>
           </div>
-          <div className="period-tabs" role="tablist" aria-label="분석 기간">
-            {periods.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={period === item.id}
-                className={period === item.id ? 'active' : ''}
-                onClick={() => setPeriod(item.id)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          {availableMonths && availableMonths.length > 0 && (
+            <select
+              className="month-select"
+              aria-label="조회할 월"
+              value={selectedMonth ?? ''}
+              onChange={(event) => setSelectedMonth(event.target.value)}
+            >
+              {[...availableMonths].reverse().map((month) => (
+                <option key={month} value={month}>
+                  {formatMonthLabel(month)}
+                </option>
+              ))}
+            </select>
+          )}
         </header>
 
-        {isLoading || !data ? (
+        {isLoadingMonths || isLoading || !data ? (
           <p>불러오는 중...</p>
         ) : (
           <>

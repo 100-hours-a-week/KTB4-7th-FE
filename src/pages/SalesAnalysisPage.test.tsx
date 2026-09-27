@@ -3,14 +3,21 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SalesAnalysisPage } from './SalesAnalysisPage'
 
-const { getSalesAnalysis, getNotifications, navigate } = vi.hoisted(() => ({
+const {
+  getSalesAnalysis,
+  getSalesAvailableMonths,
+  getNotifications,
+  navigate,
+} = vi.hoisted(() => ({
   getSalesAnalysis: vi.fn(),
+  getSalesAvailableMonths: vi.fn(),
   getNotifications: vi.fn(),
   navigate: vi.fn(),
 }))
 
 vi.mock('../features/sales/api/salesApi', () => ({
   getSalesAnalysis,
+  getSalesAvailableMonths,
 }))
 
 vi.mock('../features/notifications/api/notificationApi', () => ({
@@ -28,11 +35,11 @@ const completedResponse = {
   message: '조회에 성공했습니다.',
   data: {
     period: {
-      type: 'THIS_MONTH' as const,
+      type: 'CUSTOM' as const,
       startDate: '2026-09-01',
-      endDate: '2026-09-27',
+      endDate: '2026-09-30',
     },
-    comparisonPeriod: { startDate: '2026-08-01', endDate: '2026-08-27' },
+    comparisonPeriod: { startDate: '2026-08-01', endDate: '2026-08-31' },
     kpis: {
       totalSales: 7920000,
       orderCount: 923,
@@ -65,6 +72,7 @@ const completedResponse = {
 
 beforeEach(() => {
   getSalesAnalysis.mockReset()
+  getSalesAvailableMonths.mockReset()
   getNotifications.mockReset()
   navigate.mockReset()
   getNotifications.mockResolvedValue({
@@ -74,7 +82,10 @@ beforeEach(() => {
   })
 })
 
-test('매출 분석 데이터를 불러와 통계와 AI 인사이트를 표시한다', async () => {
+test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({
+    months: ['2026-07', '2026-08', '2026-09'],
+  })
   getSalesAnalysis.mockResolvedValue(completedResponse)
 
   render(
@@ -89,10 +100,18 @@ test('매출 분석 데이터를 불러와 통계와 AI 인사이트를 표시�
   expect(
     screen.getByText('최근 화요일 매출이 3주 연속 감소하고 있어요.'),
   ).toBeInTheDocument()
-  expect(getSalesAnalysis).toHaveBeenCalledWith({ periodType: 'THIS_MONTH' })
+  expect(getSalesAnalysis).toHaveBeenCalledWith({
+    periodType: 'CUSTOM',
+    startDate: '2026-09-01',
+    endDate: '2026-09-30',
+  })
+  expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-09')
 })
 
-test('기간 탭을 클릭하면 해당 periodType으로 다시 조회한다', async () => {
+test('월 선택을 바꾸면 해당 월 기간으로 다시 조회한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({
+    months: ['2026-08', '2026-09'],
+  })
   getSalesAnalysis.mockResolvedValue(completedResponse)
 
   render(
@@ -103,23 +122,21 @@ test('기간 탭을 클릭하면 해당 periodType으로 다시 조회한다', a
 
   await screen.findByText('₩7,920,000')
 
-  fireEvent.click(screen.getByRole('tab', { name: '오늘' }))
+  fireEvent.change(screen.getByLabelText('조회할 월'), {
+    target: { value: '2026-08' },
+  })
 
   await waitFor(() =>
-    expect(getSalesAnalysis).toHaveBeenLastCalledWith({ periodType: 'TODAY' }),
+    expect(getSalesAnalysis).toHaveBeenLastCalledWith({
+      periodType: 'CUSTOM',
+      startDate: '2026-08-01',
+      endDate: '2026-08-31',
+    }),
   )
 })
 
-test('분석 데이터가 없으면 업로드 행동을 제공한다', async () => {
-  getSalesAnalysis.mockResolvedValue({
-    status: 'EMPTY',
-    message: '선택 기간에 매출 데이터가 없습니다.',
-    data: {
-      ...completedResponse.data,
-      weekdaySales: [],
-      aiInsight: null,
-    },
-  })
+test('분석 가능한 월이 없으면 업로드 행동을 제공한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: [] })
 
   render(
     <MemoryRouter>
@@ -135,9 +152,11 @@ test('분석 데이터가 없으면 업로드 행동을 제공한다', async () 
   expect(
     screen.getByRole('link', { name: '매출 데이터 업로드' }),
   ).toHaveAttribute('href', '/sales/upload')
+  expect(getSalesAnalysis).not.toHaveBeenCalled()
 })
 
 test('세션이 없으면 로그인 페이지로 이동한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
   getSalesAnalysis.mockRejectedValue({ response: { status: 401 } })
 
   render(

@@ -5,13 +5,16 @@ import { LoginPage } from './LoginPage'
 import { SalesAnalysisPage } from './SalesAnalysisPage'
 import { SolutionPage } from './SolutionPage'
 
-const { getSalesAnalysis, getNotifications } = vi.hoisted(() => ({
-  getSalesAnalysis: vi.fn(),
-  getNotifications: vi.fn(),
-}))
+const { getSalesAnalysis, getSalesAvailableMonths, getNotifications } =
+  vi.hoisted(() => ({
+    getSalesAnalysis: vi.fn(),
+    getSalesAvailableMonths: vi.fn(),
+    getNotifications: vi.fn(),
+  }))
 
 vi.mock('../features/sales/api/salesApi', () => ({
   getSalesAnalysis,
+  getSalesAvailableMonths,
 }))
 
 vi.mock('../features/notifications/api/notificationApi', () => ({
@@ -20,6 +23,7 @@ vi.mock('../features/notifications/api/notificationApi', () => ({
 
 beforeEach(() => {
   getSalesAnalysis.mockReset()
+  getSalesAvailableMonths.mockReset()
   getNotifications.mockReset()
   getNotifications.mockResolvedValue({
     message: '조회 성공',
@@ -48,34 +52,8 @@ test('솔루션이 없으면 매출 업로드 행동을 제공한다', () => {
   ).toHaveAttribute('href', '/sales/upload')
 })
 
-test('분석 데이터가 없으면 업로드 행동을 제공한다', async () => {
-  getSalesAnalysis.mockResolvedValue({
-    status: 'EMPTY',
-    message: '선택 기간에 매출 데이터가 없습니다.',
-    data: {
-      period: {
-        type: 'THIS_MONTH',
-        startDate: '2026-09-01',
-        endDate: '2026-09-27',
-      },
-      comparisonPeriod: null,
-      kpis: {
-        totalSales: 0,
-        orderCount: 0,
-        averageOrderValue: 0,
-        changes: {
-          totalSalesRate: null,
-          orderCountRate: null,
-          averageOrderValueRate: null,
-        },
-      },
-      dailySales: [],
-      menuRankings: [],
-      hourlySales: [],
-      weekdaySales: [],
-      aiInsight: null,
-    },
-  })
+test('분석 가능한 월이 없으면 업로드 행동을 제공한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: [] })
 
   render(
     <MemoryRouter>
