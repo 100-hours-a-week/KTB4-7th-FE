@@ -4,6 +4,7 @@ import { SignupPage } from '../pages/SignupPage'
 import { SolutionPage } from '../pages/SolutionPage'
 import { SolutionDetailPage } from '../pages/SolutionDetailPage'
 import { MySolutionsPage } from '../pages/MySolutionsPage'
+import { MySolutionDetailPage } from '../pages/MySolutionDetailPage'
 import { SolutionChatPage } from '../pages/SolutionChatPage'
 import { LoginPage } from '../pages/LoginPage'
 import { PasswordResetPage } from '../pages/PasswordResetPage'
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
   { path: '/solution/:solutionId', element: <SolutionDetailPage /> },
   { path: '/solution/:solutionId/chat', element: <SolutionChatPage /> },
   { path: '/my-solutions', element: <MySolutionsPage /> },
+  { path: '/my-solutions/:savedId', element: <MySolutionDetailPage /> },
   { path: '/notifications', element: <NotificationsPage /> },
   { path: '/notifications/settings', element: <NotificationSettingsPage /> },
   { path: '/profile', element: <ProfilePage /> },
