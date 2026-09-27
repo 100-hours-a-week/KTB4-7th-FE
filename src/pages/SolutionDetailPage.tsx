@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   getSolutionBundleDetail,
-  saveSolutionBundle,
+  saveSolutionCard,
   type SolutionCard,
 } from '../features/solution/api/solutionApi'
 import { AppShell } from '../shared/ui/AppShell'
@@ -22,11 +22,10 @@ export function SolutionDetailPage() {
   const navigate = useNavigate()
 
   const [items, setItems] = useState<SolutionCard[]>([])
-  const [isSaved, setIsSaved] = useState(false)
   const [expirationNotice, setExpirationNotice] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [savingCardId, setSavingCardId] = useState<number | null>(null)
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export function SolutionDetailPage() {
       .then((response) => {
         if (ignore) return
         setItems(response.data.solutionBundle.items)
-        setIsSaved(response.data.solutionBundle.isSaved)
         setExpirationNotice(response.data.solutionBundle.expirationNotice)
       })
       .catch((requestError) => {
@@ -61,13 +59,25 @@ export function SolutionDetailPage() {
     }
   }, [bundleId, navigate])
 
-  const handleSave = async () => {
-    if (!Number.isFinite(bundleId) || isSaving || isSaved) return
-    setIsSaving(true)
+  const handleSave = async (cardId: number) => {
+    if (savingCardId !== null) return
+    const target = items.find((item) => item.id === cardId)
+    if (!target || target.isSaved) return
+    setSavingCardId(cardId)
     setSaveError('')
     try {
-      await saveSolutionBundle(bundleId)
-      setIsSaved(true)
+      const response = await saveSolutionCard(cardId)
+      setItems((current) =>
+        current.map((item) =>
+          item.id === cardId
+            ? {
+                ...item,
+                isSaved: true,
+                savedId: response.data.savedSolution.id,
+              }
+            : item,
+        ),
+      )
     } catch (requestError) {
       if (isUnauthorized(requestError)) {
         navigate('/login')
@@ -75,7 +85,7 @@ export function SolutionDetailPage() {
       }
       setSaveError('솔루션 저장에 실패했습니다. 잠시 후 다시 시도해 주세요.')
     } finally {
-      setIsSaving(false)
+      setSavingCardId(null)
     }
   }
 
@@ -105,6 +115,11 @@ export function SolutionDetailPage() {
         <p>오늘의 실행 가이드</p>
         <h1>오늘의 솔루션</h1>
         {expirationNotice && <p>{expirationNotice}</p>}
+        {saveError && (
+          <p className="form-error" role="alert">
+            {saveError}
+          </p>
+        )}
         <section>
           {items.map((item) => (
             <article key={item.id}>
@@ -114,24 +129,23 @@ export function SolutionDetailPage() {
               <p>{item.summaryText}</p>
               <p>{item.detailText}</p>
               {item.evidence && <p>{item.evidence}</p>}
+              <div className="detail-page-actions">
+                <button
+                  type="button"
+                  className="light-button"
+                  onClick={() => handleSave(item.id)}
+                  disabled={savingCardId === item.id || item.isSaved}
+                >
+                  {item.isSaved
+                    ? '저장됨'
+                    : savingCardId === item.id
+                      ? '저장 중...'
+                      : '이 솔루션 저장하기'}
+                </button>
+              </div>
             </article>
           ))}
         </section>
-        {saveError && (
-          <p className="form-error" role="alert">
-            {saveError}
-          </p>
-        )}
-        <div className="detail-page-actions">
-          <button
-            type="button"
-            className="light-button"
-            onClick={handleSave}
-            disabled={isSaving || isSaved}
-          >
-            {isSaved ? '저장됨' : isSaving ? '저장 중...' : '솔루션 저장하기'}
-          </button>
-        </div>
       </div>
     </AppShell>
   )

@@ -15,6 +15,8 @@ export type SolutionCard = {
   summaryText: string
   detailText: string
   evidence: string
+  isSaved: boolean
+  savedId: number | null
 }
 
 export type SolutionTodayData = {
@@ -70,10 +72,8 @@ export type SolutionSaveResponse = {
   }
 }
 
-export async function saveSolutionBundle(bundleId: number) {
+export async function saveSolutionCard(solutionId: number) {
   return (
-    await http.post<SolutionSaveResponse>(
-      `/v1/solution-bundles/${bundleId}/saves`,
-    )
+    await http.post<SolutionSaveResponse>(`/v1/solutions/${solutionId}/saves`)
   ).data
 }

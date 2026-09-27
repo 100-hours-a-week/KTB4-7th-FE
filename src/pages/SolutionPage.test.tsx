@@ -32,6 +32,8 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
           summaryText: '요약1',
           detailText: '상세1',
           evidence: '근거1',
+          isSaved: false,
+          savedId: null,
         },
         {
           id: 2,
@@ -40,6 +42,8 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
           summaryText: '요약2',
           detailText: '상세2',
           evidence: '근거2',
+          isSaved: false,
+          savedId: null,
         },
         {
           id: 3,
@@ -48,6 +52,8 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
           summaryText: '요약3',
           detailText: '상세3',
           evidence: '근거3',
+          isSaved: false,
+          savedId: null,
         },
       ],
     },
