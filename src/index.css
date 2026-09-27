@@ -617,6 +617,17 @@ input {
   border-radius: 8px 8px 2px 2px;
   background: linear-gradient(#38b69e, #075b4e);
 }
+.sales-chart-labels {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+}
+.sales-chart-labels span {
+  flex: 1;
+  text-align: center;
+  color: #68716e;
+  font-size: 11px;
+}
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1793,6 +1804,16 @@ input {
   background: #fbe7e3;
   color: #b64134;
 }
+.status-pending {
+  background: #f1f3f2;
+  color: #4d5652;
+}
+.upload-history-empty {
+  padding: 18px 4px;
+  color: #68716e;
+  font-size: 13px;
+  text-align: center;
+}
 
 /* --- Sales analysis --- */
 .analysis-page-title {
@@ -1858,6 +1879,10 @@ input {
 .trend-down {
   background: #fbe7e3;
   color: #b64134;
+}
+.trend-neutral {
+  background: #f1f3f2;
+  color: #4d5652;
 }
 .stat-card-caption {
   color: #a3aaa7;
