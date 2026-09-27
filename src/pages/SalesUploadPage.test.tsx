@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SalesUploadPage } from './SalesUploadPage'
@@ -94,15 +100,22 @@ test('연결 상태와 업로드 기록을 실제 API로 불러온다', async ()
     totalCount: 1,
   })
 
-  render(
+  const { container } = render(
     <MemoryRouter>
       <SalesUploadPage />
     </MemoryRouter>,
   )
 
-  expect(await screen.findByText('08.27')).toBeInTheDocument()
-  expect(screen.getByText('3,204건')).toBeInTheDocument()
-  expect(screen.getByText('최신')).toBeInTheDocument()
+  await waitFor(() => expect(getSalesUploadHistory).toHaveBeenCalled())
+
+  const connectionStatus = container.querySelector(
+    '.connection-status',
+  ) as HTMLElement
+  expect(connectionStatus).not.toBeNull()
+
+  expect(await within(connectionStatus).findByText('08.27')).toBeInTheDocument()
+  expect(within(connectionStatus).getByText('3,204건')).toBeInTheDocument()
+  expect(within(connectionStatus).getByText('최신')).toBeInTheDocument()
   expect(screen.getByText('202608_매출.xlsx')).toBeInTheDocument()
 })
 
