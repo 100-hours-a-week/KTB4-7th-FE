@@ -616,6 +616,10 @@ input {
   min-height: 18px;
   border-radius: 8px 8px 2px 2px;
   background: linear-gradient(#38b69e, #075b4e);
+  cursor: pointer;
+}
+.sales-chart span:hover {
+  background: linear-gradient(#4fd0b4, #0c7a64);
 }
 .sales-chart-labels {
   display: flex;
@@ -1835,6 +1839,33 @@ input {
   font-size: 12px;
   font-weight: 700;
 }
+.menu-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 14px;
+}
+.menu-pagination button {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid #e0e6e3;
+  border-radius: 999px;
+  background: #fff;
+  color: #141716;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.menu-pagination button:disabled {
+  color: #a3aaa7;
+  cursor: not-allowed;
+}
+.menu-pagination span {
+  color: #68716e;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 .upload-history-empty {
   padding: 18px 4px;
@@ -1886,12 +1917,13 @@ input {
 
 .stat-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .stat-card {
   display: grid;
   gap: 6px;
+  min-width: 0;
   padding: 14px 12px;
   border: 1px solid #e0e6e3;
   border-radius: 14px;
@@ -1902,8 +1934,14 @@ input {
   font-size: 11px;
 }
 .stat-card strong {
-  font-size: 17px;
-  letter-spacing: -0.03em;
+  font-size: 14px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .stat-card {
+    padding: 12px 8px;
+  }
 }
 .trend-badge {
   justify-self: start;
@@ -2016,6 +2054,24 @@ input {
   border-radius: 999px;
   background: #141716;
 }
+.chart-dots button {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9dfdc;
+}
+.chart-dots button[aria-selected='true'] {
+  width: 16px;
+  border-radius: 999px;
+  background: #141716;
+}
+.chart-carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
 
 .chart-empty {
   margin: 0;
@@ -2042,6 +2098,27 @@ input {
 }
 .daily-trend-dot {
   fill: #075b4e;
+}
+.daily-trend-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+.daily-trend-hit:hover {
+  fill: rgba(12, 122, 100, 0.12);
+}
+.chart-tooltip {
+  position: fixed;
+  z-index: 50;
+  transform: translate(-50%, calc(-100% - 10px));
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #141716;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgba(15, 22, 20, 0.25);
 }
 .daily-trend-range {
   display: flex;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
@@ -18,6 +18,8 @@ const weekdayLabels: Record<string, string> = {
   SATURDAY: '토',
   SUNDAY: '일',
 }
+
+const MENU_PAGE_SIZE = 10
 
 function isUnauthorized(error: unknown) {
   return (
@@ -74,7 +76,20 @@ function TrendBadge({ change }: { change: string | null }) {
   )
 }
 
+type ChartTip = { x: number; y: number; text: string } | null
+
+function ChartTooltip({ tip }: { tip: ChartTip }) {
+  if (!tip) return null
+  return (
+    <div className="chart-tooltip" style={{ left: tip.x, top: tip.y }}>
+      {tip.text}
+    </div>
+  )
+}
+
 function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
+  const [tip, setTip] = useState<ChartTip>(null)
+
   if (data.length === 0) {
     return <p className="chart-empty">표시할 일별 매출 데이터가 없습니다.</p>
   }
@@ -105,20 +120,40 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
       >
         <path d={areaPath} className="daily-trend-area" />
         <path d={linePath} className="daily-trend-line" fill="none" />
-        {coords.map((point) => (
-          <circle
-            key={point.item.date}
-            cx={point.x}
-            cy={point.y}
-            r={2.4}
-            className="daily-trend-dot"
-          />
-        ))}
+        {coords.map((point) => {
+          const text = `${formatShortDate(point.item.date)} ${formatCurrency(point.item.salesAmount)}`
+          return (
+            <g key={point.item.date}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={2.4}
+                className="daily-trend-dot"
+              />
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={8}
+                className="daily-trend-hit"
+                onMouseEnter={(event) =>
+                  setTip({ x: event.clientX, y: event.clientY, text })
+                }
+                onMouseMove={(event) =>
+                  setTip({ x: event.clientX, y: event.clientY, text })
+                }
+                onMouseLeave={() => setTip(null)}
+              >
+                <title>{text}</title>
+              </circle>
+            </g>
+          )
+        })}
       </svg>
       <div className="daily-trend-range">
         <span>{formatShortDate(data[0].date)}</span>
         <span>{formatShortDate(data[data.length - 1].date)}</span>
       </div>
+      <ChartTooltip tip={tip} />
     </div>
   )
 }
@@ -132,6 +167,10 @@ export function SalesAnalysisPage() {
   const [isLoadingMonths, setIsLoadingMonths] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [chartIndex, setChartIndex] = useState(0)
+  const [menuCursor, setMenuCursor] = useState(0)
+  const [hoverTip, setHoverTip] = useState<ChartTip>(null)
+  const touchStartXRef = useRef<number | null>(null)
 
   useEffect(() => {
     let ignore = false
@@ -168,6 +207,8 @@ export function SalesAnalysisPage() {
         if (ignore) return
         setStatus(response.status)
         setData(response.data)
+        setChartIndex(0)
+        setMenuCursor(0)
       })
       .catch((requestError) => {
         if (ignore) return
@@ -226,6 +267,193 @@ export function SalesAnalysisPage() {
   const menuMax = data
     ? Math.max(1, ...data.menuRankings.map((item) => item.salesAmount))
     : 1
+
+  const chartTabs = [
+    { key: 'hourly', title: '시간대별 매출' },
+    { key: 'daily', title: '일별 매출 추이' },
+    { key: 'weekday', title: '요일별 매출' },
+    { key: 'menu', title: '메뉴별 매출 순위' },
+  ] as const
+
+  const goToChart = (index: number) => {
+    setChartIndex(Math.max(0, Math.min(chartTabs.length - 1, index)))
+  }
+
+  const handleChartTouchStart = (event: TouchEvent) => {
+    touchStartXRef.current = event.touches[0].clientX
+  }
+
+  const handleChartTouchEnd = (event: TouchEvent) => {
+    if (touchStartXRef.current === null) return
+    const deltaX = event.changedTouches[0].clientX - touchStartXRef.current
+    touchStartXRef.current = null
+    const SWIPE_THRESHOLD = 40
+    if (deltaX > SWIPE_THRESHOLD) {
+      goToChart(chartIndex - 1)
+    } else if (deltaX < -SWIPE_THRESHOLD) {
+      goToChart(chartIndex + 1)
+    }
+  }
+
+  function renderChartBody() {
+    if (!data) return null
+    const activeKey = chartTabs[chartIndex].key
+
+    if (activeKey === 'hourly') {
+      if (data.hourlySales.length === 0) {
+        return (
+          <p className="chart-empty">표시할 시간대별 매출 데이터가 없습니다.</p>
+        )
+      }
+      return (
+        <>
+          <div className="sales-chart" aria-label="시간대별 매출">
+            {data.hourlySales.map((item) => {
+              const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
+              return (
+                <span
+                  key={item.hour}
+                  style={{
+                    height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
+                  }}
+                  aria-label={text}
+                  title={text}
+                  onMouseEnter={(event) =>
+                    setHoverTip({ x: event.clientX, y: event.clientY, text })
+                  }
+                  onMouseMove={(event) =>
+                    setHoverTip({ x: event.clientX, y: event.clientY, text })
+                  }
+                  onMouseLeave={() => setHoverTip(null)}
+                />
+              )
+            })}
+          </div>
+          <div className="sales-chart-labels">
+            {data.hourlySales.map((item) => (
+              <span key={item.hour}>{item.hour}시</span>
+            ))}
+          </div>
+        </>
+      )
+    }
+
+    if (activeKey === 'daily') {
+      return <DailyTrendChart data={data.dailySales} />
+    }
+
+    if (activeKey === 'weekday') {
+      return (
+        <>
+          <div className="sales-chart" aria-label="요일별 매출">
+            {data.weekdaySales.map((item) => {
+              const text = `${weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek} ${formatCurrency(item.salesAmount)}`
+              return (
+                <span
+                  key={item.dayOfWeek}
+                  style={{
+                    height: `${Math.max(4, (item.salesAmount / weekdayMax) * 100)}%`,
+                  }}
+                  aria-label={text}
+                  title={text}
+                  onMouseEnter={(event) =>
+                    setHoverTip({ x: event.clientX, y: event.clientY, text })
+                  }
+                  onMouseMove={(event) =>
+                    setHoverTip({ x: event.clientX, y: event.clientY, text })
+                  }
+                  onMouseLeave={() => setHoverTip(null)}
+                />
+              )
+            })}
+          </div>
+          <div className="sales-chart-labels">
+            {data.weekdaySales.map((item) => (
+              <span key={item.dayOfWeek}>
+                {weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek}
+              </span>
+            ))}
+          </div>
+        </>
+      )
+    }
+
+    const visibleMenuRankings = data.menuRankings.filter(
+      (item) => item.salesAmount > 0,
+    )
+    if (visibleMenuRankings.length === 0) {
+      return (
+        <p className="chart-empty">표시할 메뉴별 매출 데이터가 없습니다.</p>
+      )
+    }
+    const menuTotalPages = Math.ceil(
+      visibleMenuRankings.length / MENU_PAGE_SIZE,
+    )
+    const menuPage = Math.min(
+      menuTotalPages,
+      Math.floor(menuCursor / MENU_PAGE_SIZE) + 1,
+    )
+    const menuPageItems = visibleMenuRankings.slice(
+      menuCursor,
+      menuCursor + MENU_PAGE_SIZE,
+    )
+    return (
+      <>
+        <ol className="menu-ranking-list">
+          {menuPageItems.map((item) => (
+            <li key={item.rank}>
+              <span className="menu-rank-number">{item.rank}</span>
+              <div className="menu-rank-body">
+                <div className="menu-rank-row">
+                  <strong>{item.menuName}</strong>
+                  <span>{formatCurrency(item.salesAmount)}</span>
+                </div>
+                <div className="menu-rank-bar">
+                  <span
+                    style={{
+                      width: `${Math.max(4, (item.salesAmount / menuMax) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+        {menuTotalPages > 1 && (
+          <div className="menu-pagination">
+            <button
+              type="button"
+              disabled={menuCursor <= 0}
+              onClick={() =>
+                setMenuCursor((prev) => Math.max(0, prev - MENU_PAGE_SIZE))
+              }
+            >
+              이전
+            </button>
+            <span>
+              {menuPage} / {menuTotalPages}
+            </span>
+            <button
+              type="button"
+              disabled={
+                menuCursor + MENU_PAGE_SIZE >= visibleMenuRankings.length
+              }
+              onClick={() =>
+                setMenuCursor((prev) =>
+                  Math.min(
+                    (menuTotalPages - 1) * MENU_PAGE_SIZE,
+                    prev + MENU_PAGE_SIZE,
+                  ),
+                )
+              }
+            >
+              다음
+            </button>
+          </div>
+        )}
+      </>
+    )
+  }
 
   return (
     <AppShell title="매출 분석">
@@ -297,89 +525,53 @@ export function SalesAnalysisPage() {
             <section className="analysis-chart-section">
               <h2>분석 그래프</h2>
 
-              <div className="section-card chart-card">
-                <h3>시간대별 매출</h3>
-                {data.hourlySales.length === 0 ? (
-                  <p className="chart-empty">
-                    표시할 시간대별 매출 데이터가 없습니다.
-                  </p>
-                ) : (
-                  <>
-                    <div className="sales-chart" aria-label="시간대별 매출">
-                      {data.hourlySales.map((item) => (
-                        <span
-                          key={item.hour}
-                          style={{
-                            height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
-                          }}
-                          aria-label={`${item.hour}시 ${formatCurrency(item.salesAmount)}`}
-                        />
-                      ))}
-                    </div>
-                    <div className="sales-chart-labels">
-                      {data.hourlySales.map((item) => (
-                        <span key={item.hour}>{item.hour}시</span>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
+              <div
+                className="chart-carousel"
+                onTouchStart={handleChartTouchStart}
+                onTouchEnd={handleChartTouchEnd}
+              >
+                <button
+                  type="button"
+                  className="chart-carousel-arrow"
+                  aria-label="이전 그래프 보기"
+                  disabled={chartIndex <= 0}
+                  onClick={() => goToChart(chartIndex - 1)}
+                >
+                  ◀
+                </button>
 
-              <div className="section-card chart-card">
-                <h3>일별 매출 추이</h3>
-                <DailyTrendChart data={data.dailySales} />
-              </div>
-
-              <div className="section-card chart-card">
-                <h3>요일별 매출</h3>
-                <div className="sales-chart" aria-label="요일별 매출">
-                  {data.weekdaySales.map((item) => (
-                    <span
-                      key={item.dayOfWeek}
-                      style={{
-                        height: `${Math.max(4, (item.salesAmount / weekdayMax) * 100)}%`,
-                      }}
-                      aria-label={`${weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek} ${formatCurrency(item.salesAmount)}`}
-                    />
-                  ))}
+                <div className="section-card chart-card">
+                  <h3>{chartTabs[chartIndex].title}</h3>
+                  {renderChartBody()}
+                  <ChartTooltip tip={hoverTip} />
                 </div>
-                <div className="sales-chart-labels">
-                  {data.weekdaySales.map((item) => (
-                    <span key={item.dayOfWeek}>
-                      {weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek}
-                    </span>
-                  ))}
-                </div>
+
+                <button
+                  type="button"
+                  className="chart-carousel-arrow"
+                  aria-label="다음 그래프 보기"
+                  disabled={chartIndex >= chartTabs.length - 1}
+                  onClick={() => goToChart(chartIndex + 1)}
+                >
+                  ▶
+                </button>
               </div>
 
-              <div className="section-card chart-card">
-                <h3>메뉴별 매출 순위</h3>
-                {data.menuRankings.length === 0 ? (
-                  <p className="chart-empty">
-                    표시할 메뉴별 매출 데이터가 없습니다.
-                  </p>
-                ) : (
-                  <ol className="menu-ranking-list">
-                    {data.menuRankings.map((item) => (
-                      <li key={item.rank}>
-                        <span className="menu-rank-number">{item.rank}</span>
-                        <div className="menu-rank-body">
-                          <div className="menu-rank-row">
-                            <strong>{item.menuName}</strong>
-                            <span>{formatCurrency(item.salesAmount)}</span>
-                          </div>
-                          <div className="menu-rank-bar">
-                            <span
-                              style={{
-                                width: `${Math.max(4, (item.salesAmount / menuMax) * 100)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                )}
+              <div
+                className="chart-dots"
+                role="tablist"
+                aria-label="그래프 종류 선택"
+              >
+                {chartTabs.map((tab, index) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === chartIndex}
+                    aria-label={tab.title}
+                    onClick={() => goToChart(index)}
+                  />
+                ))}
               </div>
             </section>
 

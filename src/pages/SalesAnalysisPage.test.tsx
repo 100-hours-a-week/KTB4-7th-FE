@@ -167,3 +167,122 @@ test('세션이 없으면 로그인 페이지로 이동한다', async () => {
 
   await waitFor(() => expect(navigate).toHaveBeenCalledWith('/login'))
 })
+
+test('화살표를 누르면 다른 분석 그래프로 이동한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('₩7,920,000')
+
+  expect(
+    screen.getByRole('heading', { level: 3, name: '시간대별 매출' }),
+  ).toBeInTheDocument()
+  expect(screen.getByLabelText('이전 그래프 보기')).toBeDisabled()
+
+  const nextButton = screen.getByLabelText('다음 그래프 보기')
+  fireEvent.click(nextButton)
+  expect(
+    screen.getByRole('heading', { level: 3, name: '일별 매출 추이' }),
+  ).toBeInTheDocument()
+
+  fireEvent.click(nextButton)
+  expect(
+    screen.getByRole('heading', { level: 3, name: '요일별 매출' }),
+  ).toBeInTheDocument()
+
+  fireEvent.click(nextButton)
+  expect(
+    screen.getByRole('heading', { level: 3, name: '메뉴별 매출 순위' }),
+  ).toBeInTheDocument()
+  expect(nextButton).toBeDisabled()
+
+  fireEvent.click(screen.getByLabelText('이전 그래프 보기'))
+  expect(
+    screen.getByRole('heading', { level: 3, name: '요일별 매출' }),
+  ).toBeInTheDocument()
+})
+
+test('스와이프 동작으로도 그래프를 넘길 수 있다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('₩7,920,000')
+
+  const carousel = screen
+    .getByRole('heading', {
+      level: 3,
+      name: '시간대별 매출',
+    })
+    .closest('.chart-carousel') as HTMLElement
+  expect(carousel).not.toBeNull()
+
+  fireEvent.touchStart(carousel, { touches: [{ clientX: 200 }] })
+  fireEvent.touchEnd(carousel, { changedTouches: [{ clientX: 100 }] })
+
+  expect(
+    screen.getByRole('heading', { level: 3, name: '일별 매출 추이' }),
+  ).toBeInTheDocument()
+})
+
+test('메뉴별 매출 순위는 매출 0원을 숨기고 10개씩 페이지네이션한다', async () => {
+  const menuRankings = [
+    ...Array.from({ length: 11 }, (_, index) => ({
+      rank: index + 1,
+      menuName: `메뉴${index + 1}`,
+      salesAmount: 100000 - index * 1000,
+      quantity: 10,
+    })),
+    { rank: 12, menuName: '품절된메뉴', salesAmount: 0, quantity: 0 },
+    { rank: 13, menuName: '중단된메뉴', salesAmount: 0, quantity: 0 },
+  ]
+
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue({
+    ...completedResponse,
+    data: { ...completedResponse.data, menuRankings },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('₩7,920,000')
+
+  const nextButton = screen.getByLabelText('다음 그래프 보기')
+  fireEvent.click(nextButton)
+  fireEvent.click(nextButton)
+  fireEvent.click(nextButton)
+  await screen.findByRole('heading', { level: 3, name: '메뉴별 매출 순위' })
+
+  expect(screen.getByText('메뉴1')).toBeInTheDocument()
+  expect(screen.getByText('메뉴10')).toBeInTheDocument()
+  expect(screen.queryByText('메뉴11')).not.toBeInTheDocument()
+  expect(screen.queryByText('품절된메뉴')).not.toBeInTheDocument()
+  expect(screen.queryByText('중단된메뉴')).not.toBeInTheDocument()
+  expect(screen.getByText('1 / 2')).toBeInTheDocument()
+
+  const menuNextButton = screen
+    .getByText('1 / 2')
+    .closest('.menu-pagination')!
+    .querySelector('button:last-child') as HTMLElement
+  fireEvent.click(menuNextButton)
+
+  expect(screen.getByText('메뉴11')).toBeInTheDocument()
+  expect(screen.queryByText('메뉴10')).not.toBeInTheDocument()
+  expect(screen.getByText('2 / 2')).toBeInTheDocument()
+  expect(menuNextButton).toBeDisabled()
+})
