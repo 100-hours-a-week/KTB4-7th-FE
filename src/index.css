@@ -2188,9 +2188,11 @@ input {
   position: relative;
   display: grid;
   gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
   isolation: isolate;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin: 0 0 16px;
   padding: 20px;
   border-radius: 22px;
   background: var(--ink);
@@ -2213,17 +2215,21 @@ input {
   content: '';
 }
 .forecast-total-card-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
 }
 .forecast-total-card small {
+  grid-column: 2;
   color: #b9e3d9;
   font-size: 12px;
   font-weight: 700;
+  text-align: center;
 }
 .forecast-ai-mark {
   display: grid;
+  grid-column: 3;
+  justify-self: end;
   width: 32px;
   height: 32px;
   place-items: center;
@@ -2237,11 +2243,13 @@ input {
   font-size: clamp(29px, 6vw, 36px);
   letter-spacing: -0.06em;
   line-height: 1.08;
+  text-align: center;
 }
 .forecast-range {
   margin: 0;
   color: #d5e7e2;
   font-size: 12px;
+  text-align: center;
 }
 .forecast-breakdown {
   display: grid;
