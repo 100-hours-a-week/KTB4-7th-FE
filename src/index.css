@@ -2377,6 +2377,8 @@ input {
 }
 .chart-carousel {
   display: flex;
+  min-width: 0;
+  width: 100%;
   align-items: center;
   gap: 8px;
 }
@@ -2394,8 +2396,10 @@ input {
   cursor: pointer;
 }
 .chart-card {
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  width: 0;
   min-width: 0;
+  overflow: hidden;
 }
 .chart-card h3 {
   margin: 0 0 10px;
