@@ -134,6 +134,18 @@ export type SalesAiInsight = {
   generatedAt: string | null
 } | null
 
+export type SalesForecast = {
+  predictedSalesAmount: number
+  lowerBound: number
+  upperBound: number
+  dailyForecasts: {
+    targetDate: string
+    predictedSalesAmount: number
+    lowerBound: number
+    upperBound: number
+  }[]
+} | null
+
 export type SalesAnalysisData = {
   period: SalesPeriod
   comparisonPeriod: { startDate: string; endDate: string } | null
@@ -142,6 +154,7 @@ export type SalesAnalysisData = {
   menuRankings: SalesMenuRanking[]
   hourlySales: SalesHourlyPoint[]
   weekdaySales: SalesWeekdayPoint[]
+  forecast: SalesForecast
   aiInsight: SalesAiInsight
 }
 

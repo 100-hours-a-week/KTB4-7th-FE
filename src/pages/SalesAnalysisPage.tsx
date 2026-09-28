@@ -484,6 +484,23 @@ export function SalesAnalysisPage() {
           <p>불러오는 중...</p>
         ) : (
           <>
+            {data.forecast && (
+              <section
+                className="forecast-total-card"
+                aria-label="이번 달 예측 총매출"
+              >
+                <small>이번 달 예측 총매출</small>
+                <strong>
+                  {formatCurrency(
+                    data.kpis.totalSales + data.forecast.predictedSalesAmount,
+                  )}
+                </strong>
+                <span>
+                  누적 매출 {formatCurrency(data.kpis.totalSales)} + 남은 기간
+                  예측 {formatCurrency(data.forecast.predictedSalesAmount)}
+                </span>
+              </section>
+            )}
             <div className="stat-card-grid">
               <div className="stat-card">
                 <small>총 매출</small>
