@@ -521,24 +521,37 @@ export function SalesAnalysisPage() {
                 className="forecast-total-card"
                 aria-label={`${formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출`}
               >
-                <small>
-                  {formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출
-                </small>
+                <div className="forecast-total-card-header">
+                  <small>
+                    {formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출
+                  </small>
+                  <span className="forecast-ai-mark" aria-hidden="true">
+                    ✦
+                  </span>
+                </div>
                 <strong>
                   {formatCurrency(expectedForecast.expectedSalesAmount)}
                 </strong>
                 {expectedForecast.actualSalesAmount > 0 ? (
-                  <span>
-                    누적 매출{' '}
-                    {formatCurrency(expectedForecast.actualSalesAmount)} + 남은
-                    기간 예측{' '}
-                    {formatCurrency(expectedForecast.forecastSalesAmount)}
-                  </span>
+                  <div className="forecast-breakdown">
+                    <div>
+                      <span>누적 매출</span>
+                      <b>
+                        {formatCurrency(expectedForecast.actualSalesAmount)}
+                      </b>
+                    </div>
+                    <div>
+                      <span>남은 기간 예측</span>
+                      <b>
+                        {formatCurrency(expectedForecast.forecastSalesAmount)}
+                      </b>
+                    </div>
+                  </div>
                 ) : (
-                  <span>
+                  <p className="forecast-range">
                     예상 범위 {formatCurrency(expectedForecast.lowerBound)} -{' '}
                     {formatCurrency(expectedForecast.upperBound)}
-                  </span>
+                  </p>
                 )}
               </section>
             )}
