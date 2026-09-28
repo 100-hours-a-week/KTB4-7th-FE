@@ -2216,28 +2216,13 @@ input {
 }
 .forecast-total-card-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
 }
 .forecast-total-card small {
-  grid-column: 2;
   color: #b9e3d9;
   font-size: 12px;
   font-weight: 700;
   text-align: center;
-}
-.forecast-ai-mark {
-  display: grid;
-  grid-column: 3;
-  justify-self: end;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border-radius: 11px;
-  background: #b9e3d9;
-  color: var(--ink);
-  font-size: 18px;
-  line-height: 1;
 }
 .forecast-total-card strong {
   font-size: clamp(29px, 6vw, 36px);

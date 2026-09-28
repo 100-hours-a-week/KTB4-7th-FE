@@ -525,9 +525,6 @@ export function SalesAnalysisPage() {
                   <small>
                     {formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출
                   </small>
-                  <span className="forecast-ai-mark" aria-hidden="true">
-                    ✦
-                  </span>
                 </div>
                 <strong>
                   {formatCurrency(expectedForecast.expectedSalesAmount)}
