@@ -726,6 +726,26 @@ input {
   color: var(--ink-soft);
   font-size: 11px;
 }
+.hourly-chart-scroll {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  padding-inline: 0;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.hourly-chart-content {
+  width: max(100%, 576px);
+}
+.hourly-chart-content .sales-chart span,
+.hourly-chart-content .sales-chart-labels span {
+  flex: 0 0 16px;
+}
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -961,6 +981,9 @@ input {
   grid-column: 1/-1;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+}
+.solution-chat-link {
+  justify-self: end;
 }
 .solution-list a {
   display: flex;
@@ -1684,6 +1707,11 @@ input {
   display: block;
   padding: 24px 4px;
 }
+.mobile-app-shell .solution-chat-link {
+  display: flex;
+  width: fit-content;
+  margin: 18px 0 0 auto;
+}
 .mobile-app-shell .solution-card {
   position: relative;
   min-height: auto;
@@ -2185,26 +2213,80 @@ input {
   gap: 8px;
 }
 .forecast-total-card {
+  position: relative;
   display: grid;
-  gap: 6px;
-  margin-bottom: 12px;
-  padding: 18px;
-  border-radius: 16px;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 0 16px;
+  padding: 20px;
+  border-radius: 22px;
   background: var(--ink);
   color: var(--paper-raised);
+  box-shadow: 0 14px 28px rgba(28, 43, 46, 0.16);
+}
+.forecast-total-card::after {
+  position: absolute;
+  z-index: -1;
+  top: -88px;
+  right: -62px;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(105, 204, 182, 0.35) 0,
+    rgba(105, 204, 182, 0) 68%
+  );
+  content: '';
+}
+.forecast-total-card-header {
+  display: grid;
+  align-items: center;
 }
 .forecast-total-card small {
-  color: var(--green-pale);
+  color: #b9e3d9;
   font-size: 12px;
   font-weight: 700;
+  text-align: center;
 }
 .forecast-total-card strong {
-  font-size: 26px;
-  letter-spacing: -0.04em;
+  font-size: clamp(29px, 6vw, 36px);
+  letter-spacing: -0.06em;
+  line-height: 1.08;
+  text-align: center;
 }
-.forecast-total-card span {
-  color: var(--line);
+.forecast-range {
+  margin: 0;
+  color: #d5e7e2;
   font-size: 12px;
+  text-align: center;
+}
+.forecast-breakdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(230, 248, 241, 0.24);
+}
+.forecast-breakdown div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(5, 28, 26, 0.26);
+}
+.forecast-breakdown span {
+  color: #b9e3d9;
+  font-size: 10px;
+}
+.forecast-breakdown b {
+  color: var(--paper-raised);
+  font-size: 14px;
+  letter-spacing: -0.03em;
 }
 .stat-card {
   display: grid;
@@ -2303,6 +2385,8 @@ input {
 }
 .chart-carousel {
   display: flex;
+  min-width: 0;
+  width: 100%;
   align-items: center;
   gap: 8px;
 }
@@ -2320,8 +2404,10 @@ input {
   cursor: pointer;
 }
 .chart-card {
-  flex: 1 1 auto;
+  flex: 1 1 0;
+  width: 0;
   min-width: 0;
+  overflow: hidden;
 }
 .chart-card h3 {
   margin: 0 0 10px;

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SalesAnalysisPage } from './SalesAnalysisPage'
@@ -229,9 +235,11 @@ test('진행 중인 월에는 누적 매출과 남은 기간 예측을 함께 �
     </MemoryRouter>,
   )
 
-  expect(
-    await screen.findByText('누적 매출 ₩7,920,000 + 남은 기간 예측 ₩1,080,000'),
-  ).toBeInTheDocument()
+  const forecastCard = await screen.findByLabelText('2026년 9월 예상 총매출')
+  expect(within(forecastCard).getByText('누적 매출')).toBeInTheDocument()
+  expect(within(forecastCard).getByText('₩7,920,000')).toBeInTheDocument()
+  expect(within(forecastCard).getByText('남은 기간 예측')).toBeInTheDocument()
+  expect(within(forecastCard).getByText('₩1,080,000')).toBeInTheDocument()
   expect(screen.queryByText(/예상 범위/)).not.toBeInTheDocument()
 })
 

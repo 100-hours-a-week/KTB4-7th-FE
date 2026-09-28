@@ -172,7 +172,7 @@ export function SolutionPage() {
             </Link>
           ))}
         </div>
-        <Link className="light-button" to="/solution/chat">
+        <Link className="light-button solution-chat-link" to="/solution/chat">
           AI에게 질문하기
         </Link>
       </div>

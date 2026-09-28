@@ -175,6 +175,7 @@ export function SalesAnalysisPage() {
   const [menuCursor, setMenuCursor] = useState(0)
   const [hoverTip, setHoverTip] = useState<ChartTip>(null)
   const touchStartXRef = useRef<number | null>(null)
+  const hourlyChartScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let ignore = false
@@ -258,6 +259,27 @@ export function SalesAnalysisPage() {
     }
   }, [availableMonths, navigate, selectedMonth])
 
+  useEffect(() => {
+    if (chartIndex !== 0 || !data?.hourlySales.length) return
+
+    const animationFrame = requestAnimationFrame(() => {
+      const viewport = hourlyChartScrollRef.current
+      if (!viewport) return
+
+      const noonIndex = Math.max(
+        0,
+        data.hourlySales.findIndex((item) => item.hour === 12),
+      )
+      const itemWidth = viewport.scrollWidth / data.hourlySales.length
+      const centeredScrollLeft =
+        itemWidth * (noonIndex + 0.5) - viewport.clientWidth / 2
+
+      viewport.scrollLeft = Math.max(0, centeredScrollLeft)
+    })
+
+    return () => cancelAnimationFrame(animationFrame)
+  }, [chartIndex, data?.hourlySales])
+
   if (!isLoadingMonths && (!availableMonths || availableMonths.length === 0)) {
     return (
       <AppShell title="매출 분석">
@@ -338,35 +360,43 @@ export function SalesAnalysisPage() {
         )
       }
       return (
-        <>
-          <div className="sales-chart" aria-label="시간대별 매출">
-            {data.hourlySales.map((item) => {
-              const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
-              return (
-                <span
-                  key={item.hour}
-                  style={{
-                    height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
-                  }}
-                  aria-label={text}
-                  title={text}
-                  onMouseEnter={(event) =>
-                    setHoverTip({ x: event.clientX, y: event.clientY, text })
-                  }
-                  onMouseMove={(event) =>
-                    setHoverTip({ x: event.clientX, y: event.clientY, text })
-                  }
-                  onMouseLeave={() => setHoverTip(null)}
-                />
-              )
-            })}
+        <div
+          ref={hourlyChartScrollRef}
+          className="hourly-chart-scroll"
+          aria-label="시간대별 매출 그래프 가로 스크롤 영역"
+          onTouchStart={(event) => event.stopPropagation()}
+          onTouchEnd={(event) => event.stopPropagation()}
+        >
+          <div className="hourly-chart-content">
+            <div className="sales-chart" aria-label="시간대별 매출">
+              {data.hourlySales.map((item) => {
+                const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
+                return (
+                  <span
+                    key={item.hour}
+                    style={{
+                      height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
+                    }}
+                    aria-label={text}
+                    title={text}
+                    onMouseEnter={(event) =>
+                      setHoverTip({ x: event.clientX, y: event.clientY, text })
+                    }
+                    onMouseMove={(event) =>
+                      setHoverTip({ x: event.clientX, y: event.clientY, text })
+                    }
+                    onMouseLeave={() => setHoverTip(null)}
+                  />
+                )
+              })}
+            </div>
+            <div className="sales-chart-labels">
+              {data.hourlySales.map((item) => (
+                <span key={item.hour}>{item.hour}시</span>
+              ))}
+            </div>
           </div>
-          <div className="sales-chart-labels">
-            {data.hourlySales.map((item) => (
-              <span key={item.hour}>{item.hour}시</span>
-            ))}
-          </div>
-        </>
+        </div>
       )
     }
 
@@ -521,24 +551,34 @@ export function SalesAnalysisPage() {
                 className="forecast-total-card"
                 aria-label={`${formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출`}
               >
-                <small>
-                  {formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출
-                </small>
+                <div className="forecast-total-card-header">
+                  <small>
+                    {formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출
+                  </small>
+                </div>
                 <strong>
                   {formatCurrency(expectedForecast.expectedSalesAmount)}
                 </strong>
                 {expectedForecast.actualSalesAmount > 0 ? (
-                  <span>
-                    누적 매출{' '}
-                    {formatCurrency(expectedForecast.actualSalesAmount)} + 남은
-                    기간 예측{' '}
-                    {formatCurrency(expectedForecast.forecastSalesAmount)}
-                  </span>
+                  <div className="forecast-breakdown">
+                    <div>
+                      <span>누적 매출</span>
+                      <b>
+                        {formatCurrency(expectedForecast.actualSalesAmount)}
+                      </b>
+                    </div>
+                    <div>
+                      <span>남은 기간 예측</span>
+                      <b>
+                        {formatCurrency(expectedForecast.forecastSalesAmount)}
+                      </b>
+                    </div>
+                  </div>
                 ) : (
-                  <span>
+                  <p className="forecast-range">
                     예상 범위 {formatCurrency(expectedForecast.lowerBound)} -{' '}
                     {formatCurrency(expectedForecast.upperBound)}
-                  </span>
+                  </p>
                 )}
               </section>
             )}
