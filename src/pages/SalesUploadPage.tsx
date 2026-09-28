@@ -34,6 +34,19 @@ function formatDate(value: string | null) {
   return `${month}.${day}`
 }
 
+function formatEyebrowDate(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const year = parts.find((part) => part.type === 'year')?.value ?? '0000'
+  const month = parts.find((part) => part.type === 'month')?.value ?? '00'
+  const day = parts.find((part) => part.type === 'day')?.value ?? '00'
+  return `${year}.${month}.${day} 기준`
+}
+
 function statusLabel(status: SalesUploadStatus | null) {
   switch (status) {
     case 'COMPLETED':
@@ -137,11 +150,9 @@ export function SalesUploadPage() {
     <AppShell title="매출 데이터 연결">
       <div className="page-stack sales-upload-page">
         <header className="page-title">
-          <p>SALES DATA</p>
-          <h1>매출 데이터 연결</h1>
-          <span>
-            POS 매출 데이터를 올려주시면 AI가 우리 가게를 분석해드려요
-          </span>
+          <p className="page-eyebrow-date">{formatEyebrowDate(new Date())}</p>
+          <h1>매출 장부</h1>
+          <span>업로드한 매출을 장부처럼 모아두고 있어요</span>
         </header>
 
         <label className="upload-dropzone">
@@ -152,7 +163,9 @@ export function SalesUploadPage() {
             onChange={(event) => selectFile(event.target.files?.[0])}
           />
           <span aria-hidden="true">↑</span>
-          <strong>{selectedFile?.name || '파일을 올려주세요'}</strong>
+          <strong>
+            {selectedFile?.name || '매출 파일을 여기에 놓아주세요'}
+          </strong>
           <small>xlsx, xls, csv · 최대 10MB · 한 번에 한 개</small>
         </label>
         {fileError && (
@@ -168,31 +181,31 @@ export function SalesUploadPage() {
         )}
 
         <section className="connection-status">
-          <h2>연결 상태</h2>
-          <div className="connection-status-grid">
-            <div className="connection-status-card">
-              <small>마지막 업로드</small>
-              <strong>
-                {isLoadingHistory
-                  ? '-'
-                  : formatDate(connection?.lastUploadedAt ?? null)}
-              </strong>
-            </div>
-            <div className="connection-status-card">
-              <small>총 데이터 건수</small>
-              <strong>
-                {isLoadingHistory
-                  ? '-'
-                  : `${(connection?.totalAppliedRecordCount ?? 0).toLocaleString()}건`}
-              </strong>
-            </div>
-            <div className="connection-status-card">
-              <small>최신 상태</small>
-              <strong>
-                {isLoadingHistory
-                  ? '-'
-                  : statusLabel(connection?.latestStatus ?? null)}
-              </strong>
+          <p className="section-label">이번 달 반영 매출</p>
+          <div className="passbook">
+            <p className="passbook-num">
+              {isLoadingHistory
+                ? '-'
+                : (connection?.totalAppliedRecordCount ?? 0).toLocaleString()}
+              <span>건</span>
+            </p>
+            <div className="passbook-meta">
+              <span>
+                마지막 업로드{' '}
+                <b>
+                  {isLoadingHistory
+                    ? '-'
+                    : formatDate(connection?.lastUploadedAt ?? null)}
+                </b>
+              </span>
+              <span>
+                상태{' '}
+                <b>
+                  {isLoadingHistory
+                    ? '-'
+                    : statusLabel(connection?.latestStatus ?? null)}
+                </b>
+              </span>
             </div>
           </div>
         </section>
@@ -213,16 +226,18 @@ export function SalesUploadPage() {
         </button>
 
         <section className="upload-history">
-          <h2>업로드 기록</h2>
+          <p className="section-label">업로드 기록</p>
           <div className="upload-history-list">
             {history?.items.map((item) => (
               <div className="upload-history-row" key={item.uploadId}>
                 <div>
-                  <strong>{formatDate(item.uploadedAt)}</strong>
-                  <span>{item.fileName}</span>
+                  <strong>{item.fileName}</strong>
+                  <span>{formatDate(item.uploadedAt)}</span>
                 </div>
                 <div className="upload-history-meta">
-                  <span>{item.appliedRecordCount.toLocaleString()}건</span>
+                  <span className="upload-history-count">
+                    {item.appliedRecordCount.toLocaleString()}건
+                  </span>
                   <span
                     className={
                       item.status === 'COMPLETED'

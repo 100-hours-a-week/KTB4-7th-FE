@@ -102,7 +102,7 @@ export function NotificationsPage() {
     <AppShell title="알림">
       <div className="page-stack">
         <header className="page-title">
-          <p>NOTIFICATIONS</p>
+          <p className="page-eyebrow-date">확인할 소식</p>
           <h1>알림</h1>
           <span>매장에 필요한 소식을 놓치지 않도록 알려드릴게요.</span>
         </header>
@@ -124,10 +124,17 @@ export function NotificationsPage() {
                   onClick={() => handleMarkAsRead(notification)}
                 >
                   <span
+                    className={
+                      notification.readAt ? 'noti-dot read' : 'noti-dot'
+                    }
                     aria-label={notification.readAt ? '읽음' : '읽지 않음'}
                   />
-                  <div>
-                    <strong>{notification.title}</strong>
+                  <div className="noti-body">
+                    <strong
+                      className={notification.readAt ? 'read' : undefined}
+                    >
+                      {notification.title}
+                    </strong>
                     <p>{notification.content}</p>
                     <small>{formatSentAt(notification.sentAt)}</small>
                   </div>
