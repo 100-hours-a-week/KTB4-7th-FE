@@ -175,6 +175,7 @@ export function SalesAnalysisPage() {
   const [menuCursor, setMenuCursor] = useState(0)
   const [hoverTip, setHoverTip] = useState<ChartTip>(null)
   const touchStartXRef = useRef<number | null>(null)
+  const hourlyChartScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let ignore = false
@@ -258,6 +259,27 @@ export function SalesAnalysisPage() {
     }
   }, [availableMonths, navigate, selectedMonth])
 
+  useEffect(() => {
+    if (chartIndex !== 0 || !data?.hourlySales.length) return
+
+    const animationFrame = requestAnimationFrame(() => {
+      const viewport = hourlyChartScrollRef.current
+      if (!viewport) return
+
+      const noonIndex = Math.max(
+        0,
+        data.hourlySales.findIndex((item) => item.hour === 12),
+      )
+      const itemWidth = viewport.scrollWidth / data.hourlySales.length
+      const centeredScrollLeft =
+        itemWidth * (noonIndex + 0.5) - viewport.clientWidth / 2
+
+      viewport.scrollLeft = Math.max(0, centeredScrollLeft)
+    })
+
+    return () => cancelAnimationFrame(animationFrame)
+  }, [chartIndex, data?.hourlySales])
+
   if (!isLoadingMonths && (!availableMonths || availableMonths.length === 0)) {
     return (
       <AppShell title="매출 분석">
@@ -339,6 +361,7 @@ export function SalesAnalysisPage() {
       }
       return (
         <div
+          ref={hourlyChartScrollRef}
           className="hourly-chart-scroll"
           aria-label="시간대별 매출 그래프 가로 스크롤 영역"
           onTouchStart={(event) => event.stopPropagation()}
