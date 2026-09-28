@@ -727,6 +727,9 @@ input {
   font-size: 11px;
 }
 .hourly-chart-scroll {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   padding-bottom: 4px;
