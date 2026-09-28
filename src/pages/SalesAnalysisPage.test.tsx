@@ -64,7 +64,9 @@ const completedResponse = {
     ],
     aiInsight: {
       targetMonth: '2026-09',
+      status: 'COMPLETED' as const,
       insights: ['최근 화요일 매출이 3주 연속 감소하고 있어요.'],
+      helperText: null,
       generatedAt: '2026-09-27T00:00:00+09:00',
     },
   },
@@ -106,6 +108,69 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
     endDate: '2026-09-30',
   })
   expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-09')
+})
+
+test('연속 매출 데이터가 14일 미만이면 AI 인사이트 안내 문구를 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue({
+    ...completedResponse,
+    data: {
+      ...completedResponse.data,
+      aiInsight: {
+        targetMonth: '2026-09',
+        status: 'INSUFFICIENT_DATA',
+        insights: [],
+        helperText:
+          'AI 인사이트를 확인하려면 최소 2주(14일) 이상의 매출 데이터가 필요합니다.',
+        generatedAt: null,
+      },
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
+  expect(
+    screen.getByText(
+      'AI 인사이트를 확인하려면 최소 2주(14일) 이상의 매출 데이터가 필요합니다.',
+    ),
+  ).toBeInTheDocument()
+  expect(screen.queryByText('AI가 발견했어요')).not.toBeInTheDocument()
+})
+
+test('AI 인사이트 생성 실패 안내와 기본 매출 정보를 함께 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue({
+    ...completedResponse,
+    data: {
+      ...completedResponse.data,
+      aiInsight: {
+        targetMonth: '2026-09',
+        status: 'FAILED',
+        insights: [],
+        helperText:
+          'AI 인사이트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        generatedAt: null,
+      },
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
+  expect(
+    screen.getByText(
+      'AI 인사이트를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+    ),
+  ).toBeInTheDocument()
 })
 
 test('월 선택을 바꾸면 해당 월 기간으로 다시 조회한다', async () => {

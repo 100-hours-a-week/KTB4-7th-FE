@@ -511,16 +511,27 @@ export function SalesAnalysisPage() {
               </div>
             </div>
 
-            {data.aiInsight && data.aiInsight.insights.length > 0 && (
-              <div className="ai-insight-box">
-                <h2>AI가 발견했어요</h2>
-                <ul>
-                  {data.aiInsight.insights.map((insight) => (
-                    <li key={insight}>{insight}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {data.aiInsight &&
+              (data.aiInsight.insights.length > 0 ||
+                data.aiInsight.helperText) && (
+                <div className="ai-insight-box">
+                  {data.aiInsight.status === 'COMPLETED' ? (
+                    <>
+                      <h2>AI가 발견했어요</h2>
+                      <ul>
+                        {data.aiInsight.insights.map((insight) => (
+                          <li key={insight}>{insight}</li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <>
+                      <h2>AI 인사이트 안내</h2>
+                      <p>{data.aiInsight.helperText}</p>
+                    </>
+                  )}
+                </div>
+              )}
 
             <section className="analysis-chart-section">
               <h2>분석 그래프</h2>
