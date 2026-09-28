@@ -982,6 +982,9 @@ input {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
 }
+.solution-chat-link {
+  justify-self: end;
+}
 .solution-list a {
   display: flex;
   align-items: flex-start;
@@ -1703,6 +1706,11 @@ input {
 .mobile-app-shell .solution-page {
   display: block;
   padding: 24px 4px;
+}
+.mobile-app-shell .solution-chat-link {
+  display: flex;
+  width: fit-content;
+  margin: 18px 0 0 auto;
 }
 .mobile-app-shell .solution-card {
   position: relative;
