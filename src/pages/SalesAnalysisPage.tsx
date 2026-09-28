@@ -338,35 +338,42 @@ export function SalesAnalysisPage() {
         )
       }
       return (
-        <>
-          <div className="sales-chart" aria-label="시간대별 매출">
-            {data.hourlySales.map((item) => {
-              const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
-              return (
-                <span
-                  key={item.hour}
-                  style={{
-                    height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
-                  }}
-                  aria-label={text}
-                  title={text}
-                  onMouseEnter={(event) =>
-                    setHoverTip({ x: event.clientX, y: event.clientY, text })
-                  }
-                  onMouseMove={(event) =>
-                    setHoverTip({ x: event.clientX, y: event.clientY, text })
-                  }
-                  onMouseLeave={() => setHoverTip(null)}
-                />
-              )
-            })}
+        <div
+          className="hourly-chart-scroll"
+          aria-label="시간대별 매출 그래프 가로 스크롤 영역"
+          onTouchStart={(event) => event.stopPropagation()}
+          onTouchEnd={(event) => event.stopPropagation()}
+        >
+          <div className="hourly-chart-content">
+            <div className="sales-chart" aria-label="시간대별 매출">
+              {data.hourlySales.map((item) => {
+                const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
+                return (
+                  <span
+                    key={item.hour}
+                    style={{
+                      height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
+                    }}
+                    aria-label={text}
+                    title={text}
+                    onMouseEnter={(event) =>
+                      setHoverTip({ x: event.clientX, y: event.clientY, text })
+                    }
+                    onMouseMove={(event) =>
+                      setHoverTip({ x: event.clientX, y: event.clientY, text })
+                    }
+                    onMouseLeave={() => setHoverTip(null)}
+                  />
+                )
+              })}
+            </div>
+            <div className="sales-chart-labels">
+              {data.hourlySales.map((item) => (
+                <span key={item.hour}>{item.hour}시</span>
+              ))}
+            </div>
           </div>
-          <div className="sales-chart-labels">
-            {data.hourlySales.map((item) => (
-              <span key={item.hour}>{item.hour}시</span>
-            ))}
-          </div>
-        </>
+        </div>
       )
     }
 

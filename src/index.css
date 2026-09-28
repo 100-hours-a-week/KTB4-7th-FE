@@ -726,6 +726,20 @@ input {
   color: var(--ink-soft);
   font-size: 11px;
 }
+.hourly-chart-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.hourly-chart-content {
+  min-width: 576px;
+}
+.hourly-chart-content .sales-chart span,
+.hourly-chart-content .sales-chart-labels span {
+  flex: 0 0 16px;
+}
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
