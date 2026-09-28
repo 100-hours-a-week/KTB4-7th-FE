@@ -134,6 +134,18 @@ export type SalesAiInsight = {
   generatedAt: string | null
 } | null
 
+export type SalesForecast = {
+  predictedSalesAmount: number
+  lowerBound: number
+  upperBound: number
+  dailyForecasts: {
+    targetDate: string
+    predictedSalesAmount: number
+    lowerBound: number
+    upperBound: number
+  }[]
+} | null
+
 export type SalesAnalysisData = {
   period: SalesPeriod
   comparisonPeriod: { startDate: string; endDate: string } | null
@@ -142,6 +154,7 @@ export type SalesAnalysisData = {
   menuRankings: SalesMenuRanking[]
   hourlySales: SalesHourlyPoint[]
   weekdaySales: SalesWeekdayPoint[]
+  forecast: SalesForecast
   aiInsight: SalesAiInsight
 }
 
@@ -156,6 +169,33 @@ export async function getSalesAnalysis(params: {
 }) {
   return (
     await http.get<SalesAnalysisResponse>('/v1/sales/analyses', { params })
+  ).data
+}
+
+export type SalesExpectedForecast = {
+  targetMonth: string
+  actualSalesAmount: number
+  forecastSalesAmount: number
+  expectedSalesAmount: number
+  lowerBound: number
+  upperBound: number
+  dailyForecasts: {
+    targetDate: string
+    predictedSalesAmount: number
+    lowerBound: number
+    upperBound: number
+  }[]
+}
+
+export type SalesExpectedForecastResponse =
+  | { status: 'COMPLETED'; message: string; data: SalesExpectedForecast }
+  | { status: 'EMPTY'; message: string; data: null }
+
+export async function getSalesExpectedForecast() {
+  return (
+    await http.get<SalesExpectedForecastResponse>(
+      '/v1/sales/forecasts/expected',
+    )
   ).data
 }
 

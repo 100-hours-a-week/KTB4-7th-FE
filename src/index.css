@@ -2184,6 +2184,28 @@ input {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
+.forecast-total-card {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--ink);
+  color: var(--paper-raised);
+}
+.forecast-total-card small {
+  color: var(--green-pale);
+  font-size: 12px;
+  font-weight: 700;
+}
+.forecast-total-card strong {
+  font-size: 26px;
+  letter-spacing: -0.04em;
+}
+.forecast-total-card span {
+  color: var(--line);
+  font-size: 12px;
+}
 .stat-card {
   display: grid;
   gap: 6px;

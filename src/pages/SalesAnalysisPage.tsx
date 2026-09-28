@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
   getSalesAvailableMonths,
+  getSalesExpectedForecast,
   type SalesAnalysisData,
   type SalesDailyPoint,
+  type SalesExpectedForecast,
 } from '../features/sales/api/salesApi'
 import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
@@ -164,6 +166,8 @@ export function SalesAnalysisPage() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [status, setStatus] = useState<'COMPLETED' | 'EMPTY' | null>(null)
   const [data, setData] = useState<SalesAnalysisData | null>(null)
+  const [expectedForecast, setExpectedForecast] =
+    useState<SalesExpectedForecast | null>(null)
   const [isLoadingMonths, setIsLoadingMonths] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -225,6 +229,34 @@ export function SalesAnalysisPage() {
       ignore = true
     }
   }, [navigate, selectedMonth])
+
+  useEffect(() => {
+    if (!selectedMonth || !availableMonths?.length) return
+    if (selectedMonth !== availableMonths[availableMonths.length - 1]) {
+      setExpectedForecast(null)
+      return
+    }
+
+    let ignore = false
+    getSalesExpectedForecast()
+      .then((response) => {
+        if (ignore) return
+        setExpectedForecast(
+          response.status === 'COMPLETED' ? response.data : null,
+        )
+      })
+      .catch((requestError) => {
+        if (ignore) return
+        if (isUnauthorized(requestError)) {
+          navigate('/login')
+          return
+        }
+        setExpectedForecast(null)
+      })
+    return () => {
+      ignore = true
+    }
+  }, [availableMonths, navigate, selectedMonth])
 
   if (!isLoadingMonths && (!availableMonths || availableMonths.length === 0)) {
     return (
@@ -484,6 +516,32 @@ export function SalesAnalysisPage() {
           <p>불러오는 중...</p>
         ) : (
           <>
+            {expectedForecast && (
+              <section
+                className="forecast-total-card"
+                aria-label={`${formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출`}
+              >
+                <small>
+                  {formatMonthLabel(expectedForecast.targetMonth)} 예상 총매출
+                </small>
+                <strong>
+                  {formatCurrency(expectedForecast.expectedSalesAmount)}
+                </strong>
+                {expectedForecast.actualSalesAmount > 0 ? (
+                  <span>
+                    누적 매출{' '}
+                    {formatCurrency(expectedForecast.actualSalesAmount)} + 남은
+                    기간 예측{' '}
+                    {formatCurrency(expectedForecast.forecastSalesAmount)}
+                  </span>
+                ) : (
+                  <span>
+                    예상 범위 {formatCurrency(expectedForecast.lowerBound)} -{' '}
+                    {formatCurrency(expectedForecast.upperBound)}
+                  </span>
+                )}
+              </section>
+            )}
             <div className="stat-card-grid">
               <div className="stat-card">
                 <small>총 매출</small>

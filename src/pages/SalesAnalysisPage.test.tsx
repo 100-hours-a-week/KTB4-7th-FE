@@ -6,11 +6,13 @@ import { SalesAnalysisPage } from './SalesAnalysisPage'
 const {
   getSalesAnalysis,
   getSalesAvailableMonths,
+  getSalesExpectedForecast,
   getNotifications,
   navigate,
 } = vi.hoisted(() => ({
   getSalesAnalysis: vi.fn(),
   getSalesAvailableMonths: vi.fn(),
+  getSalesExpectedForecast: vi.fn(),
   getNotifications: vi.fn(),
   navigate: vi.fn(),
 }))
@@ -18,6 +20,7 @@ const {
 vi.mock('../features/sales/api/salesApi', () => ({
   getSalesAnalysis,
   getSalesAvailableMonths,
+  getSalesExpectedForecast,
 }))
 
 vi.mock('../features/notifications/api/notificationApi', () => ({
@@ -62,6 +65,25 @@ const completedResponse = {
       { dayOfWeek: 'SATURDAY' as const, salesAmount: 830000 },
       { dayOfWeek: 'SUNDAY' as const, salesAmount: 740000 },
     ],
+    forecast: {
+      predictedSalesAmount: 1080000,
+      lowerBound: 930000,
+      upperBound: 1230000,
+      dailyForecasts: [
+        {
+          targetDate: '2026-09-29',
+          predictedSalesAmount: 540000,
+          lowerBound: 465000,
+          upperBound: 615000,
+        },
+        {
+          targetDate: '2026-09-30',
+          predictedSalesAmount: 540000,
+          lowerBound: 465000,
+          upperBound: 615000,
+        },
+      ],
+    },
     aiInsight: {
       targetMonth: '2026-09',
       status: 'COMPLETED' as const,
@@ -75,12 +97,18 @@ const completedResponse = {
 beforeEach(() => {
   getSalesAnalysis.mockReset()
   getSalesAvailableMonths.mockReset()
+  getSalesExpectedForecast.mockReset()
   getNotifications.mockReset()
   navigate.mockReset()
   getNotifications.mockResolvedValue({
     message: '조회 성공',
     nextCursor: null,
     data: { items: [] },
+  })
+  getSalesExpectedForecast.mockResolvedValue({
+    status: 'EMPTY',
+    message: '예측 매출 데이터가 없습니다.',
+    data: null,
   })
 })
 
@@ -89,6 +117,19 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
     months: ['2026-07', '2026-08', '2026-09'],
   })
   getSalesAnalysis.mockResolvedValue(completedResponse)
+  getSalesExpectedForecast.mockResolvedValue({
+    status: 'COMPLETED',
+    message: '예상 매출을 조회했습니다.',
+    data: {
+      targetMonth: '2026-10',
+      actualSalesAmount: 0,
+      forecastSalesAmount: 1080000,
+      expectedSalesAmount: 1080000,
+      lowerBound: 930000,
+      upperBound: 1230000,
+      dailyForecasts: [],
+    },
+  })
 
   render(
     <MemoryRouter>
@@ -97,6 +138,12 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
   )
 
   expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
+  expect(screen.getByText('2026년 10월 예상 총매출')).toBeInTheDocument()
+  expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
+  expect(
+    screen.getByText('예상 범위 ₩930,000 - ₩1,230,000'),
+  ).toBeInTheDocument()
+  expect(screen.queryByText(/누적 매출/)).not.toBeInTheDocument()
   expect(screen.getByText('923건')).toBeInTheDocument()
   expect(screen.getByText('₩8,582')).toBeInTheDocument()
   expect(
@@ -108,6 +155,84 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
     endDate: '2026-09-30',
   })
   expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-09')
+})
+
+test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출 카드를 표시하지 않는다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('₩7,920,000')
+  expect(screen.queryByText(/예상 총매출/)).not.toBeInTheDocument()
+})
+
+test('지난 월을 선택하면 예상 총매출 카드를 숨긴다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-08', '2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+  getSalesExpectedForecast.mockResolvedValue({
+    status: 'COMPLETED',
+    message: '예상 매출을 조회했습니다.',
+    data: {
+      targetMonth: '2026-10',
+      actualSalesAmount: 0,
+      forecastSalesAmount: 1080000,
+      expectedSalesAmount: 1080000,
+      lowerBound: 930000,
+      upperBound: 1230000,
+      dailyForecasts: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  expect(await screen.findByText('2026년 10월 예상 총매출')).toBeInTheDocument()
+  fireEvent.change(screen.getByLabelText('조회할 월'), {
+    target: { value: '2026-08' },
+  })
+
+  await waitFor(() => {
+    expect(
+      screen.queryByText('2026년 10월 예상 총매출'),
+    ).not.toBeInTheDocument()
+  })
+})
+
+test('진행 중인 월에는 누적 매출과 남은 기간 예측을 함께 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+  getSalesExpectedForecast.mockResolvedValue({
+    status: 'COMPLETED',
+    message: '예상 매출을 조회했습니다.',
+    data: {
+      targetMonth: '2026-09',
+      actualSalesAmount: 7920000,
+      forecastSalesAmount: 1080000,
+      expectedSalesAmount: 9000000,
+      lowerBound: 8850000,
+      upperBound: 9150000,
+      dailyForecasts: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByText('누적 매출 ₩7,920,000 + 남은 기간 예측 ₩1,080,000'),
+  ).toBeInTheDocument()
+  expect(screen.queryByText(/예상 범위/)).not.toBeInTheDocument()
 })
 
 test('연속 매출 데이터가 14일 미만이면 AI 인사이트 안내 문구를 표시한다', async () => {
