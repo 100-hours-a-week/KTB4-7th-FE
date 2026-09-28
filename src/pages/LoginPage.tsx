@@ -50,21 +50,27 @@ export function LoginPage() {
   })
 
   return (
-    <main className="mobile-app-shell auth-app-shell">
+    <main className="mobile-app-shell auth-app-shell auth-app-shell--editorial">
       <div className="device-notch" aria-hidden="true" />
-      <div className="auth-page">
+      <div className="auth-page login-editorial-page">
         <header>
           <Link to="/" className="signup-brand">
             memme
           </Link>
-          <span>LOGIN</span>
+          <span className="login-document-number">FORM 01 / LOGIN</span>
         </header>
+
+        <div className="login-bean-backdrop" aria-hidden="true">
+          <img src="/assets/memme-storefront-hero.png" alt="" />
+        </div>
+
         <section className="auth-intro login-intro">
-          <p className="page-eyebrow-date">memme</p>
+          <p className="page-eyebrow-date">STORE OWNER RECORD</p>
           <h1>
             매장에 필요한
             <br />한 가지를 찾으세요.
           </h1>
+          <span>오늘의 기록을 이어갈 사장님을 확인합니다.</span>
         </section>
         {passwordResetComplete && (
           <p className="form-success">
@@ -78,7 +84,9 @@ export function LoginPage() {
         >
           {error && <p role="alert">{error}</p>}
           <label>
-            이메일
+            <span className="login-field-heading">
+              <b>01</b> 이메일
+            </span>
             <ClearableInput
               aria-label="이메일"
               type="email"
@@ -99,7 +107,9 @@ export function LoginPage() {
             )}
           </label>
           <label>
-            비밀번호
+            <span className="login-field-heading">
+              <b>02</b> 비밀번호
+            </span>
             <ClearableInput
               aria-label="비밀번호"
               type="password"
@@ -115,11 +125,12 @@ export function LoginPage() {
             비밀번호를 잃어버리셨나요?
           </Link>
           <button
-            className="primary-action"
+            className="primary-action login-submit-action"
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? '로그인 중...' : '로그인'}
+            <span>{isSubmitting ? '로그인 중...' : '로그인'}</span>
+            <span aria-hidden="true">→</span>
           </button>
         </form>
         <p className="auth-footer">

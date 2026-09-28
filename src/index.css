@@ -1806,6 +1806,181 @@ input {
   overflow-y: auto;
   margin: 0;
 }
+
+/* --- 로그인: store record editorial --- */
+.auth-app-shell--editorial {
+  background: #e8eceb;
+}
+.auth-app-shell--editorial .login-editorial-page {
+  position: relative;
+  isolation: isolate;
+  padding: 24px 24px 34px;
+  background-color: #f5f4ee;
+  background-image:
+    radial-gradient(rgba(28, 43, 46, 0.07) 0.55px, transparent 0.7px),
+    radial-gradient(rgba(28, 43, 46, 0.04) 0.5px, transparent 0.7px);
+  background-position:
+    0 0,
+    5px 7px;
+  background-size:
+    9px 9px,
+    11px 11px;
+}
+.auth-app-shell--editorial .login-editorial-page::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.7),
+    transparent 52%
+  );
+  pointer-events: none;
+}
+.login-editorial-page > header {
+  position: relative;
+  z-index: 2;
+  align-items: flex-end;
+  padding: 4px 0 15px;
+  border-bottom: 2px solid var(--ink);
+}
+.login-editorial-page .signup-brand {
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.08em;
+  line-height: 1;
+  text-decoration: none;
+}
+.login-document-number {
+  font-family: var(--font-num);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.login-bean-backdrop {
+  position: absolute;
+  z-index: -1;
+  top: 70px;
+  left: -12px;
+  width: 560px;
+  height: 440px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.login-bean-backdrop img {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.17;
+  transform: rotate(-4deg);
+  transform-origin: center;
+  filter: grayscale(1) contrast(1.25);
+}
+.login-editorial-page .auth-intro.login-intro {
+  position: relative;
+  padding: 148px 0 24px;
+}
+.login-editorial-page .auth-intro.login-intro h1 {
+  margin: 7px 0 9px;
+  font-size: 31px;
+  letter-spacing: -0.055em;
+  line-height: 1.16;
+}
+.login-editorial-page .auth-intro.login-intro > span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.login-editorial-page .login-form-underline {
+  gap: 18px;
+  padding: 18px 16px 16px;
+  border: 1.5px solid var(--ink);
+  background: rgba(255, 253, 249, 0.96);
+  box-shadow: 5px 5px 0 rgba(28, 43, 46, 0.11);
+}
+.login-editorial-page .login-form-underline label {
+  gap: 5px;
+}
+.login-field-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.login-field-heading b {
+  display: inline-grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #f5f4ee;
+  font-family: var(--font-num);
+  font-size: 8px;
+}
+.login-editorial-page .login-form.login-form-underline input {
+  padding-inline: 0 58px;
+  border-bottom-color: var(--ink);
+  font-family: var(--font-num);
+  font-size: 13px;
+}
+.login-editorial-page .login-forgot-password {
+  margin-top: -4px;
+  color: var(--ink);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.login-editorial-page .login-submit-action {
+  justify-content: space-between;
+  min-height: 46px;
+  margin-top: 0;
+  padding-inline: 18px;
+  border: 1.5px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+.login-editorial-page .login-submit-action:hover:not(:disabled) {
+  background: transparent;
+  color: var(--ink);
+}
+.login-editorial-page .login-submit-action:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+.login-editorial-page .auth-footer {
+  margin: 16px 0 0;
+  font-size: 11px;
+}
+.login-editorial-page .auth-footer a {
+  color: var(--ink);
+  text-underline-offset: 3px;
+}
+.login-editorial-page .form-success {
+  padding: 10px 12px;
+  border: 1px solid var(--teal);
+  background: rgba(228, 238, 241, 0.82);
+  font-size: 12px;
+}
+
+@media (max-width: 370px) {
+  .auth-app-shell--editorial .login-editorial-page {
+    padding-inline: 18px;
+  }
+  .login-bean-backdrop {
+    left: -20px;
+  }
+  .login-editorial-page .auth-intro.login-intro h1 {
+    font-size: 28px;
+  }
+}
 @media (min-width: 431px) {
   body {
     background: var(--teal-dim);

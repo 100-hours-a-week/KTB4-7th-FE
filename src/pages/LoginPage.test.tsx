@@ -83,3 +83,12 @@ test('이메일과 비밀번호를 입력하지 않으면 필수 입력 오류�
   expect(screen.getByText('비밀번호를 입력해주세요.')).toBeInTheDocument()
   expect(login).not.toHaveBeenCalled()
 })
+
+test('로그인 화면에 메인 페이지와 이어지는 에디토리얼 문구를 보여준다', () => {
+  renderLoginPage()
+
+  expect(screen.getByText('STORE OWNER RECORD')).toBeInTheDocument()
+  expect(
+    screen.getByText('오늘의 기록을 이어갈 사장님을 확인합니다.'),
+  ).toBeInTheDocument()
+})
