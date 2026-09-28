@@ -98,22 +98,26 @@ export function ProfilePage() {
         {passwordChanged && (
           <p className="form-success">비밀번호가 변경되었습니다.</p>
         )}
-        <header className="profile-hero">
-          <span>{profile.storeName.slice(0, 1)}</span>
-          <p>안녕하세요</p>
-          <h1>{profile.storeName} 사장님</h1>
+        <header className="merchant-card">
+          <div className="merchant-card-top">
+            <span className="merchant-mono">MEMME · MERCHANT</span>
+            <span className="merchant-seal">
+              {profile.storeName.slice(0, 1)}
+            </span>
+          </div>
+          <h1 className="merchant-name">{profile.storeName} 사장님</h1>
+          <p className="merchant-role">안녕하세요</p>
+          <dl className="merchant-card-meta">
+            <div>
+              <dt>휴대폰 번호</dt>
+              <dd>{formatPhone(profile.phone)}</dd>
+            </div>
+            <div>
+              <dt>이메일</dt>
+              <dd>{profile.email}</dd>
+            </div>
+          </dl>
         </header>
-
-        <dl className="profile-details">
-          <div>
-            <dt>휴대폰 번호</dt>
-            <dd>{formatPhone(profile.phone)}</dd>
-          </div>
-          <div>
-            <dt>이메일</dt>
-            <dd>{profile.email}</dd>
-          </div>
-        </dl>
 
         <nav className="profile-menu" aria-label="프로필 메뉴">
           <Link to="/profile/password">

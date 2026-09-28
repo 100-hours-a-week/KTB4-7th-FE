@@ -152,23 +152,14 @@ export function SolutionPage() {
             분석 기준 {targetDate ? formatTargetDate(targetDate) : ''}
           </small>
         </section>
-        <article className="solution-card">
-          <span>우선 실행</span>
-          <h2>{primary.title}</h2>
-          <p>{primary.summaryText}</p>
-          <Link
-            className="dark-button"
-            to={`/solution/${bundleId}/${primary.id}`}
-          >
-            솔루션 상세 보기
-          </Link>
-        </article>
         <div className="solution-list">
-          {cards.slice(1).map((card, index) => (
+          {cards.map((card, index) => (
             <Link key={card.id} to={`/solution/${bundleId}/${card.id}`}>
-              0{index + 2}
-              <strong>{card.title}</strong>
-              <small>{card.summaryText}</small>
+              <span className="solution-row-no">0{index + 1}</span>
+              <span className="solution-row-body">
+                <strong>{card.title}</strong>
+                <small>{card.summaryText}</small>
+              </span>
             </Link>
           ))}
         </div>

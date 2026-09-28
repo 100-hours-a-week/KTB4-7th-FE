@@ -114,7 +114,11 @@ test('연결 상태와 업로드 기록을 실제 API로 불러온다', async ()
   expect(connectionStatus).not.toBeNull()
 
   expect(await within(connectionStatus).findByText('08.27')).toBeInTheDocument()
-  expect(within(connectionStatus).getByText('3,204건')).toBeInTheDocument()
+  expect(
+    within(connectionStatus).getByText(
+      (_, element) => element?.textContent === '3,204건',
+    ),
+  ).toBeInTheDocument()
   expect(within(connectionStatus).getByText('최신')).toBeInTheDocument()
   expect(screen.getByText('202608_매출.xlsx')).toBeInTheDocument()
 })

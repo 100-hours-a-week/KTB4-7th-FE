@@ -16,6 +16,19 @@ function isUnauthorized(error: unknown) {
   )
 }
 
+function formatSavedDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const month = parts.find((part) => part.type === 'month')?.value ?? '00'
+  const day = parts.find((part) => part.type === 'day')?.value ?? '00'
+  return `${month}.${day}`
+}
+
 function mergeGroups(
   previous: SavedSolutionYearGroup[],
   next: SavedSolutionYearGroup[],
@@ -95,7 +108,7 @@ export function MySolutionsPage() {
     <AppShell title="내 솔루션">
       <div className="page-stack">
         <header className="page-title">
-          <p>SAVED SOLUTIONS</p>
+          <p className="page-eyebrow-date">저장한 솔루션</p>
           <h1>다시 보고 싶은 일</h1>
           <span>필요한 순간에 바로 실행할 수 있도록 저장했어요.</span>
         </header>
@@ -114,17 +127,23 @@ export function MySolutionsPage() {
               (group) =>
                 group.items.length > 0 && (
                   <section key={group.year}>
-                    <p>{group.year}년</p>
+                    <p className="year-label">{group.year}년</p>
                     <div className="saved-solution-list">
                       {group.items.map((item) => (
                         <Link
                           key={item.savedId}
                           to={`/my-solutions/${item.savedId}`}
                         >
-                          <small>저장한 솔루션</small>
-                          <strong>{item.displayTitle}</strong>
+                          <span className="saved-solution-body">
+                            <strong>{item.displayTitle}</strong>
+                            <small>
+                              {formatSavedDate(item.savedDate)} 저장
+                            </small>
+                          </span>
                           {item.remainingItemCount > 0 && (
-                            <span>외 {item.remainingItemCount}개</span>
+                            <span className="saved-solution-extra">
+                              외 {item.remainingItemCount}개
+                            </span>
                           )}
                         </Link>
                       ))}

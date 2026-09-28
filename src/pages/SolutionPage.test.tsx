@@ -68,9 +68,10 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
   expect(await screen.findByText('재고 점검')).toBeInTheDocument()
   expect(screen.getByText('재방문 혜택')).toBeInTheDocument()
   expect(screen.getByText('메뉴 구성')).toBeInTheDocument()
-  expect(
-    screen.getByRole('link', { name: '솔루션 상세 보기' }),
-  ).toHaveAttribute('href', '/solution/12/1')
+  expect(screen.getByText('재고 점검').closest('a')).toHaveAttribute(
+    'href',
+    '/solution/12/1',
+  )
   expect(screen.getByText('재방문 혜택').closest('a')).toHaveAttribute(
     'href',
     '/solution/12/2',

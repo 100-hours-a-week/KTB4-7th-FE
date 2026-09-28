@@ -59,8 +59,8 @@ export function LoginPage() {
           </Link>
           <span>LOGIN</span>
         </header>
-        <section className="auth-intro">
-          <p>WELCOME BACK</p>
+        <section className="auth-intro login-intro">
+          <p className="page-eyebrow-date">memme</p>
           <h1>
             매장에 필요한
             <br />한 가지를 찾으세요.
@@ -71,7 +71,11 @@ export function LoginPage() {
             비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.
           </p>
         )}
-        <form className="login-form" onSubmit={submitLogin} noValidate>
+        <form
+          className="login-form login-form-underline"
+          onSubmit={submitLogin}
+          noValidate
+        >
           {error && <p role="alert">{error}</p>}
           <label>
             이메일

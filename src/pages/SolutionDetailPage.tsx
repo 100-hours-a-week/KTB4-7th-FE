@@ -126,6 +126,15 @@ export function SolutionDetailPage() {
         )}
         <section>
           <article>
+            {item.isSaved && (
+              <div className="saved-stamp">
+                <span>
+                  저장
+                  <br />
+                  완료
+                </span>
+              </div>
+            )}
             <small>0{item.rankNo}</small>
             <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
             <h2>{item.title}</h2>
