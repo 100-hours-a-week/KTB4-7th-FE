@@ -727,17 +727,20 @@ input {
   font-size: 11px;
 }
 .hourly-chart-scroll {
+  display: block;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
+  padding-inline: 0;
   padding-bottom: 4px;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
 .hourly-chart-content {
-  min-width: 576px;
+  width: max(100%, 576px);
 }
 .hourly-chart-content .sales-chart span,
 .hourly-chart-content .sales-chart-labels span {
