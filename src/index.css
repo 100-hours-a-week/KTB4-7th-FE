@@ -911,6 +911,23 @@ input {
   font-size: 12px;
   color: var(--ink-soft);
 }
+.solution-helper-text {
+  margin: 20px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper-raised);
+}
+.solution-helper-text h2 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.solution-helper-text p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.55;
+}
 .solution-card {
   display: grid;
   align-content: start;

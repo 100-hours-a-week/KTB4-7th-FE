@@ -36,6 +36,7 @@ export function SolutionPage() {
   const [targetDate, setTargetDate] = useState<string | null>(null)
   const [bundleId, setBundleId] = useState<number | null>(null)
   const [cards, setCards] = useState<SolutionCard[]>([])
+  const [helperText, setHelperText] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -52,6 +53,7 @@ export function SolutionPage() {
         setTargetDate(response.data.targetDate)
         setBundleId(response.data.solutionBundleId)
         setCards(response.data.solutionCards)
+        setHelperText(response.data.helperText ?? null)
       })
       .catch((requestError) => {
         if (ignore) return
@@ -94,6 +96,7 @@ export function SolutionPage() {
         <EmptyState
           title="아직 제공된 솔루션이 없습니다"
           description={
+            helperText ||
             message ||
             '매출 데이터를 업로드하면 매장에 맞는 다음 행동을 제안해 드릴게요.'
           }
@@ -152,6 +155,12 @@ export function SolutionPage() {
             분석 기준 {targetDate ? formatTargetDate(targetDate) : ''}
           </small>
         </section>
+        {helperText && (
+          <section className="solution-helper-text">
+            <h2>솔루션 안내</h2>
+            <p>{helperText}</p>
+          </section>
+        )}
         <div className="solution-list">
           {cards.map((card, index) => (
             <Link key={card.id} to={`/solution/${bundleId}/${card.id}`}>

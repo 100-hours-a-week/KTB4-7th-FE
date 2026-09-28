@@ -81,3 +81,69 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
     '/solution/chat',
   )
 })
+
+test('데이터 기간이 1년 미만이면 솔루션 정확도 안내를 보여준다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '조회에 성공했습니다.',
+    status: 'COMPLETED',
+    data: {
+      storeName: '맴매 베이커리',
+      screenTitle: '맴매 베이커리 맴매 솔루션',
+      solutionBundleId: 12,
+      targetDate: '2026-09-27',
+      solutionCards: [
+        {
+          id: 1,
+          rankNo: 1,
+          title: '재고 점검',
+          summaryText: '요약1',
+          detailText: '상세1',
+          evidence: '근거1',
+          isSaved: false,
+          savedId: null,
+        },
+      ],
+      helperText:
+        '데이터가 충분하지 않아 솔루션의 정확도가 낮을 수 있어요. 데이터가 쌓일수록 더 정확한 분석을 제공할 수 있어요.',
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByText(
+      '데이터가 충분하지 않아 솔루션의 정확도가 낮을 수 있어요. 데이터가 쌓일수록 더 정확한 분석을 제공할 수 있어요.',
+    ),
+  ).toBeInTheDocument()
+})
+
+test('3개월 미만이면 솔루션 생성 전 안내 문구를 보여준다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '솔루션 생성을 위해 최소 3개월 이상의 데이터가 필요합니다.',
+    status: 'INSUFFICIENT_HISTORY',
+    data: {
+      storeName: null,
+      screenTitle: null,
+      solutionBundleId: null,
+      targetDate: '2026-09-27',
+      solutionCards: [],
+      helperText: '솔루션 생성을 위해 최소 3개월 이상의 데이터가 필요합니다.',
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByText(
+      '솔루션 생성을 위해 최소 3개월 이상의 데이터가 필요합니다.',
+    ),
+  ).toBeInTheDocument()
+})
