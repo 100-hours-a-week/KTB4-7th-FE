@@ -527,11 +527,19 @@ export function SalesAnalysisPage() {
                 <strong>
                   {formatCurrency(expectedForecast.expectedSalesAmount)}
                 </strong>
-                <span>
-                  누적 매출 {formatCurrency(expectedForecast.actualSalesAmount)}{' '}
-                  + 남은 기간 예측{' '}
-                  {formatCurrency(expectedForecast.forecastSalesAmount)}
-                </span>
+                {expectedForecast.actualSalesAmount > 0 ? (
+                  <span>
+                    누적 매출{' '}
+                    {formatCurrency(expectedForecast.actualSalesAmount)} + 남은
+                    기간 예측{' '}
+                    {formatCurrency(expectedForecast.forecastSalesAmount)}
+                  </span>
+                ) : (
+                  <span>
+                    예상 범위 {formatCurrency(expectedForecast.lowerBound)} -{' '}
+                    {formatCurrency(expectedForecast.upperBound)}
+                  </span>
+                )}
               </section>
             )}
             <div className="stat-card-grid">

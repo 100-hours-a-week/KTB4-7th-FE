@@ -140,6 +140,10 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
   expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
   expect(screen.getByText('2026년 10월 예상 총매출')).toBeInTheDocument()
   expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
+  expect(
+    screen.getByText('예상 범위 ₩930,000 - ₩1,230,000'),
+  ).toBeInTheDocument()
+  expect(screen.queryByText(/누적 매출/)).not.toBeInTheDocument()
   expect(screen.getByText('923건')).toBeInTheDocument()
   expect(screen.getByText('₩8,582')).toBeInTheDocument()
   expect(
@@ -200,6 +204,35 @@ test('지난 월을 선택하면 예상 총매출 카드를 숨긴다', async ()
       screen.queryByText('2026년 10월 예상 총매출'),
     ).not.toBeInTheDocument()
   })
+})
+
+test('진행 중인 월에는 누적 매출과 남은 기간 예측을 함께 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+  getSalesExpectedForecast.mockResolvedValue({
+    status: 'COMPLETED',
+    message: '예상 매출을 조회했습니다.',
+    data: {
+      targetMonth: '2026-09',
+      actualSalesAmount: 7920000,
+      forecastSalesAmount: 1080000,
+      expectedSalesAmount: 9000000,
+      lowerBound: 8850000,
+      upperBound: 9150000,
+      dailyForecasts: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByText('누적 매출 ₩7,920,000 + 남은 기간 예측 ₩1,080,000'),
+  ).toBeInTheDocument()
+  expect(screen.queryByText(/예상 범위/)).not.toBeInTheDocument()
 })
 
 test('연속 매출 데이터가 14일 미만이면 AI 인사이트 안내 문구를 표시한다', async () => {
