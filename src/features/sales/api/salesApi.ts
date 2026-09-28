@@ -128,7 +128,9 @@ export type SalesWeekdayPoint = {
 
 export type SalesAiInsight = {
   targetMonth: string
+  status: 'COMPLETED' | 'INSUFFICIENT_DATA' | 'FAILED'
   insights: string[]
+  helperText: string | null
   generatedAt: string | null
 } | null
 
