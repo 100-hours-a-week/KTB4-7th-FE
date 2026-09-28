@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "memme-fe",
+  "compatibility_date": "2026-09-28",
+  "workers_dev": true,
+  "keep_vars": true,
+  "routes": [
+    {
+      "pattern": "memme.kr",
+      "custom_domain": true,
+    },
+  ],
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+}
