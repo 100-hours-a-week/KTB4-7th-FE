@@ -2241,6 +2241,20 @@ input {
   font-size: 15px;
   letter-spacing: -0.02em;
 }
+.ai-insight-box p {
+  margin: 0;
+  color: var(--line);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ai-insight-box--notice {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.ai-insight-box--notice p {
+  color: var(--ink-soft);
+}
 .ai-insight-box ul {
   margin: 0;
   padding: 0;

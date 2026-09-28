@@ -514,7 +514,13 @@ export function SalesAnalysisPage() {
             {data.aiInsight &&
               (data.aiInsight.insights.length > 0 ||
                 data.aiInsight.helperText) && (
-                <div className="ai-insight-box">
+                <div
+                  className={`ai-insight-box${
+                    data.aiInsight.status === 'COMPLETED'
+                      ? ''
+                      : ' ai-insight-box--notice'
+                  }`}
+                >
                   {data.aiInsight.status === 'COMPLETED' ? (
                     <>
                       <h2>AI가 발견했어요</h2>
