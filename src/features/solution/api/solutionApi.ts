@@ -25,6 +25,7 @@ export type SolutionTodayData = {
   solutionBundleId: number | null
   targetDate: string
   solutionCards: SolutionCard[]
+  helperText?: string | null
 }
 
 export type SolutionTodayResponse = {
