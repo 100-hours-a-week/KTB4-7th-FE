@@ -172,6 +172,33 @@ export async function getSalesAnalysis(params: {
   ).data
 }
 
+export type SalesExpectedForecast = {
+  targetMonth: string
+  actualSalesAmount: number
+  forecastSalesAmount: number
+  expectedSalesAmount: number
+  lowerBound: number
+  upperBound: number
+  dailyForecasts: {
+    targetDate: string
+    predictedSalesAmount: number
+    lowerBound: number
+    upperBound: number
+  }[]
+}
+
+export type SalesExpectedForecastResponse =
+  | { status: 'COMPLETED'; message: string; data: SalesExpectedForecast }
+  | { status: 'EMPTY'; message: string; data: null }
+
+export async function getSalesExpectedForecast() {
+  return (
+    await http.get<SalesExpectedForecastResponse>(
+      '/v1/sales/forecasts/expected',
+    )
+  ).data
+}
+
 export type SalesAvailableMonthsResponse = {
   months: string[]
 }
