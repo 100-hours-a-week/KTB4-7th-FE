@@ -139,7 +139,7 @@ export function SolutionDetailPage() {
             <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
             <h2>{item.title}</h2>
             <p>{item.summaryText}</p>
-            <p>{item.detailText}</p>
+            <p style={{ whiteSpace: 'pre-line' }}>{item.detailText}</p>
             {item.evidence && <p>{item.evidence}</p>}
             <div className="detail-page-actions">
               <button
