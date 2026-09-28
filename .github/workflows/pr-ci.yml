@@ -1,14 +1,17 @@
-name: 프론트 PR CI
+name: 프론트 CI
 
 on:
   pull_request:
     branches:
       - dev
     types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - dev
 
 jobs:
   quality:
-    if: startsWith(github.head_ref, 'feat/')
+    if: github.event_name == 'push' || startsWith(github.head_ref, 'feat/')
     runs-on: ubuntu-latest
     steps:
       - name: 저장소 체크아웃
