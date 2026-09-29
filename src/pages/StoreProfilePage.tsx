@@ -43,6 +43,16 @@ const timeHours = Array.from({ length: 24 }, (_, index) =>
 )
 const timeMinutes = ['00', '30']
 
+function isValidBusinessTimeRange(
+  openTime: string | null,
+  closeTime: string | null,
+) {
+  if (!openTime || !closeTime) return false
+  if (openTime === closeTime) return openTime === '00:00'
+  if (closeTime > openTime) return true
+  return closeTime <= '06:00'
+}
+
 function toHourMinute(time: string | null, fallback: string) {
   if (!time) return fallback
   return time.slice(0, 5)
@@ -228,6 +238,22 @@ export function StoreProfilePage() {
     )
   }
 
+  const toggleDay24Hours = (dayOfWeek: string) => {
+    setBusinessHours((previous) =>
+      previous.map((hours) => {
+        if (hours.dayOfWeek !== dayOfWeek) return hours
+        const is24Hours =
+          hours.openTime === '00:00' && hours.closeTime === '00:00'
+        return {
+          ...hours,
+          isClosed: false,
+          openTime: is24Hours ? '09:00' : '00:00',
+          closeTime: is24Hours ? '18:00' : '00:00',
+        }
+      }),
+    )
+  }
+
   const submit = handleSubmit(async (values) => {
     setError('')
     setSuccess(false)
@@ -235,6 +261,17 @@ export function StoreProfilePage() {
 
     if (!postalCode || !roadAddress) {
       setError('주소 검색으로 매장 주소를 입력해주세요.')
+      return
+    }
+
+    if (
+      !businessHours.every(
+        (hours) =>
+          hours.isClosed ||
+          isValidBusinessTimeRange(hours.openTime, hours.closeTime),
+      )
+    ) {
+      setBusinessHoursError('영업시간을 확인해 주세요.')
       return
     }
 
@@ -345,100 +382,129 @@ export function StoreProfilePage() {
                 <div className="store-hours-row" key={hours.dayOfWeek}>
                   <div className="store-hours-day">
                     <span>{dayLabels[hours.dayOfWeek]}요일</span>
-                    <button
-                      type="button"
-                      className={
-                        hours.isClosed
-                          ? 'store-hours-closed-toggle active'
-                          : 'store-hours-closed-toggle'
-                      }
-                      aria-pressed={hours.isClosed}
-                      onClick={() => toggleDayClosed(hours.dayOfWeek)}
-                    >
-                      휴무
-                    </button>
+                    <div className="store-hours-actions">
+                      <button
+                        type="button"
+                        className={
+                          hours.openTime === '00:00' &&
+                          hours.closeTime === '00:00' &&
+                          !hours.isClosed
+                            ? 'store-hours-closed-toggle active'
+                            : 'store-hours-closed-toggle'
+                        }
+                        aria-pressed={
+                          hours.openTime === '00:00' &&
+                          hours.closeTime === '00:00' &&
+                          !hours.isClosed
+                        }
+                        onClick={() => toggleDay24Hours(hours.dayOfWeek)}
+                      >
+                        24시간
+                      </button>
+                      <button
+                        type="button"
+                        className={
+                          hours.isClosed
+                            ? 'store-hours-closed-toggle active'
+                            : 'store-hours-closed-toggle'
+                        }
+                        aria-pressed={hours.isClosed}
+                        onClick={() => toggleDayClosed(hours.dayOfWeek)}
+                      >
+                        휴무
+                      </button>
+                    </div>
                   </div>
                   {!hours.isClosed && (
                     <div className="store-hours-times">
-                      <div className="signup-time-selects">
-                        <select
-                          aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 시작 시`}
-                          value={(hours.openTime ?? '09:00').split(':')[0]}
-                          onChange={(event) =>
-                            updateDayTime(
-                              hours.dayOfWeek,
-                              'openTime',
-                              'hour',
-                              event.target.value,
-                            )
-                          }
-                        >
-                          {timeHours.map((hour) => (
-                            <option key={hour} value={hour}>
-                              {hour}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="signup-time-colon">:</span>
-                        <select
-                          aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 시작 분`}
-                          value={(hours.openTime ?? '09:00').split(':')[1]}
-                          onChange={(event) =>
-                            updateDayTime(
-                              hours.dayOfWeek,
-                              'openTime',
-                              'minute',
-                              event.target.value,
-                            )
-                          }
-                        >
-                          {timeMinutes.map((minute) => (
-                            <option key={minute} value={minute}>
-                              {minute}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <span className="store-hours-dash">~</span>
-                      <div className="signup-time-selects">
-                        <select
-                          aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 마감 시`}
-                          value={(hours.closeTime ?? '18:00').split(':')[0]}
-                          onChange={(event) =>
-                            updateDayTime(
-                              hours.dayOfWeek,
-                              'closeTime',
-                              'hour',
-                              event.target.value,
-                            )
-                          }
-                        >
-                          {timeHours.map((hour) => (
-                            <option key={hour} value={hour}>
-                              {hour}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="signup-time-colon">:</span>
-                        <select
-                          aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 마감 분`}
-                          value={(hours.closeTime ?? '18:00').split(':')[1]}
-                          onChange={(event) =>
-                            updateDayTime(
-                              hours.dayOfWeek,
-                              'closeTime',
-                              'minute',
-                              event.target.value,
-                            )
-                          }
-                        >
-                          {timeMinutes.map((minute) => (
-                            <option key={minute} value={minute}>
-                              {minute}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {hours.openTime === '00:00' &&
+                      hours.closeTime === '00:00' ? (
+                        <span className="store-hours-24-label">
+                          24시간 영업
+                        </span>
+                      ) : (
+                        <>
+                          <div className="signup-time-selects">
+                            <select
+                              aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 시작 시`}
+                              value={(hours.openTime ?? '09:00').split(':')[0]}
+                              onChange={(event) =>
+                                updateDayTime(
+                                  hours.dayOfWeek,
+                                  'openTime',
+                                  'hour',
+                                  event.target.value,
+                                )
+                              }
+                            >
+                              {timeHours.map((hour) => (
+                                <option key={hour} value={hour}>
+                                  {hour}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="signup-time-colon">:</span>
+                            <select
+                              aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 시작 분`}
+                              value={(hours.openTime ?? '09:00').split(':')[1]}
+                              onChange={(event) =>
+                                updateDayTime(
+                                  hours.dayOfWeek,
+                                  'openTime',
+                                  'minute',
+                                  event.target.value,
+                                )
+                              }
+                            >
+                              {timeMinutes.map((minute) => (
+                                <option key={minute} value={minute}>
+                                  {minute}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <span className="store-hours-dash">~</span>
+                          <div className="signup-time-selects">
+                            <select
+                              aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 마감 시`}
+                              value={(hours.closeTime ?? '18:00').split(':')[0]}
+                              onChange={(event) =>
+                                updateDayTime(
+                                  hours.dayOfWeek,
+                                  'closeTime',
+                                  'hour',
+                                  event.target.value,
+                                )
+                              }
+                            >
+                              {timeHours.map((hour) => (
+                                <option key={hour} value={hour}>
+                                  {hour}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="signup-time-colon">:</span>
+                            <select
+                              aria-label={`${dayLabels[hours.dayOfWeek]}요일 영업 마감 분`}
+                              value={(hours.closeTime ?? '18:00').split(':')[1]}
+                              onChange={(event) =>
+                                updateDayTime(
+                                  hours.dayOfWeek,
+                                  'closeTime',
+                                  'minute',
+                                  event.target.value,
+                                )
+                              }
+                            >
+                              {timeMinutes.map((minute) => (
+                                <option key={minute} value={minute}>
+                                  {minute}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

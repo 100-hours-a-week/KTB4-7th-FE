@@ -141,3 +141,26 @@ test('저장하면 수정된 매장 정보를 서버로 전송한다', async () 
     await screen.findByText('매장 정보가 수정되었습니다.'),
   ).toBeInTheDocument()
 })
+
+test('요일별 24시간 영업을 선택하면 자정부터 자정까지 전송한다', async () => {
+  getMyStore.mockResolvedValue(storeFixture)
+  updateMyStore.mockResolvedValue(storeFixture)
+
+  render(
+    <MemoryRouter>
+      <StoreProfilePage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByLabelText('매장명')
+  fireEvent.click(screen.getAllByRole('button', { name: '24시간' })[0])
+  fireEvent.click(screen.getByRole('button', { name: '저장하기' }))
+
+  await waitFor(() => expect(updateMyStore).toHaveBeenCalledOnce())
+  expect(updateMyStore.mock.calls[0][0].businessHours[0]).toEqual({
+    dayOfWeek: 'MONDAY',
+    isClosed: false,
+    openTime: '00:00',
+    closeTime: '00:00',
+  })
+})

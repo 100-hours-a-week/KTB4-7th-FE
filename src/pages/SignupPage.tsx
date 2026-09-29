@@ -93,6 +93,12 @@ const timeHours = Array.from({ length: 24 }, (_, index) =>
   String(index).padStart(2, '0'),
 )
 const timeMinutes = ['00', '30']
+
+function isValidBusinessTimeRange(openTime: string, closeTime: string) {
+  if (openTime === closeTime) return openTime === '00:00'
+  if (closeTime > openTime) return true
+  return closeTime <= '06:00'
+}
 function getApiFieldErrors(error: unknown): ApiFieldError[] {
   if (typeof error !== 'object' || error === null || !('response' in error))
     return []
@@ -145,7 +151,7 @@ export function SignupPage() {
     Boolean(businessValues.address) &&
     Boolean(businessValues.openTime) &&
     Boolean(businessValues.closeTime) &&
-    businessValues.closeTime > businessValues.openTime
+    isValidBusinessTimeRange(businessValues.openTime, businessValues.closeTime)
   const addressLabel =
     businessValues.postalCode && businessValues.address
       ? '[' + businessValues.postalCode + '] ' + businessValues.address
@@ -242,6 +248,18 @@ export function SignupPage() {
         ? value + ':' + (minute ?? '00')
         : (hour ?? '00') + ':' + value
     business.setValue(field, nextValue, { shouldValidate: true })
+  }
+
+  const toggle24HourBusiness = () => {
+    const is24HourBusiness =
+      business.getValues('openTime') === '00:00' &&
+      business.getValues('closeTime') === '00:00'
+    business.setValue('openTime', is24HourBusiness ? '09:00' : '00:00', {
+      shouldValidate: true,
+    })
+    business.setValue('closeTime', is24HourBusiness ? '18:00' : '00:00', {
+      shouldValidate: true,
+    })
   }
 
   const loadMoreAddresses = async () => {
@@ -665,6 +683,22 @@ export function SignupPage() {
 
           <section className="signup-section">
             <h2 className="signup-section-title">영업 시간</h2>
+            <button
+              type="button"
+              className={
+                businessValues.openTime === '00:00' &&
+                businessValues.closeTime === '00:00'
+                  ? 'business-hours-24-toggle active'
+                  : 'business-hours-24-toggle'
+              }
+              aria-pressed={
+                businessValues.openTime === '00:00' &&
+                businessValues.closeTime === '00:00'
+              }
+              onClick={toggle24HourBusiness}
+            >
+              24시간 영업
+            </button>
             <div className="signup-hours-row">
               <div className="signup-time-field">
                 <span className="signup-field-label">영업 시작</span>
@@ -672,6 +706,10 @@ export function SignupPage() {
                   <select
                     aria-label="영업 시작 시"
                     value={(businessValues.openTime ?? '09:00').split(':')[0]}
+                    disabled={
+                      businessValues.openTime === '00:00' &&
+                      businessValues.closeTime === '00:00'
+                    }
                     onChange={(event) =>
                       updateTimePart('openTime', 'hour', event.target.value)
                     }
@@ -686,6 +724,10 @@ export function SignupPage() {
                   <select
                     aria-label="영업 시작 분"
                     value={(businessValues.openTime ?? '09:00').split(':')[1]}
+                    disabled={
+                      businessValues.openTime === '00:00' &&
+                      businessValues.closeTime === '00:00'
+                    }
                     onChange={(event) =>
                       updateTimePart('openTime', 'minute', event.target.value)
                     }
@@ -708,6 +750,10 @@ export function SignupPage() {
                   <select
                     aria-label="영업 마감 시"
                     value={(businessValues.closeTime ?? '18:00').split(':')[0]}
+                    disabled={
+                      businessValues.openTime === '00:00' &&
+                      businessValues.closeTime === '00:00'
+                    }
                     onChange={(event) =>
                       updateTimePart('closeTime', 'hour', event.target.value)
                     }
@@ -722,6 +768,10 @@ export function SignupPage() {
                   <select
                     aria-label="영업 마감 분"
                     value={(businessValues.closeTime ?? '18:00').split(':')[1]}
+                    disabled={
+                      businessValues.openTime === '00:00' &&
+                      businessValues.closeTime === '00:00'
+                    }
                     onChange={(event) =>
                       updateTimePart('closeTime', 'minute', event.target.value)
                     }
@@ -738,8 +788,10 @@ export function SignupPage() {
                   {...business.register('closeTime', {
                     required: true,
                     validate: (value) =>
-                      value > business.getValues('openTime') ||
-                      '영업 마감 시간은 시작 시간보다 늦어야 해요.',
+                      isValidBusinessTimeRange(
+                        business.getValues('openTime'),
+                        value,
+                      ) || '영업 마감 시간은 시작 시간보다 늦어야 해요.',
                   })}
                 />
               </div>
