@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   getChatErrorMessage,
   getChatHistory,
@@ -137,22 +137,27 @@ export function SolutionChatPage() {
   }
 
   return (
-    <AppShell title="AI 채팅">
+    <AppShell
+      title="AI 채팅"
+      backTo="/solution"
+      contentClassName="chat-app-content"
+    >
       <div className="chat-page">
-        <p>MEMME AI</p>
-        <h1>오늘의 솔루션, 무엇이든 물어보세요</h1>
-        <Link to="/solution">← 오늘의 솔루션</Link>
-        {serviceGuide && <small>{serviceGuide}</small>}
-        {pageError && (
-          <p className="form-error" role="alert">
-            {pageError}
-          </p>
-        )}
+        <header className="chat-page-header">
+          <p>MEMME AI</p>
+          <h1>오늘의 솔루션, 무엇이든 물어보세요</h1>
+          {serviceGuide && <small>{serviceGuide}</small>}
+          {pageError && (
+            <p className="form-error" role="alert">
+              {pageError}
+            </p>
+          )}
+        </header>
         {isLoading ? (
           <p>불러오는 중...</p>
         ) : (
           <>
-            <div>
+            <div className="chat-messages" aria-label="대화 내용">
               {messages.map((item) => (
                 <p key={item.id} className={item.role === 'USER' ? 'user' : ''}>
                   {item.status === 'FAILED'

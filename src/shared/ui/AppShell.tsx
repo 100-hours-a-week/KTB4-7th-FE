@@ -42,10 +42,12 @@ function BackIcon() {
 export function AppShell({
   title,
   backTo,
+  contentClassName,
   children,
 }: {
   title: string
   backTo?: string
+  contentClassName?: string
   children: ReactNode
 }) {
   const [hasUnread, setHasUnread] = useState(false)
@@ -89,7 +91,9 @@ export function AppShell({
           )}
         </Link>
       </header>
-      <main className="app-content">{children}</main>
+      <main className={`app-content ${contentClassName ?? ''}`.trim()}>
+        {children}
+      </main>
       <nav className="bottom-tabs" aria-label="하단 탐색">
         <NavLink to="/solution">솔루션</NavLink>
         <NavLink to="/sales/analysis">매출</NavLink>

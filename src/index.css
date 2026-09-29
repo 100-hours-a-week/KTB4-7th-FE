@@ -1095,33 +1095,44 @@ input {
   letter-spacing: -0.08em;
 }
 .chat-page {
+  display: flex;
+  flex-direction: column;
   max-width: 760px;
-  margin: 80px auto;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
 }
 .chat-page h1 {
   font-size: 48px;
   font-weight: 400;
 }
-.chat-page > div {
+.chat-page-header {
+  flex: none;
+}
+.chat-messages {
   display: grid;
+  flex: 1 1 auto;
   gap: 12px;
   min-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px;
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
 }
-.chat-page > div p {
+.chat-messages p {
   max-width: 70%;
   margin: 0;
   padding: 14px;
   background: var(--paper-raised);
 }
-.chat-page > div .user {
+.chat-messages .user {
   justify-self: end;
   background: var(--ink);
   color: var(--paper);
 }
 .chat-page form {
+  flex: none;
   display: flex;
   gap: 8px;
   margin-top: 18px;
@@ -1723,6 +1734,9 @@ input {
   overscroll-behavior: contain;
   padding: 24px 16px;
 }
+.mobile-app-shell .app-content.chat-app-content {
+  overflow: hidden;
+}
 .mobile-app-shell .bottom-tabs {
   position: relative;
   z-index: 2;
@@ -1832,6 +1846,12 @@ input {
 .mobile-app-shell .chat-page {
   margin: 0;
   padding: 24px 4px;
+}
+.mobile-app-shell .chat-page {
+  box-sizing: border-box;
+}
+.mobile-app-shell .chat-messages {
+  min-height: 0;
 }
 .mobile-app-shell .detail-page section {
   grid-template-columns: 1fr;
