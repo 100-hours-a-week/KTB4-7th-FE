@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
 import { initializeCsrfToken } from './shared/api/http'
+import { initializeGoogleAnalytics } from './shared/lib/googleAnalytics'
 import './index.css'
 
 const rootElement = document.getElementById('root')
@@ -11,6 +12,7 @@ if (rootElement === null) {
 }
 
 void initializeCsrfToken().catch(() => undefined)
+initializeGoogleAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID)
 
 createRoot(rootElement).render(
   <StrictMode>
