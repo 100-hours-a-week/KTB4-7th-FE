@@ -155,12 +155,6 @@ export function SolutionPage() {
             분석 기준 {targetDate ? formatTargetDate(targetDate) : ''}
           </small>
         </section>
-        {helperText && (
-          <section className="solution-helper-text">
-            <h2>솔루션 안내</h2>
-            <p>{helperText}</p>
-          </section>
-        )}
         <div className="solution-list">
           {cards.map((card, index) => (
             <Link key={card.id} to={`/solution/${bundleId}/${card.id}`}>
@@ -175,6 +169,12 @@ export function SolutionPage() {
         <Link className="light-button solution-chat-link" to="/solution/chat">
           AI에게 질문하기
         </Link>
+        {helperText && (
+          <section className="solution-helper-text">
+            <h2>솔루션 안내</h2>
+            <p>{helperText}</p>
+          </section>
+        )}
       </div>
     </AppShell>
   )
