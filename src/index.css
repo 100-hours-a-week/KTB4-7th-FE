@@ -334,7 +334,7 @@ input {
 .notification-list li:first-child {
   border-top: none;
 }
-.notification-list li.unread {
+.notification-list li.notification-link {
   cursor: pointer;
 }
 .noti-dot {
@@ -2982,6 +2982,6 @@ input {
   opacity: 0.6;
   cursor: not-allowed;
 }
-.notification-list li.unread {
+.notification-list li.notification-link {
   cursor: pointer;
 }
