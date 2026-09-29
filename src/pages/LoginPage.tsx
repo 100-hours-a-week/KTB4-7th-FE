@@ -9,7 +9,10 @@ type LoginForm = {
   password: string
 }
 type ApiErrorResponse = { message?: string }
-type LocationState = { passwordResetComplete?: boolean } | null
+type LocationState = {
+  passwordResetComplete?: boolean
+  from?: { pathname: string; search?: string; hash?: string }
+} | null
 
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (typeof error !== 'object' || error === null || !('response' in error))
@@ -33,12 +36,17 @@ export function LoginPage() {
   const passwordResetComplete = Boolean(
     (location.state as LocationState)?.passwordResetComplete,
   )
+  const returnTo = (location.state as LocationState)?.from
 
   const submitLogin = handleSubmit(async (values) => {
     setError('')
     try {
       await login(values)
-      navigate('/solution')
+      navigate(
+        returnTo
+          ? `${returnTo.pathname}${returnTo.search ?? ''}${returnTo.hash ?? ''}`
+          : '/solution',
+      )
     } catch (requestError) {
       setError(
         getApiErrorMessage(
