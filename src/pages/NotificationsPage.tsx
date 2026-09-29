@@ -28,6 +28,10 @@ function formatSentAt(sentAt: string) {
   })
 }
 
+function notificationDestination(notification: NotificationItem) {
+  return notification.type === 'SOLUTION_READY' ? '/solution' : '/sales/upload'
+}
+
 export function NotificationsPage() {
   const navigate = useNavigate()
   const [items, setItems] = useState<NotificationItem[]>([])
@@ -98,6 +102,13 @@ export function NotificationsPage() {
     }
   }
 
+  const handleNotificationClick = (notification: NotificationItem) => {
+    if (!notification.readAt) {
+      void handleMarkAsRead(notification)
+    }
+    navigate(notificationDestination(notification))
+  }
+
   return (
     <AppShell title="알림">
       <div className="page-stack">
@@ -120,8 +131,18 @@ export function NotificationsPage() {
               {items.map((notification) => (
                 <li
                   key={notification.id}
-                  className={notification.readAt ? '' : 'unread'}
-                  onClick={() => handleMarkAsRead(notification)}
+                  className={`notification-link ${
+                    notification.readAt ? '' : 'unread'
+                  }`.trim()}
+                  onClick={() => handleNotificationClick(notification)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      handleNotificationClick(notification)
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
                   <span
                     className={

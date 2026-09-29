@@ -77,7 +77,7 @@ test('알림이 없으면 빈 상태를 표시한다', async () => {
   expect(await screen.findByText('새 알림이 없습니다')).toBeInTheDocument()
 })
 
-test('읽지 않은 알림을 클릭하면 읽음 처리를 요청한다', async () => {
+test('읽지 않은 솔루션 알림을 클릭하면 읽음 처리 후 솔루션으로 이동한다', async () => {
   getNotifications.mockResolvedValue({
     message: '조회 성공',
     nextCursor: null,
@@ -110,6 +110,39 @@ test('읽지 않은 알림을 클릭하면 읽음 처리를 요청한다', async
   fireEvent.click(await screen.findByText('오늘의 솔루션이 도착했어요'))
 
   await waitFor(() => expect(markNotificationsAsRead).toHaveBeenCalledWith([1]))
+  expect(navigate).toHaveBeenCalledWith('/solution')
+})
+
+test('매출 업로드 알림을 클릭하면 업로드 화면으로 이동한다', async () => {
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: {
+      items: [
+        {
+          id: 2,
+          type: 'SALES_UPLOAD_REMINDER',
+          title: '매출 파일을 업로드해 주세요',
+          content: '오늘 매출을 분석해 보세요.',
+          relatedEntityType: null,
+          relatedEntityId: null,
+          sentAt: '2026-09-26T08:00:00+09:00',
+          readAt: '2026-09-26T09:00:00+09:00',
+        },
+      ],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationsPage />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByText('매출 파일을 업로드해 주세요'))
+
+  expect(navigate).toHaveBeenCalledWith('/sales/upload')
+  expect(markNotificationsAsRead).not.toHaveBeenCalled()
 })
 
 test('더 불러올 알림이 있으면 더보기 버튼으로 다음 페이지를 요청한다', async () => {
