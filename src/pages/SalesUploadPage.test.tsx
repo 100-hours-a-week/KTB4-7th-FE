@@ -113,6 +113,9 @@ test('연결 상태와 업로드 기록을 실제 API로 불러온다', async ()
   ) as HTMLElement
   expect(connectionStatus).not.toBeNull()
 
+  expect(
+    within(connectionStatus).getByText('누적 반영 매출'),
+  ).toBeInTheDocument()
   expect(await within(connectionStatus).findByText('08.27')).toBeInTheDocument()
   expect(
     within(connectionStatus).getByText(
@@ -120,6 +123,11 @@ test('연결 상태와 업로드 기록을 실제 API로 불러온다', async ()
     ),
   ).toBeInTheDocument()
   expect(within(connectionStatus).getByText('최신')).toBeInTheDocument()
+  expect(
+    within(connectionStatus).getByText(
+      '같은 기간을 다시 업로드한 경우에도 중복 없이 반영된 건수예요.',
+    ),
+  ).toBeInTheDocument()
   expect(screen.getByText('202608_매출.xlsx')).toBeInTheDocument()
 })
 

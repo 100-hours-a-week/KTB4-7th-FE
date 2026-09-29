@@ -45,9 +45,6 @@ export function HomePage() {
                   </Link>
                 </>
               )}
-              <Link className="light-button" to="/solution">
-                솔루션 미리 보기
-              </Link>
             </div>
           </section>
           <section className="landing-values">

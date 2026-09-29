@@ -62,7 +62,4 @@ test('로그인한 사용자에게는 회원가입/로그인 버튼을 숨긴다
     ).not.toBeInTheDocument(),
   )
   expect(screen.queryByRole('link', { name: '로그인' })).not.toBeInTheDocument()
-  expect(
-    screen.getByRole('link', { name: '솔루션 미리 보기' }),
-  ).toBeInTheDocument()
 })

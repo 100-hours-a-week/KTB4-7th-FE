@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   getChatErrorMessage,
   getChatHistory,
@@ -137,29 +137,51 @@ export function SolutionChatPage() {
   }
 
   return (
-    <AppShell title="AI 채팅">
+    <AppShell
+      title="AI 채팅"
+      backTo="/solution"
+      contentClassName="chat-app-content"
+    >
       <div className="chat-page">
-        <p>MEMME AI</p>
-        <h1>오늘의 솔루션, 무엇이든 물어보세요</h1>
-        <Link to="/solution">← 오늘의 솔루션</Link>
-        {serviceGuide && <small>{serviceGuide}</small>}
-        {pageError && (
-          <p className="form-error" role="alert">
-            {pageError}
-          </p>
-        )}
+        <header className="chat-page-header">
+          <p>MEMME AI</p>
+          <h1>오늘의 솔루션, 무엇이든 물어보세요</h1>
+          {serviceGuide && <small>{serviceGuide}</small>}
+          {pageError && (
+            <p className="form-error" role="alert">
+              {pageError}
+            </p>
+          )}
+        </header>
         {isLoading ? (
           <p>불러오는 중...</p>
         ) : (
           <>
-            <div>
+            <div className="chat-messages" aria-label="대화 내용">
               {messages.map((item) => (
-                <p key={item.id} className={item.role === 'USER' ? 'user' : ''}>
-                  {item.status === 'FAILED'
-                    ? '답변 생성에 실패했습니다.'
-                    : item.content ||
-                      (item.status === 'STREAMING' ? '답변 작성 중...' : '')}
-                </p>
+                <article
+                  key={item.id}
+                  className={`chat-message ${
+                    item.role === 'USER'
+                      ? 'chat-message-user'
+                      : 'chat-message-assistant'
+                  }`}
+                >
+                  {item.role === 'ASSISTANT' && (
+                    <span className="chat-assistant-label">MEMME AI</span>
+                  )}
+                  <p>
+                    {item.status === 'FAILED'
+                      ? '답변 생성에 실패했습니다.'
+                      : item.content ||
+                        (item.status === 'STREAMING' ? '답변 작성 중...' : '')}
+                  </p>
+                  {item.role === 'USER' && (
+                    <span className="chat-user-avatar" aria-label="내 프로필">
+                      나
+                    </span>
+                  )}
+                </article>
               ))}
               {messages.length === 0 && recommendedQuestions.length > 0 && (
                 <div className="chat-recommended-questions">

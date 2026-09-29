@@ -948,6 +948,56 @@ input {
   font-size: 13px;
   line-height: 1.55;
 }
+.solution-status-page {
+  position: relative;
+  min-height: 480px;
+}
+.solution-status-modal {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(100% - 32px, 360px);
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  padding: 28px 24px;
+  border: 1px solid var(--ink);
+  border-radius: 18px;
+  background: var(--paper-raised);
+  box-shadow: 8px 8px var(--ink);
+  text-align: center;
+}
+.solution-status-modal h2 {
+  margin: 10px 0 8px;
+  font-size: 22px;
+}
+.solution-status-modal > p:not(.solution-status-icon) {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.solution-status-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--teal-dim);
+  color: var(--teal);
+  font-size: 24px;
+  font-weight: 700;
+}
+.solution-status-polling {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 700;
+}
+.solution-status-modal .primary-action {
+  width: 100%;
+  margin-top: 18px;
+}
 .solution-card {
   display: grid;
   align-content: start;
@@ -1045,33 +1095,110 @@ input {
   letter-spacing: -0.08em;
 }
 .chat-page {
+  display: flex;
+  flex-direction: column;
   max-width: 760px;
-  margin: 80px auto;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
 }
 .chat-page h1 {
   font-size: 48px;
   font-weight: 400;
 }
-.chat-page > div {
+.chat-page-header {
+  flex: none;
+}
+.chat-messages {
   display: grid;
+  flex: 1 1 auto;
   gap: 12px;
   min-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px;
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
 }
-.chat-page > div p {
+.chat-message {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  width: fit-content;
+  max-width: min(82%, 520px);
+}
+.chat-message p {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px 16px 16px 16px;
+  background: var(--paper-raised);
+  color: var(--ink);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.chat-message-assistant::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 24px;
+  width: 10px;
+  height: 10px;
+  border-bottom: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: var(--paper-raised);
+  transform: rotate(45deg);
+}
+.chat-assistant-label {
+  color: var(--teal);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.chat-message-user {
+  justify-self: end;
+  margin-right: 10px;
+}
+.chat-message-user p {
+  border-color: var(--ink);
+  border-radius: 16px 4px 16px 16px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.chat-message-user::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 15px;
+  width: 10px;
+  height: 10px;
+  background: var(--ink);
+  transform: rotate(45deg);
+}
+.chat-user-avatar {
+  position: absolute;
+  top: -9px;
+  right: -13px;
+  z-index: 1;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 2px solid var(--paper-raised);
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+}
+.chat-messages > p {
   max-width: 70%;
   margin: 0;
   padding: 14px;
   background: var(--paper-raised);
 }
-.chat-page > div .user {
-  justify-self: end;
-  background: var(--ink);
-  color: var(--paper);
-}
 .chat-page form {
+  flex: none;
   display: flex;
   gap: 8px;
   margin-top: 18px;
@@ -1673,6 +1800,9 @@ input {
   overscroll-behavior: contain;
   padding: 24px 16px;
 }
+.mobile-app-shell .app-content.chat-app-content {
+  overflow: hidden;
+}
 .mobile-app-shell .bottom-tabs {
   position: relative;
   z-index: 2;
@@ -1782,6 +1912,12 @@ input {
 .mobile-app-shell .chat-page {
   margin: 0;
   padding: 24px 4px;
+}
+.mobile-app-shell .chat-page {
+  box-sizing: border-box;
+}
+.mobile-app-shell .chat-messages {
+  min-height: 0;
 }
 .mobile-app-shell .detail-page section {
   grid-template-columns: 1fr;
@@ -2015,6 +2151,12 @@ input {
   margin: 0 0 10px;
   color: var(--ink-soft);
   font-size: 12px;
+}
+.connection-status-guide {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
 }
 .passbook {
   position: relative;
