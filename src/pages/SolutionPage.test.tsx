@@ -147,3 +147,59 @@ test('3개월 미만이면 솔루션 생성 전 안내 문구를 보여준다', 
     ),
   ).toBeInTheDocument()
 })
+
+test('솔루션 생성 중 상태를 모달로 보여준다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '매출 데이터를 분석하고 있습니다.',
+    status: 'GENERATING',
+    data: {
+      storeName: '맴매 베이커리',
+      screenTitle: null,
+      solutionBundleId: null,
+      targetDate: '2026-09-27',
+      solutionCards: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByRole('dialog', {
+      name: '오늘의 솔루션을 생성하고 있어요',
+    }),
+  ).toBeInTheDocument()
+  expect(screen.getByText('자동으로 확인하고 있어요')).toBeInTheDocument()
+})
+
+test('솔루션 생성 실패 상태를 모달로 보여준다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '생성 요청을 완료하지 못했습니다.',
+    status: 'FAILED',
+    data: {
+      storeName: '맴매 베이커리',
+      screenTitle: null,
+      solutionBundleId: null,
+      targetDate: '2026-09-27',
+      solutionCards: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByRole('dialog', {
+      name: '솔루션 생성에 실패했어요',
+    }),
+  ).toBeInTheDocument()
+  expect(
+    screen.getByRole('button', { name: '다시 확인하기' }),
+  ).toBeInTheDocument()
+})

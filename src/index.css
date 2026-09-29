@@ -948,6 +948,56 @@ input {
   font-size: 13px;
   line-height: 1.55;
 }
+.solution-status-page {
+  position: relative;
+  min-height: 480px;
+}
+.solution-status-modal {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: min(100% - 32px, 360px);
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  padding: 28px 24px;
+  border: 1px solid var(--ink);
+  border-radius: 18px;
+  background: var(--paper-raised);
+  box-shadow: 8px 8px var(--ink);
+  text-align: center;
+}
+.solution-status-modal h2 {
+  margin: 10px 0 8px;
+  font-size: 22px;
+}
+.solution-status-modal > p:not(.solution-status-icon) {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.solution-status-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--teal-dim);
+  color: var(--teal);
+  font-size: 24px;
+  font-weight: 700;
+}
+.solution-status-polling {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 700;
+}
+.solution-status-modal .primary-action {
+  width: 100%;
+  margin-top: 18px;
+}
 .solution-card {
   display: grid;
   align-content: start;

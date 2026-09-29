@@ -39,10 +39,12 @@ export function SolutionPage() {
   const [helperText, setHelperText] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let ignore = false
-    setIsLoading(true)
+    let refreshTimer: number | undefined
+    if (refreshKey === 0) setIsLoading(true)
     setError('')
     getTodaySolution()
       .then((response) => {
@@ -54,6 +56,11 @@ export function SolutionPage() {
         setBundleId(response.data.solutionBundleId)
         setCards(response.data.solutionCards)
         setHelperText(response.data.helperText ?? null)
+        if (response.status === 'PENDING' || response.status === 'GENERATING') {
+          refreshTimer = window.setTimeout(() => {
+            if (!ignore) setRefreshKey((previous) => previous + 1)
+          }, 3000)
+        }
       })
       .catch((requestError) => {
         if (ignore) return
@@ -64,17 +71,30 @@ export function SolutionPage() {
         setError('오늘의 솔루션을 불러오지 못했습니다.')
       })
       .finally(() => {
-        if (!ignore) setIsLoading(false)
+        if (!ignore && refreshKey === 0) setIsLoading(false)
       })
     return () => {
       ignore = true
+      if (refreshTimer) window.clearTimeout(refreshTimer)
     }
-  }, [navigate])
+  }, [navigate, refreshKey])
 
   if (isLoading) {
     return (
       <AppShell title="솔루션">
-        <p>불러오는 중...</p>
+        <div className="solution-page solution-status-page">
+          <section
+            className="solution-status-modal"
+            role="status"
+            aria-live="polite"
+          >
+            <p className="solution-status-icon" aria-hidden="true">
+              …
+            </p>
+            <h2>오늘의 솔루션을 생성하고 있어요</h2>
+            <p>오늘의 솔루션 상태를 확인하고 있습니다.</p>
+          </section>
+        </div>
       </AppShell>
     )
   }
@@ -106,29 +126,51 @@ export function SolutionPage() {
     )
   }
 
-  if (status === 'PENDING' || status === 'GENERATING') {
-    return (
-      <AppShell title="솔루션">
-        <EmptyState
-          title="오늘의 솔루션을 생성하고 있습니다"
-          description={message || '잠시 후 다시 확인해 주세요.'}
-        />
-      </AppShell>
-    )
-  }
-
-  if (status === 'FAILED') {
-    return (
-      <AppShell title="솔루션">
-        <EmptyState
-          title="오늘의 솔루션을 불러오지 못했습니다"
-          description={message || '잠시 후 다시 시도해 주세요.'}
-        />
-      </AppShell>
-    )
-  }
-
   const primary = cards[0]
+
+  if (status === 'PENDING' || status === 'GENERATING' || status === 'FAILED') {
+    const isGenerating = status === 'PENDING' || status === 'GENERATING'
+    return (
+      <AppShell title="솔루션">
+        <div className="solution-page solution-status-page">
+          <section
+            className="solution-status-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="solution-status-title"
+          >
+            <p className="solution-status-icon" aria-hidden="true">
+              {isGenerating ? '…' : '!'}
+            </p>
+            <h2 id="solution-status-title">
+              {isGenerating
+                ? '오늘의 솔루션을 생성하고 있어요'
+                : '솔루션 생성에 실패했어요'}
+            </h2>
+            <p>
+              {message ||
+                (isGenerating
+                  ? '잠시만 기다리면 준비된 솔루션을 보여드릴게요.'
+                  : '잠시 후 다시 확인해 주세요.')}
+            </p>
+            {isGenerating ? (
+              <span className="solution-status-polling">
+                자동으로 확인하고 있어요
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="primary-action"
+                onClick={() => setRefreshKey((previous) => previous + 1)}
+              >
+                다시 확인하기
+              </button>
+            )}
+          </section>
+        </div>
+      </AppShell>
+    )
+  }
 
   if (!primary || !bundleId) {
     return (
