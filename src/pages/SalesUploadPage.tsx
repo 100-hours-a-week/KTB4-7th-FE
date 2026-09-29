@@ -181,7 +181,7 @@ export function SalesUploadPage() {
         )}
 
         <section className="connection-status">
-          <p className="section-label">이번 달 반영 매출</p>
+          <p className="section-label">누적 반영 매출</p>
           <div className="passbook">
             <p className="passbook-num">
               {isLoadingHistory
@@ -208,6 +208,9 @@ export function SalesUploadPage() {
               </span>
             </div>
           </div>
+          <p className="connection-status-guide">
+            같은 기간을 다시 업로드한 경우에도 중복 없이 반영된 건수예요.
+          </p>
         </section>
 
         {submitError && (
