@@ -23,9 +23,9 @@ beforeEach(() => {
   navigate.mockReset()
 })
 
-function renderLoginPage() {
+function renderLoginPage(initialEntry = '/login') {
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <LoginPage />
     </MemoryRouter>,
   )
@@ -50,6 +50,26 @@ test('이메일/비밀번호로 로그인에 성공하면 솔루션 페이지로
     }),
   )
   await waitFor(() => expect(navigate).toHaveBeenCalledWith('/solution'))
+})
+
+test('로그인 성공 후 보호 경로에서 전달한 원래 주소로 이동한다', async () => {
+  login.mockResolvedValue({ user: { id: 1, email: 'owner@memme.kr' } })
+  renderLoginPage({
+    pathname: '/login',
+    state: { from: { pathname: '/solution/chat', search: '?source=notice' } },
+  } as never)
+
+  fireEvent.change(screen.getByLabelText('이메일'), {
+    target: { value: 'owner@memme.kr' },
+  })
+  fireEvent.change(screen.getByLabelText('비밀번호'), {
+    target: { value: 'Memme!2026' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+
+  await waitFor(() =>
+    expect(navigate).toHaveBeenCalledWith('/solution/chat?source=notice'),
+  )
 })
 
 test('로그인에 실패하면 서버 에러 메시지를 보여주고 이동하지 않는다', async () => {
