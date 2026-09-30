@@ -144,9 +144,10 @@ export function SignupPage() {
   const isBusinessVerified =
     Boolean(verificationId) &&
     verifiedRegNumber === businessValues.businessRegNumber
+  const hasBusinessRegNumber = Boolean(businessValues.businessRegNumber)
   const isBusinessReady =
     Boolean(businessValues.storeName) &&
-    isBusinessVerified &&
+    (!hasBusinessRegNumber || isBusinessVerified) &&
     Boolean(businessValues.postalCode) &&
     Boolean(businessValues.address) &&
     Boolean(businessValues.openTime) &&
@@ -319,19 +320,23 @@ export function SignupPage() {
   }, [addressQuery, isAddressModalOpen])
 
   const submitBusiness = business.handleSubmit(async (values) => {
-    if (!isBusinessVerified)
-      return setError('사업자 인증을 먼저 완료해 주세요.')
-
     setError('')
     setBusinessHoursError('')
     business.clearErrors()
 
-    const { openTime, closeTime, ...businessFields } = values
+    const { openTime, closeTime, businessRegNumber, ...businessFields } = values
+    const businessVerification =
+      isBusinessVerified && verificationId !== undefined
+        ? {
+            businessRegNumber,
+            businessVerificationId: verificationId,
+          }
+        : {}
 
     try {
       const data = await completeSignup(token, {
         ...businessFields,
-        businessVerificationId: verificationId as number,
+        ...businessVerification,
         businessHours: days.map((dayOfWeek) => {
           const isClosed = closedDays.has(dayOfWeek)
           return {
@@ -404,7 +409,7 @@ export function SignupPage() {
         <p>
           {step === 1
             ? '필수 정보를 입력한 뒤 다음 단계로 이동할 수 있습니다.'
-            : '사업자 인증 후 매장 정보를 등록해 주세요.'}
+            : '매장 정보를 입력해 회원가입을 완료해 주세요.'}
         </p>
       </section>
       {error && <p role="alert">{error}</p>}
@@ -582,16 +587,13 @@ export function SignupPage() {
               )}
             </label>
             <label>
-              <span className="signup-field-label">
-                사업자등록번호 <em aria-hidden="true">*</em>
-              </span>
+              <span className="signup-field-label">사업자등록번호</span>
               <div className="signup-inline-field">
                 <ClearableInput
                   aria-label="사업자등록번호"
                   autoComplete="off"
                   placeholder="- 없이 숫자 10자리를 입력해주세요"
                   {...business.register('businessRegNumber', {
-                    required: true,
                     pattern: {
                       value: /^\d{10}$/,
                       message: '숫자 10자리를 입력해주세요.',
@@ -620,7 +622,7 @@ export function SignupPage() {
                 </small>
               ) : (
                 <small className="signup-field-hint">
-                  사업자등록번호를 입력하고 인증하기를 눌러주세요.
+                  선택 항목이에요. 입력하면 인증 후 가입할 수 있어요.
                 </small>
               )}
             </label>
