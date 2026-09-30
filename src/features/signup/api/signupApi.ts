@@ -23,8 +23,8 @@ export type BusinessHours = {
 }
 export type SignupBusinessRequest = {
   storeName: string
-  businessRegNumber: string
-  businessVerificationId: number
+  businessRegNumber?: string
+  businessVerificationId?: number
   postalCode: string
   address: string
   addressDetail: string

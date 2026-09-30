@@ -270,6 +270,48 @@ test('가입 완료 API의 영업시간 오류를 영업시간 영역에 표시�
   ).toBeInTheDocument()
 })
 
+test('사업자번호와 인증 없이 매장 정보를 입력하면 회원가입을 완료한다', async () => {
+  await moveToBusinessStep()
+  searchAddress.mockResolvedValue({
+    addresses: [
+      {
+        postalCode: '06134',
+        roadAddress: '서울특별시 강남구 테헤란로 231',
+        jibunAddress: '',
+      },
+    ],
+    nextCursor: null,
+  })
+  completeSignup.mockResolvedValue({
+    user: { id: 1, email: 'owner@memme.kr' },
+    store: { id: 2, storeName: '맴매카페' },
+    next: 'LOGIN',
+  })
+
+  fireEvent.change(screen.getByLabelText('매장명'), {
+    target: { value: '맴매카페' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: '주소 검색' }))
+  fireEvent.change(
+    screen.getByPlaceholderText('도로명, 건물명 또는 지번으로 검색해주세요'),
+    { target: { value: '테헤란로' } },
+  )
+  fireEvent.click(
+    await screen.findByRole('button', {
+      name: /서울특별시 강남구 테헤란로 231/,
+    }),
+  )
+
+  const submitButton = screen.getByRole('button', { name: '회원가입 완료' })
+  expect(submitButton).toBeEnabled()
+  fireEvent.click(submitButton)
+
+  await waitFor(() => expect(completeSignup).toHaveBeenCalledOnce())
+  const [, request] = completeSignup.mock.calls[0]
+  expect(request).not.toHaveProperty('businessRegNumber')
+  expect(request).not.toHaveProperty('businessVerificationId')
+})
+
 test('주소 검색 모달에서 검색 결과를 선택하면 매장 주소가 채워진다', async () => {
   requestSignupAccount.mockResolvedValue({
     signupToken: 'signup-token',
