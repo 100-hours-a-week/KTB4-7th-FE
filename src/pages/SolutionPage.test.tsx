@@ -148,6 +148,35 @@ test('3개월 미만이면 솔루션 생성 전 안내 문구를 보여준다', 
   ).toBeInTheDocument()
 })
 
+test('오늘 솔루션 준비 전에는 자정 준비 안내를 보여주고 업로드를 유도하지 않는다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '오늘의 솔루션은 매일 자정에 준비됩니다.',
+    status: 'EMPTY',
+    data: {
+      storeName: null,
+      screenTitle: null,
+      solutionBundleId: null,
+      targetDate: '2026-09-30',
+      solutionCards: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByRole('heading', {
+      name: '오늘의 솔루션은 자정에 준비됩니다',
+    }),
+  ).toBeInTheDocument()
+  expect(
+    screen.queryByRole('link', { name: '매출 데이터 업로드' }),
+  ).not.toBeInTheDocument()
+})
+
 test('솔루션 생성 중 상태를 모달로 보여준다', async () => {
   getTodaySolution.mockResolvedValue({
     message: '매출 데이터를 분석하고 있습니다.',

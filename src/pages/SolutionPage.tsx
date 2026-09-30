@@ -110,6 +110,20 @@ export function SolutionPage() {
     )
   }
 
+  if (
+    status === 'EMPTY' &&
+    message === '오늘의 솔루션은 매일 자정에 준비됩니다.'
+  ) {
+    return (
+      <AppShell title="솔루션">
+        <EmptyState
+          title="오늘의 솔루션은 자정에 준비됩니다"
+          description={message}
+        />
+      </AppShell>
+    )
+  }
+
   if (status === 'EMPTY' || status === 'INSUFFICIENT_HISTORY') {
     return (
       <AppShell title="솔루션">
