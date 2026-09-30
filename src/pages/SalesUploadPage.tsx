@@ -8,7 +8,7 @@ import {
 } from '../features/sales/api/salesApi'
 import { AppShell } from '../shared/ui/AppShell'
 
-const supportedExtensions = ['csv', 'xlsx', 'xls']
+const supportedExtensions = ['xlsx']
 const MAX_REQUESTABLE_PAGE = 5
 
 function isUnauthorized(error: unknown) {
@@ -115,7 +115,7 @@ export function SalesUploadPage() {
     const extension = file.name.split('.').pop()?.toLowerCase()
     if (!extension || !supportedExtensions.includes(extension)) {
       setSelectedFile(null)
-      setFileError('CSV 또는 엑셀 파일만 업로드할 수 있습니다.')
+      setFileError('xlsx 파일만 업로드할 수 있습니다.')
       return
     }
     setFileError('')
@@ -159,14 +159,14 @@ export function SalesUploadPage() {
           <input
             aria-label="매출 파일 선택"
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".xlsx"
             onChange={(event) => selectFile(event.target.files?.[0])}
           />
           <span aria-hidden="true">↑</span>
           <strong>
             {selectedFile?.name || '매출 파일을 여기에 놓아주세요'}
           </strong>
-          <small>xlsx, xls, csv · 최대 10MB · 한 번에 한 개</small>
+          <small>xlsx · 최대 10MB · 한 번에 한 개</small>
         </label>
         {fileError && (
           <p className="form-error" role="alert">
