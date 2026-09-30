@@ -72,7 +72,7 @@ test('지원하지 않는 매출 파일을 선택하면 오류를 표시한다',
   })
 
   expect(screen.getByRole('alert')).toHaveTextContent(
-    'CSV 또는 엑셀 파일만 업로드할 수 있습니다.',
+    'xlsx 파일만 업로드할 수 있습니다.',
   )
 })
 
@@ -158,6 +158,27 @@ test('파일을 선택하고 분석 시작을 누르면 업로드 후 분석 페
   await waitFor(() => expect(navigate).toHaveBeenCalledWith('/sales/analysis'))
 })
 
+test('xlsx가 아닌 파일은 선택할 수 없다', async () => {
+  render(
+    <MemoryRouter>
+      <SalesUploadPage />
+    </MemoryRouter>,
+  )
+
+  await waitFor(() => expect(getSalesUploadHistory).toHaveBeenCalled())
+
+  fireEvent.change(screen.getByLabelText('매출 파일 선택'), {
+    target: {
+      files: [new File(['x'], 'sales.csv', { type: 'text/csv' })],
+    },
+  })
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'xlsx 파일만 업로드할 수 있습니다.',
+  )
+  expect(screen.getByRole('button', { name: '분석 시작' })).toBeDisabled()
+})
+
 test('업로드에 실패하면 오류 메시지를 보여준다', async () => {
   uploadSalesFile.mockRejectedValue(new Error('network error'))
 
@@ -171,7 +192,11 @@ test('업로드에 실패하면 오류 메시지를 보여준다', async () => {
 
   fireEvent.change(screen.getByLabelText('매출 파일 선택'), {
     target: {
-      files: [new File(['x'], 'sales.csv', { type: 'text/csv' })],
+      files: [
+        new File(['x'], 'sales.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+      ],
     },
   })
   fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
