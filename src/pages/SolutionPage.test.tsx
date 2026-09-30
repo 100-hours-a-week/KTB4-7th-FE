@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SolutionPage } from './SolutionPage'
@@ -202,4 +202,53 @@ test('솔루션 생성 실패 상태를 모달로 보여준다', async () => {
   expect(
     screen.getByRole('button', { name: '다시 확인하기' }),
   ).toBeInTheDocument()
+})
+
+test('실패 상태에서 다시 확인하기를 누르면 확인 중 상태를 보여주고 다시 조회한다', async () => {
+  let resolveRetry: ((value: unknown) => void) | undefined
+  getTodaySolution
+    .mockResolvedValueOnce({
+      message: '생성 요청을 완료하지 못했습니다.',
+      status: 'FAILED',
+      data: {
+        storeName: '맴매 베이커리',
+        screenTitle: null,
+        solutionBundleId: null,
+        targetDate: '2026-09-27',
+        solutionCards: [],
+      },
+    })
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRetry = resolve
+        }),
+    )
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByRole('button', { name: '다시 확인하기' }))
+
+  expect(
+    await screen.findByRole('status', { name: '솔루션 상태 확인 중' }),
+  ).toBeInTheDocument()
+  await waitFor(() => expect(getTodaySolution).toHaveBeenCalledTimes(2))
+
+  await act(async () => {
+    resolveRetry?.({
+      message: '생성 요청을 완료하지 못했습니다.',
+      status: 'FAILED',
+      data: {
+        storeName: '맴매 베이커리',
+        screenTitle: null,
+        solutionBundleId: null,
+        targetDate: '2026-09-27',
+        solutionCards: [],
+      },
+    })
+  })
 })

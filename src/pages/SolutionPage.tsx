@@ -38,6 +38,7 @@ export function SolutionPage() {
   const [cards, setCards] = useState<SolutionCard[]>([])
   const [helperText, setHelperText] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRetrying, setIsRetrying] = useState(false)
   const [error, setError] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -71,7 +72,10 @@ export function SolutionPage() {
         setError('오늘의 솔루션을 불러오지 못했습니다.')
       })
       .finally(() => {
-        if (!ignore && refreshKey === 0) setIsLoading(false)
+        if (!ignore) {
+          if (refreshKey === 0) setIsLoading(false)
+          setIsRetrying(false)
+        }
       })
     return () => {
       ignore = true
@@ -158,13 +162,28 @@ export function SolutionPage() {
                 자동으로 확인하고 있어요
               </span>
             ) : (
-              <button
-                type="button"
-                className="primary-action"
-                onClick={() => setRefreshKey((previous) => previous + 1)}
-              >
-                다시 확인하기
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="primary-action"
+                  disabled={isRetrying}
+                  onClick={() => {
+                    setIsRetrying(true)
+                    setRefreshKey((previous) => previous + 1)
+                  }}
+                >
+                  {isRetrying ? '확인 중...' : '다시 확인하기'}
+                </button>
+                {isRetrying && (
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    aria-label="솔루션 상태 확인 중"
+                  >
+                    솔루션 상태를 확인하고 있어요.
+                  </p>
+                )}
+              </>
             )}
           </section>
         </div>
