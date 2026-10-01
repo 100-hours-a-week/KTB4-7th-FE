@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -165,9 +166,24 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
   expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-09')
 })
 
-test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출 카드를 표시하지 않는다', async () => {
+test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출을 자동으로 다시 조회한다', async () => {
   getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
   getSalesAnalysis.mockResolvedValue(completedResponse)
+  getSalesExpectedForecast
+    .mockResolvedValueOnce({ status: 'EMPTY', message: '없음', data: null })
+    .mockResolvedValueOnce({
+      status: 'COMPLETED',
+      message: '조회 성공',
+      data: {
+        targetMonth: '2026-10',
+        actualSalesAmount: 0,
+        forecastSalesAmount: 1080000,
+        expectedSalesAmount: 1080000,
+        lowerBound: 930000,
+        upperBound: 1230000,
+        dailyForecasts: [],
+      },
+    })
 
   render(
     <MemoryRouter>
@@ -176,7 +192,109 @@ test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출 카
   )
 
   await screen.findByText('₩7,920,000')
-  expect(screen.queryByText(/예상 총매출/)).not.toBeInTheDocument()
+  expect(
+    screen.queryByLabelText('2026년 10월 예상 총매출'),
+  ).not.toBeInTheDocument()
+  expect(
+    await screen.findByText('예상 총매출을 확인하고 있어요.'),
+  ).toBeInTheDocument()
+
+  expect(
+    await screen.findByText('2026년 10월 예상 총매출', {}, { timeout: 4000 }),
+  ).toBeInTheDocument()
+  expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
+})
+
+test('예측 데이터가 계속 없으면 재조회를 멈추고 다시 확인 버튼을 표시한다', async () => {
+  vi.useFakeTimers()
+  try {
+    getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+    getSalesAnalysis.mockResolvedValue(completedResponse)
+    const view = render(
+      <MemoryRouter>
+        <SalesAnalysisPage />
+      </MemoryRouter>,
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000)
+    })
+
+    expect(
+      screen.getByText('아직 예상 총매출을 불러오지 못했어요.'),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: '다시 확인' }),
+    ).toBeInTheDocument()
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(21)
+    view.unmount()
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('예상 총매출 조회 오류 후 다시 확인을 누르면 재조회한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+  getSalesExpectedForecast
+    .mockRejectedValueOnce(new Error('network'))
+    .mockResolvedValueOnce({
+      status: 'COMPLETED',
+      message: '조회 성공',
+      data: {
+        targetMonth: '2026-10',
+        actualSalesAmount: 0,
+        forecastSalesAmount: 1080000,
+        expectedSalesAmount: 1080000,
+        lowerBound: 930000,
+        upperBound: 1230000,
+        dailyForecasts: [],
+      },
+    })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByRole('button', { name: '다시 확인' }))
+  expect(await screen.findByText('₩1,080,000')).toBeInTheDocument()
+})
+
+test('지난 월로 이동하면 예정된 예상 총매출 재조회를 취소한다', async () => {
+  vi.useFakeTimers()
+  try {
+    getSalesAvailableMonths.mockResolvedValue({
+      months: ['2026-08', '2026-09'],
+    })
+    getSalesAnalysis.mockResolvedValue(completedResponse)
+    const view = render(
+      <MemoryRouter>
+        <SalesAnalysisPage />
+      </MemoryRouter>,
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(1)
+
+    fireEvent.change(screen.getByLabelText('조회할 월'), {
+      target: { value: '2026-08' },
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(1)
+    view.unmount()
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 test('지난 월을 선택하면 예상 총매출 카드를 숨긴다', async () => {
