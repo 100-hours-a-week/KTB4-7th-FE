@@ -252,6 +252,8 @@ export function SalesAnalysisPage() {
     let ignore = false
     let retryTimeout: ReturnType<typeof setTimeout> | undefined
     let retryCount = 0
+    let initialForecastAmount: number | null = null
+    let sawEmptyForecast = false
     setExpectedForecast(null)
     setForecastRefreshStatus('checking')
 
@@ -261,10 +263,19 @@ export function SalesAnalysisPage() {
         if (ignore) return
         if (response.status === 'COMPLETED') {
           setExpectedForecast(response.data)
-          if (!refreshForecastAfterUpload || retryCount >= FORECAST_MAX_RETRIES) {
+          if (
+            !refreshForecastAfterUpload ||
+            sawEmptyForecast ||
+            (initialForecastAmount !== null &&
+              response.data.expectedSalesAmount !== initialForecastAmount) ||
+            retryCount >= FORECAST_MAX_RETRIES
+          ) {
             setForecastRefreshStatus('idle')
             return
           }
+          initialForecastAmount = response.data.expectedSalesAmount
+        } else {
+          sawEmptyForecast = true
         }
         if (retryCount >= FORECAST_MAX_RETRIES) {
           setForecastRefreshStatus('unavailable')

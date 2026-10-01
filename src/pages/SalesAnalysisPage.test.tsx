@@ -205,7 +205,7 @@ test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출을 
   expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
 })
 
-test('업로드 직후에는 기존 예측이 완료 상태여도 60초간 새 값을 자동 반영한다', async () => {
+test('업로드 직후에는 기존 예측값이 바뀌면 재조회를 멈춘다', async () => {
   vi.useFakeTimers()
   try {
     getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
@@ -225,13 +225,29 @@ test('업로드 직후에는 기존 예측이 완료 상태여도 60초간 새 �
       expectedSalesAmount: 1200000,
     }
     getSalesExpectedForecast
-      .mockResolvedValueOnce({ status: 'COMPLETED', message: '조회 성공', data: oldForecast })
-      .mockResolvedValue({ status: 'COMPLETED', message: '조회 성공', data: newForecast })
+      .mockResolvedValueOnce({
+        status: 'COMPLETED',
+        message: '조회 성공',
+        data: oldForecast,
+      })
+      .mockResolvedValueOnce({
+        status: 'COMPLETED',
+        message: '조회 성공',
+        data: oldForecast,
+      })
+      .mockResolvedValue({
+        status: 'COMPLETED',
+        message: '조회 성공',
+        data: newForecast,
+      })
 
     const view = render(
       <MemoryRouter
         initialEntries={[
-          { pathname: '/sales/analysis', state: { refreshForecastAfterUpload: true } },
+          {
+            pathname: '/sales/analysis',
+            state: { refreshForecastAfterUpload: true },
+          },
         ]}
       >
         <SalesAnalysisPage />
@@ -247,15 +263,114 @@ test('업로드 직후에는 기존 예측이 완료 상태여도 60초간 새 �
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000)
     })
-    expect(screen.getByText('₩1,200,000')).toBeInTheDocument()
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(2)
+    expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
 
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(57000)
-    })
-    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(21)
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000)
     })
+    expect(screen.getByText('₩1,200,000')).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000)
+    })
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(3)
+    view.unmount()
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('업로드 직후 예측이 비어 있으면 첫 완료 응답에서 재조회를 멈춘다', async () => {
+  vi.useFakeTimers()
+  try {
+    getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+    getSalesAnalysis.mockResolvedValue(completedResponse)
+    getSalesExpectedForecast
+      .mockResolvedValueOnce({ status: 'EMPTY', message: '없음', data: null })
+      .mockResolvedValue({
+        status: 'COMPLETED',
+        message: '조회 성공',
+        data: {
+          targetMonth: '2026-10',
+          actualSalesAmount: 0,
+          forecastSalesAmount: 1200000,
+          expectedSalesAmount: 1200000,
+          lowerBound: 930000,
+          upperBound: 1230000,
+          dailyForecasts: [],
+        },
+      })
+
+    const view = render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/sales/analysis',
+            state: { refreshForecastAfterUpload: true },
+          },
+        ]}
+      >
+        <SalesAnalysisPage />
+      </MemoryRouter>,
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+    expect(screen.getByText('₩1,200,000')).toBeInTheDocument()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(60000)
+    })
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(2)
+    view.unmount()
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+test('업로드 후 예측값이 그대로면 60초 후 재조회를 멈춘다', async () => {
+  vi.useFakeTimers()
+  try {
+    getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+    getSalesAnalysis.mockResolvedValue(completedResponse)
+    getSalesExpectedForecast.mockResolvedValue({
+      status: 'COMPLETED',
+      message: '조회 성공',
+      data: {
+        targetMonth: '2026-10',
+        actualSalesAmount: 0,
+        forecastSalesAmount: 1080000,
+        expectedSalesAmount: 1080000,
+        lowerBound: 930000,
+        upperBound: 1230000,
+        dailyForecasts: [],
+      },
+    })
+
+    const view = render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/sales/analysis',
+            state: { refreshForecastAfterUpload: true },
+          },
+        ]}
+      >
+        <SalesAnalysisPage />
+      </MemoryRouter>,
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(63000)
+    })
+    expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
     expect(getSalesExpectedForecast).toHaveBeenCalledTimes(21)
     view.unmount()
   } finally {
