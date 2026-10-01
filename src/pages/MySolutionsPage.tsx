@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getSavedSolutions,
@@ -14,19 +14,6 @@ function isUnauthorized(error: unknown) {
     'response' in error &&
     (error as { response?: { status?: number } }).response?.status === 401
   )
-}
-
-function formatSavedDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Seoul',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date)
-  const month = parts.find((part) => part.type === 'month')?.value ?? '00'
-  const day = parts.find((part) => part.type === 'day')?.value ?? '00'
-  return `${month}.${day}`
 }
 
 function mergeGroups(
@@ -55,6 +42,9 @@ export function MySolutionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState('')
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
 
   useEffect(() => {
     let ignore = false
@@ -103,15 +93,46 @@ export function MySolutionsPage() {
   }
 
   const hasItems = groups.some((group) => group.items.length > 0)
+  const allSavedCards = groups.flatMap((group) => group.items)
+  const availableMonths = [
+    ...new Set(allSavedCards.map((item) => Number(item.savedDate.slice(5, 7)))),
+  ].sort((left, right) => right - left)
+  const savedCards = allSavedCards.filter(
+    (item) =>
+      selectedMonth === null ||
+      Number(item.savedDate.slice(5, 7)) === selectedMonth,
+  )
+
+  const selectMonth = (month: number | null) => {
+    setSelectedMonth(month)
+    setActiveIndex(0)
+  }
+
+  const showPrevious = () => {
+    setActiveIndex((current) => Math.max(0, current - 1))
+  }
+
+  const showNext = () => {
+    setActiveIndex((current) => Math.min(savedCards.length - 1, current + 1))
+  }
+
+  const handleTouchEnd = (clientY: number) => {
+    if (touchStartY.current === null) return
+    const distance = clientY - touchStartY.current
+    touchStartY.current = null
+    if (Math.abs(distance) < 45) return
+    if (distance < 0) showNext()
+    else showPrevious()
+  }
 
   return (
-    <AppShell title="내 솔루션">
-      <div className="page-stack">
-        <header className="page-title">
-          <p className="page-eyebrow-date">저장한 솔루션</p>
+    <AppShell title="내 솔루션" contentClassName="saved-solutions-content">
+      <div className="page-stack my-solutions-page">
+        <section className="saved-solutions-intro">
+          <span>저장한 솔루션</span>
           <h1>다시 보고 싶은 일</h1>
-          <span>필요한 순간에 바로 실행할 수 있도록 저장했어요.</span>
-        </header>
+          <p>필요한 순간에 바로 실행할 수 있도록 저장했어요.</p>
+        </section>
         {error && <p role="alert">{error}</p>}
         {isLoading ? (
           <p>불러오는 중...</p>
@@ -123,34 +144,111 @@ export function MySolutionsPage() {
           />
         ) : (
           <>
-            {groups.map(
-              (group) =>
-                group.items.length > 0 && (
-                  <section key={group.year}>
-                    <p className="year-label">{group.year}년</p>
-                    <div className="saved-solution-list">
-                      {group.items.map((item) => (
-                        <Link
-                          key={item.savedId}
-                          to={`/my-solutions/${item.savedId}`}
-                        >
-                          <span className="saved-solution-body">
-                            <strong>{item.displayTitle}</strong>
-                            <small>
-                              {formatSavedDate(item.savedDate)} 저장
-                            </small>
-                          </span>
-                          {item.remainingItemCount > 0 && (
-                            <span className="saved-solution-extra">
-                              외 {item.remainingItemCount}개
-                            </span>
-                          )}
-                        </Link>
-                      ))}
-                    </div>
-                  </section>
-                ),
-            )}
+            <div
+              className="saved-solution-filters"
+              role="group"
+              aria-label="저장 솔루션 월별 필터"
+            >
+              <button
+                type="button"
+                className={selectedMonth === null ? 'active' : undefined}
+                aria-pressed={selectedMonth === null}
+                onClick={() => selectMonth(null)}
+              >
+                전체
+              </button>
+              {availableMonths.map((month) => (
+                <button
+                  key={month}
+                  type="button"
+                  className={selectedMonth === month ? 'active' : undefined}
+                  aria-pressed={selectedMonth === month}
+                  onClick={() => selectMonth(month)}
+                >
+                  {month}월
+                </button>
+              ))}
+            </div>
+            <section
+              className="saved-solution-carousel"
+              aria-label="저장한 솔루션 카드"
+            >
+              <div
+                className="saved-solution-carousel-viewport"
+                onTouchStart={(event) => {
+                  touchStartY.current = event.touches[0]?.clientY ?? null
+                }}
+                onTouchEnd={(event) => {
+                  handleTouchEnd(event.changedTouches[0]?.clientY ?? 0)
+                }}
+              >
+                {savedCards.map((item, index) => {
+                  const offset = index - activeIndex
+                  const isActive = offset === 0
+                  const isVisible = Math.abs(offset) <= 2
+                  return (
+                    <Link
+                      key={item.savedId}
+                      className="saved-solution-card"
+                      data-offset={Math.max(-2, Math.min(2, offset))}
+                      data-visible={isVisible}
+                      aria-current={isActive ? 'true' : undefined}
+                      aria-hidden={!isVisible}
+                      tabIndex={isVisible ? 0 : -1}
+                      to={`/my-solutions/${item.savedId}`}
+                      onClick={(event) => {
+                        if (isActive) return
+                        event.preventDefault()
+                        setActiveIndex(index)
+                      }}
+                    >
+                      <span className="saved-solution-card-index">
+                        <span>
+                          {isActive ? 'MEMME SOLUTION' : item.displayTitle}
+                        </span>
+                        <span>CARD {String(index + 1).padStart(2, '0')}</span>
+                      </span>
+                      <strong>{item.displayTitle}</strong>
+                      <span className="saved-solution-card-meta">
+                        <span>
+                          {item.remainingItemCount > 0
+                            ? `${item.remainingItemCount + 1} SOLUTIONS`
+                            : '1 SOLUTION'}
+                        </span>
+                        <span>ARCHIVE</span>
+                      </span>
+                      <span className="saved-solution-card-open">
+                        자세히 보기 <span aria-hidden="true">↗</span>
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+
+              <div className="saved-solution-carousel-controls">
+                <button
+                  type="button"
+                  aria-label="이전 저장 솔루션"
+                  disabled={activeIndex === 0}
+                  onClick={showPrevious}
+                >
+                  ↑
+                </button>
+                <span aria-live="polite">
+                  {String(activeIndex + 1).padStart(2, '0')} /{' '}
+                  {String(savedCards.length).padStart(2, '0')}
+                </span>
+                <button
+                  type="button"
+                  aria-label="다음 저장 솔루션"
+                  disabled={activeIndex === savedCards.length - 1}
+                  onClick={showNext}
+                >
+                  ↓
+                </button>
+              </div>
+              <p className="saved-solution-swipe-hint">SWIPE UP OR DOWN</p>
+            </section>
             {nextCursor && (
               <button
                 type="button"

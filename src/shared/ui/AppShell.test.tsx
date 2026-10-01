@@ -21,15 +21,28 @@ beforeEach(() => {
 })
 
 test('모바일 하단 탐색과 화면 제목을 표시한다', () => {
-  render(
+  const { container } = render(
     <MemoryRouter>
       <AppShell title="솔루션">내용</AppShell>
     </MemoryRouter>,
   )
+  expect(container.firstChild).toHaveClass('mobile-app-shell--white')
   expect(
     screen.getByRole('navigation', { name: '하단 탐색' }),
   ).toBeInTheDocument()
   expect(screen.getAllByText('솔루션')).toHaveLength(2)
+})
+
+test('paper 톤을 지정하면 베이지 테마 셸을 표시한다', () => {
+  const { container } = render(
+    <MemoryRouter>
+      <AppShell title="맴매" tone="paper">
+        내용
+      </AppShell>
+    </MemoryRouter>,
+  )
+
+  expect(container.firstChild).toHaveClass('mobile-app-shell--paper')
 })
 
 test('기기 프레임 안에 스크롤 본문과 알림 이동을 렌더링한다', () => {

@@ -78,7 +78,7 @@ export function ProfilePage() {
 
   if (loadError) {
     return (
-      <AppShell title="마이페이지">
+      <AppShell title="마이페이지" tone="white">
         <p role="alert">{loadError}</p>
       </AppShell>
     )
@@ -86,62 +86,86 @@ export function ProfilePage() {
 
   if (!profile) {
     return (
-      <AppShell title="마이페이지">
+      <AppShell title="마이페이지" tone="white">
         <p>불러오는 중...</p>
       </AppShell>
     )
   }
 
   return (
-    <AppShell title="마이페이지">
-      <div className="page-stack">
+    <AppShell title="마이페이지" tone="white">
+      <div className="page-stack profile-editorial-page">
         {passwordChanged && (
           <p className="form-success">비밀번호가 변경되었습니다.</p>
         )}
+        <figure className="profile-editorial-hero">
+          <img
+            src="/assets/profile-coffee-tasting-halftone.png"
+            alt="커피를 맛보는 세 명의 사람들"
+          />
+          <figcaption>OWNER PROFILE / MEMME ARCHIVE</figcaption>
+        </figure>
         <header className="merchant-card">
           <div className="merchant-card-top">
-            <span className="merchant-mono">MEMME · MERCHANT</span>
+            <span className="merchant-mono">OWNER RECORD / 01</span>
             <span className="merchant-seal">
               {profile.storeName.slice(0, 1)}
             </span>
           </div>
+          <p className="merchant-card-kicker">STORE INFORMATION</p>
           <h1 className="merchant-name">{profile.storeName} 사장님</h1>
-          <p className="merchant-role">안녕하세요</p>
+          <p className="merchant-role">오늘도 매장의 기록을 이어가요.</p>
           <dl className="merchant-card-meta">
             <div>
-              <dt>휴대폰 번호</dt>
+              <dt>PHONE</dt>
               <dd>{formatPhone(profile.phone)}</dd>
             </div>
             <div>
-              <dt>이메일</dt>
+              <dt>EMAIL</dt>
               <dd>{profile.email}</dd>
             </div>
           </dl>
         </header>
 
+        <p className="profile-index-title">ACCOUNT INDEX</p>
         <nav className="profile-menu" aria-label="프로필 메뉴">
           <Link to="/profile/password">
-            비밀번호 수정 <span>›</span>
+            <span className="profile-menu-label">
+              <b>01</b> 비밀번호 수정
+            </span>
+            <span aria-hidden="true">→</span>
           </Link>
           <Link to="/profile/store">
-            사업자 정보 확인 및 수정 <span>›</span>
+            <span className="profile-menu-label">
+              <b>02</b> 사업자 정보 확인 및 수정
+            </span>
+            <span aria-hidden="true">→</span>
           </Link>
           <Link to="/notifications/settings">
-            알림 설정 <span>›</span>
+            <span className="profile-menu-label">
+              <b>03</b> 알림 설정
+            </span>
+            <span aria-hidden="true">→</span>
           </Link>
           <button
             type="button"
             className="profile-menu-action"
             onClick={handleLogout}
           >
-            로그아웃 <span>›</span>
+            <span className="profile-menu-label">
+              <b>04</b> 로그아웃
+            </span>
+            <span aria-hidden="true">→</span>
           </button>
           <button
             type="button"
             className="profile-menu-action danger-link"
             onClick={() => setWithdrawModalOpen(true)}
           >
-            회원탈퇴 <span>›</span>
+            <span className="profile-menu-label">
+              <b>05</b> 회원탈퇴
+            </span>
+            <span aria-hidden="true">→</span>
           </button>
         </nav>
         <p className="profile-menu-caption">

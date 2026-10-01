@@ -21,56 +21,52 @@ export function HomePage() {
   }, [])
 
   return (
-    <AppShell title="맴매">
-      <div className="landing-page">
-        <main>
-          <section className="landing-hero">
-            <p>FOR BETTER DAYS AT YOUR STORE</p>
-            <h1>
-              오늘의 매장을
-              <br />더 가볍게
-            </h1>
-            <div>
-              <span>
-                맴매는 사장님의 매장 데이터를 읽고, 오늘 바로 실행할 수 있는
-                다음 한 가지를 제안합니다.
-              </span>
+    <AppShell title="맴매" tone="paper">
+      <div className="landing-page landing-page--editorial">
+        <main className="landing-editorial">
+          <section className="landing-hero" aria-labelledby="landing-title">
+            <p className="landing-kicker">SMART STORE PARTNER</p>
+            <h1 id="landing-title">MEMME</h1>
+            <ul className="landing-keywords" aria-label="맴매가 돕는 일">
+              <li>매출 분석</li>
+              <li>오늘의 솔루션</li>
+              <li>실행 코칭</li>
+            </ul>
+
+            <img
+              className="landing-illustration"
+              src="/assets/memme-storefront-hero.png"
+              alt="커피 봉투와 돈 봉투를 들고 씩씩하게 걷는 사장님"
+            />
+
+            <div className="landing-copy">
+              <h2>
+                사장님의 매장을 읽고,
+                <br />
+                오늘의 다음 한 가지를 제안해요.
+              </h2>
+              <p>
+                복잡한 숫자는 맴매가 정리할게요. 사장님은 지금 필요한 일에만
+                집중하세요.
+              </p>
+            </div>
+
+            <div className="landing-actions">
+              {!isAuthenticated ? (
+                <Link className="landing-primary-action" to="/signup">
+                  무료로 시작하기 <span aria-hidden="true">↗</span>
+                </Link>
+              ) : (
+                <Link className="landing-primary-action" to="/solution">
+                  오늘의 솔루션 보기 <span aria-hidden="true">↗</span>
+                </Link>
+              )}
               {!isAuthenticated && (
-                <>
-                  <Link className="dark-button" to="/signup">
-                    무료로 시작하기
-                  </Link>
-                  <Link className="light-button" to="/login">
-                    로그인
-                  </Link>
-                </>
+                <div className="landing-secondary-actions">
+                  <Link to="/login">로그인</Link>
+                </div>
               )}
             </div>
-          </section>
-          <section className="landing-values">
-            {[
-              [
-                '01',
-                '흩어진 숫자 대신',
-                '매출과 재고의 흐름을 한눈에 정리합니다.',
-              ],
-              [
-                '02',
-                '어려운 분석 대신',
-                '오늘 먼저 하면 좋은 일을 짧고 분명하게 알려드립니다.',
-              ],
-              [
-                '03',
-                '혼자 고민하는 대신',
-                '솔루션을 따라 실행하고 질문을 이어갈 수 있습니다.',
-              ],
-            ].map(([n, t, d]) => (
-              <article key={n}>
-                <small>{n}</small>
-                <h2>{t}</h2>
-                <p>{d}</p>
-              </article>
-            ))}
           </section>
         </main>
       </div>

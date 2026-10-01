@@ -61,7 +61,13 @@ test('프로필 정보를 불러와 매장명 기반으로 표시한다', async 
   expect(
     await screen.findByRole('heading', { name: '맴매 베이커리 사장님' }),
   ).toBeInTheDocument()
-  expect(screen.getByText('안녕하세요')).toBeInTheDocument()
+  expect(screen.getByRole('main').parentElement).toHaveClass(
+    'mobile-app-shell--white',
+  )
+  expect(screen.getByText('오늘도 매장의 기록을 이어가요.')).toBeInTheDocument()
+  expect(
+    screen.getByRole('img', { name: '커피를 맛보는 세 명의 사람들' }),
+  ).toHaveAttribute('src', '/assets/profile-coffee-tasting-halftone.png')
   expect(screen.getByText('owner@memme.kr')).toBeInTheDocument()
   expect(screen.getByText('010-1234-5678')).toBeInTheDocument()
 })

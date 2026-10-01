@@ -228,6 +228,7 @@ test('솔루션 생성 실패 상태를 모달로 보여준다', async () => {
       name: '솔루션 생성에 실패했어요',
     }),
   ).toBeInTheDocument()
+  expect(screen.getByText('ISSUE REPORT / 01')).toBeInTheDocument()
   expect(
     screen.getByRole('button', { name: '다시 확인하기' }),
   ).toBeInTheDocument()

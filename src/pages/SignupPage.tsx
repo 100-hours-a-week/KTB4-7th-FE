@@ -366,7 +366,10 @@ export function SignupPage() {
 
   if (step === 3) {
     return (
-      <main className="signup-page signup-complete">
+      <main className="signup-page signup-complete signup-page--editorial signup-complete--editorial">
+        <div className="signup-bean-backdrop" aria-hidden="true">
+          <img src="/assets/auth-coffee-moka-upright.png" alt="" />
+        </div>
         <p className="signup-kicker">MEMME / JOIN</p>
         <h1>
           가입이
@@ -382,15 +385,20 @@ export function SignupPage() {
   }
 
   return (
-    <main className="signup-page mobile-onboarding">
+    <main className="signup-page mobile-onboarding signup-page--editorial">
       <header>
         <a href="/" className="signup-brand">
           memme
         </a>
-        <span>JOIN / 0{step}</span>
+        <span className="signup-document-number">FORM 02 / JOIN 0{step}</span>
       </header>
+      <div className="signup-bean-backdrop" aria-hidden="true">
+        <img src="/assets/auth-coffee-moka-upright.png" alt="" />
+      </div>
       <section className="signup-intro">
-        <div className="signup-logo">m</div>
+        <p className="signup-editorial-kicker">
+          {step === 1 ? 'OWNER PROFILE' : 'STORE PROFILE'}
+        </p>
         <h1>
           {step === 1 ? (
             <>
@@ -564,6 +572,7 @@ export function SignupPage() {
       ) : (
         <form
           key="step-2"
+          className="signup-business-form"
           onSubmit={submitBusiness}
           autoComplete="off"
           noValidate
