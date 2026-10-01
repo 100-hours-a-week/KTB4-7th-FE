@@ -250,7 +250,7 @@ export function PasswordResetPage() {
   const token = searchParams.get('token')
 
   return (
-    <main className="mobile-app-shell auth-app-shell">
+    <main className="mobile-app-shell mobile-app-shell--white auth-app-shell">
       <div className="device-notch" aria-hidden="true" />
       {token ? <NewPasswordForm token={token} /> : <EmailRequestForm />}
     </main>

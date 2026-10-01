@@ -43,11 +43,13 @@ export function AppShell({
   title,
   backTo,
   contentClassName,
+  tone = 'white',
   children,
 }: {
   title: string
   backTo?: string
   contentClassName?: string
+  tone?: 'white' | 'paper'
   children: ReactNode
 }) {
   const [hasUnread, setHasUnread] = useState(false)
@@ -67,7 +69,7 @@ export function AppShell({
   }, [])
 
   return (
-    <div className="mobile-app-shell">
+    <div className={`mobile-app-shell mobile-app-shell--${tone}`}>
       <div className="device-notch" aria-hidden="true" />
       <header className="mobile-app-header">
         {backTo ? (

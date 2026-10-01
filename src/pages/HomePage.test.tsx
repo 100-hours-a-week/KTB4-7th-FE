@@ -40,6 +40,12 @@ test('로그인하지 않은 사용자에게는 회원가입/로그인 버튼을
     screen.getByRole('link', { name: '무료로 시작하기' }),
   ).toBeInTheDocument()
   expect(screen.getByRole('link', { name: '로그인' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'MEMME' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('img', {
+      name: '커피 봉투와 돈 봉투를 들고 씩씩하게 걷는 사장님',
+    }),
+  ).toBeInTheDocument()
 })
 
 test('로그인한 사용자에게는 회원가입/로그인 버튼을 숨긴다', async () => {
@@ -62,4 +68,10 @@ test('로그인한 사용자에게는 회원가입/로그인 버튼을 숨긴다
     ).not.toBeInTheDocument(),
   )
   expect(screen.queryByRole('link', { name: '로그인' })).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('link', { name: '솔루션 미리 보기' }),
+  ).not.toBeInTheDocument()
+  expect(
+    screen.getByRole('link', { name: '오늘의 솔루션 보기' }),
+  ).toHaveAttribute('href', '/solution')
 })

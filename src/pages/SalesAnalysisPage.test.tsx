@@ -152,6 +152,8 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
   expect(screen.queryByText(/누적 매출/)).not.toBeInTheDocument()
   expect(screen.getByText('923건')).toBeInTheDocument()
   expect(screen.getByText('₩8,582')).toBeInTheDocument()
+  expect(screen.getByText('▲ 4.2%')).toHaveClass('trend-up')
+  expect(screen.getByText('▼ 0.8%')).toHaveClass('trend-down')
   expect(
     screen.getByText('최근 화요일 매출이 3주 연속 감소하고 있어요.'),
   ).toBeInTheDocument()

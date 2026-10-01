@@ -88,10 +88,11 @@ export function SolutionPage() {
       <AppShell title="솔루션">
         <div className="solution-page solution-status-page">
           <section
-            className="solution-status-modal"
+            className="solution-status-modal solution-status-modal--progress"
             role="status"
             aria-live="polite"
           >
+            <p className="solution-status-kicker">STATUS REPORT / 01</p>
             <p className="solution-status-icon" aria-hidden="true">
               …
             </p>
@@ -152,11 +153,16 @@ export function SolutionPage() {
       <AppShell title="솔루션">
         <div className="solution-page solution-status-page">
           <section
-            className="solution-status-modal"
+            className={`solution-status-modal solution-status-modal--${
+              isGenerating ? 'progress' : 'failed'
+            }`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="solution-status-title"
           >
+            <p className="solution-status-kicker">
+              {isGenerating ? 'STATUS REPORT / 01' : 'ISSUE REPORT / 01'}
+            </p>
             <p className="solution-status-icon" aria-hidden="true">
               {isGenerating ? '…' : '!'}
             </p>
@@ -171,6 +177,12 @@ export function SolutionPage() {
                   ? '잠시만 기다리면 준비된 솔루션을 보여드릴게요.'
                   : '잠시 후 다시 확인해 주세요.')}
             </p>
+            {!isGenerating && helperText && (
+              <div className="solution-status-note">
+                <span>DATA NOTE</span>
+                <p>{helperText}</p>
+              </div>
+            )}
             {isGenerating ? (
               <span className="solution-status-polling">
                 자동으로 확인하고 있어요
@@ -186,7 +198,8 @@ export function SolutionPage() {
                     setRefreshKey((previous) => previous + 1)
                   }}
                 >
-                  {isRetrying ? '확인 중...' : '다시 확인하기'}
+                  <span>{isRetrying ? '확인 중...' : '다시 확인하기'}</span>
+                  <span aria-hidden="true">→</span>
                 </button>
                 {isRetrying && (
                   <p

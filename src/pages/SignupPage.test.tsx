@@ -28,6 +28,17 @@ beforeEach(() => {
   searchAddress.mockReset()
 })
 
+test('회원가입 화면은 로그인과 같은 에디토리얼 배경을 사용한다', () => {
+  const { container } = render(<SignupPage />)
+
+  expect(screen.getByRole('main')).toHaveClass('signup-page--editorial')
+  expect(screen.getByText('OWNER PROFILE')).toBeInTheDocument()
+  expect(container.querySelector('.signup-bean-backdrop img')).toHaveAttribute(
+    'src',
+    '/assets/auth-coffee-moka-upright.png',
+  )
+})
+
 async function moveToBusinessStep() {
   requestSignupAccount.mockResolvedValue({
     signupToken: 'signup-token',
