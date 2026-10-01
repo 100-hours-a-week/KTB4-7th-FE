@@ -3209,6 +3209,24 @@ input {
   color: #111111;
   box-shadow: none;
 }
+.forecast-feedback {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.forecast-feedback p {
+  margin: 0;
+}
+.forecast-feedback .secondary-action {
+  width: fit-content;
+  padding: 0 16px;
+  background: transparent;
+  cursor: pointer;
+}
 .forecast-total-card::before {
   content: none;
 }
