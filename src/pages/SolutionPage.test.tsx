@@ -148,7 +148,7 @@ test('3개월 미만이면 솔루션 생성 전 안내 문구를 보여준다', 
   ).toBeInTheDocument()
 })
 
-test('오늘 솔루션 준비 전에는 자정 준비 안내를 보여주고 업로드를 유도하지 않는다', async () => {
+test('기존 자정 응답을 받아도 준비 중 안내를 보여주고 업로드를 유도하지 않는다', async () => {
   getTodaySolution.mockResolvedValue({
     message: '오늘의 솔루션은 매일 자정에 준비됩니다.',
     status: 'EMPTY',
@@ -169,12 +169,85 @@ test('오늘 솔루션 준비 전에는 자정 준비 안내를 보여주고 업
 
   expect(
     await screen.findByRole('heading', {
-      name: '오늘의 솔루션은 자정에 준비됩니다',
+      name: '오늘의 솔루션을 준비하고 있어요',
     }),
   ).toBeInTheDocument()
+  expect(screen.queryByText(/자정/)).not.toBeInTheDocument()
   expect(
     screen.queryByRole('link', { name: '매출 데이터 업로드' }),
   ).not.toBeInTheDocument()
+})
+
+test('예측 범위 밖이면 최근 매출 업로드를 안내한다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '2026년 8월 27일 이후 매출이 포함된 파일을 업로드해 주세요.',
+    status: 'FORECAST_OUT_OF_RANGE',
+    data: {
+      storeName: null,
+      screenTitle: null,
+      solutionBundleId: null,
+      targetDate: '2026-10-01',
+      solutionCards: [],
+      helperText: '솔루션 생성에는 연속 3개월 이상의 매출 이력도 필요합니다.',
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByRole('heading', {
+      name: '최근 매출 데이터가 필요합니다',
+    }),
+  ).toBeInTheDocument()
+  expect(
+    screen.getByText(
+      '2026년 8월 27일 이후 매출이 포함된 파일을 업로드해 주세요.',
+    ),
+  ).toBeInTheDocument()
+  expect(
+    screen.getByText(
+      '솔루션 생성에는 연속 3개월 이상의 매출 이력도 필요합니다.',
+    ),
+  ).toBeInTheDocument()
+  expect(screen.getByRole('main')).toHaveClass('solution-empty-content')
+  expect(
+    screen.getByRole('link', { name: '매출 데이터 업로드' }),
+  ).toHaveAttribute('href', '/sales/upload')
+  expect(
+    screen.queryByText('오늘의 솔루션은 자정에 준비됩니다'),
+  ).not.toBeInTheDocument()
+})
+
+test('오늘 솔루션이 아직 없으면 자정 시간을 단정하지 않는다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '오늘의 솔루션을 준비하고 있습니다.',
+    status: 'EMPTY',
+    data: {
+      storeName: null,
+      screenTitle: null,
+      solutionBundleId: null,
+      targetDate: '2026-10-01',
+      solutionCards: [],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+
+  expect(
+    await screen.findByRole('heading', {
+      name: '오늘의 솔루션을 준비하고 있어요',
+    }),
+  ).toBeInTheDocument()
+  expect(screen.getByRole('main')).toHaveClass('solution-empty-content')
+  expect(screen.queryByText(/자정/)).not.toBeInTheDocument()
 })
 
 test('솔루션 생성 중 상태를 모달로 보여준다', async () => {
