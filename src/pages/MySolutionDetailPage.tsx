@@ -108,7 +108,6 @@ export function MySolutionDetailPage() {
               <h2>{item.title}</h2>
               <p>{item.summaryText}</p>
               <p style={{ whiteSpace: 'pre-line' }}>{item.detailText}</p>
-              {item.evidence && <p>{item.evidence}</p>}
             </article>
           ))}
         </section>
