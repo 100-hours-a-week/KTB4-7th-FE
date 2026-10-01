@@ -117,13 +117,27 @@ export function SolutionPage() {
 
   if (
     status === 'EMPTY' &&
-    message === '오늘의 솔루션은 매일 자정에 준비됩니다.'
+    (message === '오늘의 솔루션은 매일 자정에 준비됩니다.' ||
+      message === '오늘의 솔루션을 준비하고 있습니다.')
   ) {
     return (
-      <AppShell title="솔루션">
+      <AppShell title="솔루션" contentClassName="solution-empty-content">
         <EmptyState
-          title="오늘의 솔루션은 자정에 준비됩니다"
+          title="오늘의 솔루션을 준비하고 있어요"
+          description="오늘의 솔루션을 준비 중입니다. 잠시 후 다시 확인해 주세요."
+        />
+      </AppShell>
+    )
+  }
+
+  if (status === 'FORECAST_OUT_OF_RANGE') {
+    return (
+      <AppShell title="솔루션" contentClassName="solution-empty-content">
+        <EmptyState
+          title="최근 매출 데이터가 필요합니다"
           description={message}
+          supportingText={helperText}
+          action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
         />
       </AppShell>
     )

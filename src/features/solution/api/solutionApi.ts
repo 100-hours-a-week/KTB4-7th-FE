@@ -3,6 +3,7 @@ import { http } from '../../../shared/api/http'
 export type SolutionTodayStatus =
   | 'EMPTY'
   | 'INSUFFICIENT_HISTORY'
+  | 'FORECAST_OUT_OF_RANGE'
   | 'PENDING'
   | 'GENERATING'
   | 'COMPLETED'
