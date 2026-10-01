@@ -129,7 +129,9 @@ export function SalesUploadPage() {
     setSubmitError('')
     try {
       await uploadSalesFile(selectedFile)
-      navigate('/sales/analysis')
+      navigate('/sales/analysis', {
+        state: { refreshForecastAfterUpload: true },
+      })
     } catch (error) {
       if (isUnauthorized(error)) {
         navigate('/login')

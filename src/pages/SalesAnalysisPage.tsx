@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
   getSalesAvailableMonths,
@@ -163,7 +163,11 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
 }
 
 export function SalesAnalysisPage() {
+  const location = useLocation()
   const navigate = useNavigate()
+  const refreshForecastAfterUpload =
+    (location.state as { refreshForecastAfterUpload?: boolean } | null)
+      ?.refreshForecastAfterUpload === true
   const [availableMonths, setAvailableMonths] = useState<string[] | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [status, setStatus] = useState<'COMPLETED' | 'EMPTY' | null>(null)
@@ -257,8 +261,10 @@ export function SalesAnalysisPage() {
         if (ignore) return
         if (response.status === 'COMPLETED') {
           setExpectedForecast(response.data)
-          setForecastRefreshStatus('idle')
-          return
+          if (!refreshForecastAfterUpload || retryCount >= FORECAST_MAX_RETRIES) {
+            setForecastRefreshStatus('idle')
+            return
+          }
         }
         if (retryCount >= FORECAST_MAX_RETRIES) {
           setForecastRefreshStatus('unavailable')
@@ -281,7 +287,13 @@ export function SalesAnalysisPage() {
       ignore = true
       if (retryTimeout) clearTimeout(retryTimeout)
     }
-  }, [availableMonths, forecastRetryKey, navigate, selectedMonth])
+  }, [
+    availableMonths,
+    forecastRetryKey,
+    navigate,
+    refreshForecastAfterUpload,
+    selectedMonth,
+  ])
 
   useEffect(() => {
     if (chartIndex !== 0 || !data?.hourlySales.length) return

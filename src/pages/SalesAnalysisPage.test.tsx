@@ -205,6 +205,64 @@ test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출을 
   expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
 })
 
+test('업로드 직후에는 기존 예측이 완료 상태여도 60초간 새 값을 자동 반영한다', async () => {
+  vi.useFakeTimers()
+  try {
+    getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+    getSalesAnalysis.mockResolvedValue(completedResponse)
+    const oldForecast = {
+      targetMonth: '2026-10',
+      actualSalesAmount: 0,
+      forecastSalesAmount: 1080000,
+      expectedSalesAmount: 1080000,
+      lowerBound: 930000,
+      upperBound: 1230000,
+      dailyForecasts: [],
+    }
+    const newForecast = {
+      ...oldForecast,
+      forecastSalesAmount: 1200000,
+      expectedSalesAmount: 1200000,
+    }
+    getSalesExpectedForecast
+      .mockResolvedValueOnce({ status: 'COMPLETED', message: '조회 성공', data: oldForecast })
+      .mockResolvedValue({ status: 'COMPLETED', message: '조회 성공', data: newForecast })
+
+    const view = render(
+      <MemoryRouter
+        initialEntries={[
+          { pathname: '/sales/analysis', state: { refreshForecastAfterUpload: true } },
+        ]}
+      >
+        <SalesAnalysisPage />
+      </MemoryRouter>,
+    )
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+    expect(screen.getByText('₩1,200,000')).toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(57000)
+    })
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(21)
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+    expect(getSalesExpectedForecast).toHaveBeenCalledTimes(21)
+    view.unmount()
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
 test('예측 데이터가 계속 없으면 재조회를 멈추고 다시 확인 버튼을 표시한다', async () => {
   vi.useFakeTimers()
   try {
