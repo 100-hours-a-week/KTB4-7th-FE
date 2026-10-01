@@ -155,7 +155,11 @@ test('파일을 선택하고 분석 시작을 누르면 업로드 후 분석 페
   fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
 
   await waitFor(() => expect(uploadSalesFile).toHaveBeenCalled())
-  await waitFor(() => expect(navigate).toHaveBeenCalledWith('/sales/analysis'))
+  await waitFor(() =>
+    expect(navigate).toHaveBeenCalledWith('/sales/analysis', {
+      state: { refreshForecastAfterUpload: true },
+    }),
+  )
 })
 
 test('xlsx가 아닌 파일은 선택할 수 없다', async () => {
