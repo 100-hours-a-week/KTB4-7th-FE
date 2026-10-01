@@ -270,6 +270,24 @@ input {
   color: var(--ink-soft);
   line-height: 1.65;
 }
+.solution-empty-content .empty-state h1 {
+  text-wrap: balance;
+  word-break: keep-all;
+}
+.solution-empty-content .empty-state p {
+  max-width: 28rem;
+  text-wrap: pretty;
+  word-break: keep-all;
+}
+.solution-empty-content .empty-state-description--paired {
+  margin-bottom: 8px;
+}
+.solution-empty-content .empty-state-supporting {
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
 .empty-state a,
 .primary-action {
   display: inline-flex;
