@@ -22,6 +22,8 @@ const weekdayLabels: Record<string, string> = {
 }
 
 const MENU_PAGE_SIZE = 10
+const FORECAST_RETRY_INTERVAL_MS = 3000
+const FORECAST_MAX_RETRIES = 20
 
 function isUnauthorized(error: unknown) {
   return (
@@ -168,6 +170,10 @@ export function SalesAnalysisPage() {
   const [data, setData] = useState<SalesAnalysisData | null>(null)
   const [expectedForecast, setExpectedForecast] =
     useState<SalesExpectedForecast | null>(null)
+  const [forecastRefreshStatus, setForecastRefreshStatus] = useState<
+    'idle' | 'checking' | 'unavailable'
+  >('idle')
+  const [forecastRetryKey, setForecastRetryKey] = useState(0)
   const [isLoadingMonths, setIsLoadingMonths] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
@@ -235,29 +241,47 @@ export function SalesAnalysisPage() {
     if (!selectedMonth || !availableMonths?.length) return
     if (selectedMonth !== availableMonths[availableMonths.length - 1]) {
       setExpectedForecast(null)
+      setForecastRefreshStatus('idle')
       return
     }
 
     let ignore = false
-    getSalesExpectedForecast()
-      .then((response) => {
+    let retryTimeout: ReturnType<typeof setTimeout> | undefined
+    let retryCount = 0
+    setExpectedForecast(null)
+    setForecastRefreshStatus('checking')
+
+    const checkForecast = async () => {
+      try {
+        const response = await getSalesExpectedForecast()
         if (ignore) return
-        setExpectedForecast(
-          response.status === 'COMPLETED' ? response.data : null,
-        )
-      })
-      .catch((requestError) => {
+        if (response.status === 'COMPLETED') {
+          setExpectedForecast(response.data)
+          setForecastRefreshStatus('idle')
+          return
+        }
+        if (retryCount >= FORECAST_MAX_RETRIES) {
+          setForecastRefreshStatus('unavailable')
+          return
+        }
+        retryCount += 1
+        retryTimeout = setTimeout(checkForecast, FORECAST_RETRY_INTERVAL_MS)
+      } catch (requestError) {
         if (ignore) return
         if (isUnauthorized(requestError)) {
           navigate('/login')
           return
         }
-        setExpectedForecast(null)
-      })
+        setForecastRefreshStatus('unavailable')
+      }
+    }
+
+    void checkForecast()
     return () => {
       ignore = true
+      if (retryTimeout) clearTimeout(retryTimeout)
     }
-  }, [availableMonths, navigate, selectedMonth])
+  }, [availableMonths, forecastRetryKey, navigate, selectedMonth])
 
   useEffect(() => {
     if (chartIndex !== 0 || !data?.hourlySales.length) return
@@ -582,6 +606,27 @@ export function SalesAnalysisPage() {
                 )}
               </section>
             )}
+            {!expectedForecast &&
+              selectedMonth === availableMonths?.[availableMonths.length - 1] &&
+              forecastRefreshStatus === 'checking' && (
+                <p className="forecast-feedback" role="status">
+                  예상 총매출을 확인하고 있어요.
+                </p>
+              )}
+            {!expectedForecast &&
+              selectedMonth === availableMonths?.[availableMonths.length - 1] &&
+              forecastRefreshStatus === 'unavailable' && (
+                <div className="forecast-feedback" role="status">
+                  <p>아직 예상 총매출을 불러오지 못했어요.</p>
+                  <button
+                    type="button"
+                    className="secondary-action"
+                    onClick={() => setForecastRetryKey((key) => key + 1)}
+                  >
+                    다시 확인
+                  </button>
+                </div>
+              )}
             <div className="stat-card-grid">
               <div className="stat-card">
                 <small>총 매출</small>
