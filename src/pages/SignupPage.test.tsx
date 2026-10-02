@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SignupPage } from './SignupPage'
 
@@ -45,7 +46,14 @@ async function moveToBusinessStep() {
     expiresAt: '2026-09-30T00:00:00Z',
   })
 
-  render(<SignupPage />)
+  render(
+    <MemoryRouter initialEntries={['/signup']}>
+      <Routes>
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/login" element={<div>로그인 화면</div>} />
+      </Routes>
+    </MemoryRouter>,
+  )
   fireEvent.change(screen.getByLabelText('이메일'), {
     target: { value: 'owner@memme.kr' },
   })
@@ -321,6 +329,11 @@ test('사업자번호와 인증 없이 매장 정보를 입력하면 회원가�
   const [, request] = completeSignup.mock.calls[0]
   expect(request).not.toHaveProperty('businessRegNumber')
   expect(request).not.toHaveProperty('businessVerificationId')
+
+  const loginLink = await screen.findByRole('link', { name: '로그인으로 이동' })
+  expect(loginLink).toHaveAttribute('href', '/login')
+  fireEvent.click(loginLink)
+  expect(screen.getByText('로그인 화면')).toBeInTheDocument()
 })
 
 test('주소 검색 모달에서 검색 결과를 선택하면 매장 주소가 채워진다', async () => {
