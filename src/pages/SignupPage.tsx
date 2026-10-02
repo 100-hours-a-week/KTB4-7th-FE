@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useForm, type FieldPath } from 'react-hook-form'
+import { Link } from 'react-router-dom'
 import {
   completeSignup,
   requestSignupAccount,
@@ -387,9 +388,9 @@ export function SignupPage() {
           완료되었습니다.
         </h1>
         <p>{business.getValues('storeName')}의 오늘을 함께 만들게요.</p>
-        <a className="signup-button" href="/">
+        <Link className="signup-button" to="/login">
           로그인으로 이동
-        </a>
+        </Link>
       </main>
     )
   }
