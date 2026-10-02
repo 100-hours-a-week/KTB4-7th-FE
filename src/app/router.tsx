@@ -15,6 +15,7 @@ import { PasswordChangePage } from '../pages/PasswordChangePage'
 import { StoreProfilePage } from '../pages/StoreProfilePage'
 import { SalesUploadPage } from '../pages/SalesUploadPage'
 import { SalesAnalysisPage } from '../pages/SalesAnalysisPage'
+import { NotFoundPage } from '../pages/NotFoundPage'
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
 
 export const router = createBrowserRouter([
@@ -48,4 +49,5 @@ export const router = createBrowserRouter([
       { path: '/sales/analysis', element: <SalesAnalysisPage /> },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ])
