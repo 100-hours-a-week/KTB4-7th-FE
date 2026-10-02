@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SignupPage } from './SignupPage'
@@ -27,6 +27,35 @@ beforeEach(() => {
   verifyBusinessNumber.mockReset()
   completeSignup.mockReset()
   searchAddress.mockReset()
+})
+
+test('약관 오류는 처음에는 숨기고 동의를 해제하면 표시한다', async () => {
+  render(<SignupPage />)
+
+  const terms = screen.getByLabelText(/이용약관 동의/)
+  const privacy = screen.getByLabelText(/개인정보.*동의/)
+  const clickAgreement = async (input: HTMLElement) => {
+    await act(async () => fireEvent.click(input))
+  }
+  expect(screen.queryByText('이용약관에 동의해주세요.')).not.toBeInTheDocument()
+  expect(
+    screen.queryByText('개인정보 수집·이용에 동의해주세요.'),
+  ).not.toBeInTheDocument()
+
+  await clickAgreement(terms)
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  await clickAgreement(terms)
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    '이용약관에 동의해주세요.',
+  )
+
+  await clickAgreement(terms)
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  await clickAgreement(privacy)
+  await clickAgreement(privacy)
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    '개인정보 수집·이용에 동의해주세요.',
+  )
 })
 
 test('회원가입 화면은 로그인과 같은 에디토리얼 배경을 사용한다', () => {

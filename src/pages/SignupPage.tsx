@@ -116,6 +116,10 @@ export function SignupPage() {
   const [verifiedRegNumber, setVerifiedRegNumber] = useState('')
   const [error, setError] = useState('')
   const [activePolicy, setActivePolicy] = useState<PolicyType | null>(null)
+  const [agreementInteracted, setAgreementInteracted] = useState({
+    terms: false,
+    privacy: false,
+  })
   const [isAddressModalOpen, setAddressModalOpen] = useState(false)
   const [addressQuery, setAddressQuery] = useState('')
   const [addressResults, setAddressResults] = useState<AddressSearchItem[]>([])
@@ -142,6 +146,12 @@ export function SignupPage() {
     /^010\d{8}$/.test(accountValues.phone ?? '') &&
     accountValues.terms &&
     accountValues.privacy
+  const agreementError =
+    !accountValues.terms && agreementInteracted.terms
+      ? '이용약관에 동의해주세요.'
+      : !accountValues.privacy && agreementInteracted.privacy
+        ? '개인정보 수집·이용에 동의해주세요.'
+        : ''
   const isBusinessVerified =
     Boolean(verificationId) &&
     verifiedRegNumber === businessValues.businessRegNumber
@@ -529,6 +539,12 @@ export function SignupPage() {
                   {...account.register('terms', {
                     required: '이용약관에 동의해주세요.',
                   })}
+                  onClick={() =>
+                    setAgreementInteracted((previous) => ({
+                      ...previous,
+                      terms: true,
+                    }))
+                  }
                 />
                 [필수] 이용약관 동의
               </label>
@@ -547,6 +563,12 @@ export function SignupPage() {
                   {...account.register('privacy', {
                     required: '개인정보 수집·이용에 동의해주세요.',
                   })}
+                  onClick={() =>
+                    setAgreementInteracted((previous) => ({
+                      ...previous,
+                      privacy: true,
+                    }))
+                  }
                 />
                 [필수] 개인정보 수집·이용 동의
               </label>
@@ -559,11 +581,9 @@ export function SignupPage() {
               </button>
             </div>
           </div>
-          {(!accountValues.terms || !accountValues.privacy) && (
+          {agreementError && (
             <small role="alert" className="signup-agreements-error">
-              {!accountValues.terms
-                ? '이용약관에 동의해주세요.'
-                : '개인정보 수집·이용에 동의해주세요.'}
+              {agreementError}
             </small>
           )}
           <button className="signup-button" disabled={!isAccountReady}>
