@@ -3940,7 +3940,7 @@ input {
   padding: 0;
   border: 0;
   border-radius: 999px;
-  background: var(--line);
+  background: #9ca3af;
   cursor: pointer;
   transition: background 0.15s ease;
 }
