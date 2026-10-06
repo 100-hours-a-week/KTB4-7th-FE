@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   getMyStore,
@@ -7,6 +7,7 @@ import {
 } from '../features/store/api/storeApi'
 import {
   searchAddress,
+  verifyBusinessNumber,
   type AddressSearchItem,
   type BusinessHours,
 } from '../features/signup/api/signupApi'
@@ -58,6 +59,10 @@ function toHourMinute(time: string | null, fallback: string) {
   return time.slice(0, 5)
 }
 
+function normalizeBusinessRegNumber(value: string | null | undefined) {
+  return value?.replace(/\D/g, '') ?? ''
+}
+
 function getApiErrorMessage(error: unknown, fallback: string) {
   if (typeof error !== 'object' || error === null || !('response' in error))
     return fallback
@@ -84,6 +89,16 @@ export function StoreProfilePage() {
   const [postalCode, setPostalCode] = useState('')
   const [roadAddress, setRoadAddress] = useState('')
   const [businessRegNumber, setBusinessRegNumber] = useState('')
+  const [originalBusinessRegNumber, setOriginalBusinessRegNumber] =
+    useState('')
+  const [businessVerificationId, setBusinessVerificationId] = useState<
+    number | null
+  >(null)
+  const [verifiedBusinessRegNumber, setVerifiedBusinessRegNumber] =
+    useState('')
+  const [isVerifyingBusinessNumber, setIsVerifyingBusinessNumber] =
+    useState(false)
+  const [businessRegNumberError, setBusinessRegNumberError] = useState('')
   const [businessHours, setBusinessHours] = useState<BusinessHours[]>(
     days.map((dayOfWeek) => ({
       dayOfWeek,
@@ -118,7 +133,11 @@ export function StoreProfilePage() {
         setValue('addressDetail', store.address.addressDetail ?? '')
         setPostalCode(store.address.postalCode)
         setRoadAddress(store.address.roadAddress)
-        setBusinessRegNumber(store.businessRegNumber)
+        const normalizedBusinessRegNumber = normalizeBusinessRegNumber(
+          store.businessRegNumber,
+        )
+        setBusinessRegNumber(normalizedBusinessRegNumber)
+        setOriginalBusinessRegNumber(normalizedBusinessRegNumber)
         setBusinessHours(
           days.map((dayOfWeek) => {
             const found = store.businessHours.find(
@@ -254,10 +273,68 @@ export function StoreProfilePage() {
     )
   }
 
+  const hasBusinessRegNumberChanged =
+    businessRegNumber !== originalBusinessRegNumber
+  const isBusinessRegNumberVerified =
+    businessVerificationId !== null &&
+    verifiedBusinessRegNumber === businessRegNumber
+
+  const changeBusinessRegNumber = (event: ChangeEvent<HTMLInputElement>) => {
+    setBusinessRegNumber(event.target.value.replace(/\D/g, '').slice(0, 10))
+    setBusinessVerificationId(null)
+    setVerifiedBusinessRegNumber('')
+    setBusinessRegNumberError('')
+    setSuccess(false)
+  }
+
+  const verifyBusinessRegNumber = async () => {
+    setBusinessRegNumberError('')
+    setError('')
+
+    if (!/^\d{10}$/.test(businessRegNumber)) {
+      setBusinessRegNumberError('사업자등록번호 숫자 10자리를 입력해주세요.')
+      return
+    }
+
+    setIsVerifyingBusinessNumber(true)
+    try {
+      const result = await verifyBusinessNumber(businessRegNumber)
+      setBusinessVerificationId(result.businessVerificationId)
+      setVerifiedBusinessRegNumber(businessRegNumber)
+    } catch (verificationError) {
+      const fieldError = getApiFieldErrors(verificationError).find(
+        (item) => item.field === 'businessRegNumber',
+      )
+      setBusinessRegNumberError(
+        fieldError?.message ??
+          getApiErrorMessage(
+            verificationError,
+            '사업자 인증에 실패했습니다. 다시 시도해주세요.',
+          ),
+      )
+    } finally {
+      setIsVerifyingBusinessNumber(false)
+    }
+  }
+
   const submit = handleSubmit(async (values) => {
     setError('')
     setSuccess(false)
     setBusinessHoursError('')
+    setBusinessRegNumberError('')
+
+    if (hasBusinessRegNumberChanged) {
+      if (!/^\d{10}$/.test(businessRegNumber)) {
+        setBusinessRegNumberError(
+          '사업자등록번호 숫자 10자리를 입력해주세요.',
+        )
+        return
+      }
+      if (!isBusinessRegNumberVerified) {
+        setBusinessRegNumberError('변경한 사업자등록번호 인증을 완료해주세요.')
+        return
+      }
+    }
 
     if (!postalCode || !roadAddress) {
       setError('주소 검색으로 매장 주소를 입력해주세요.')
@@ -289,7 +366,18 @@ export function StoreProfilePage() {
           openTime: hours.isClosed ? null : hours.openTime,
           closeTime: hours.isClosed ? null : hours.closeTime,
         })),
+        ...(hasBusinessRegNumberChanged && businessVerificationId !== null
+          ? {
+              businessRegNumber,
+              businessVerificationId,
+            }
+          : {}),
       })
+      if (hasBusinessRegNumberChanged) {
+        setOriginalBusinessRegNumber(businessRegNumber)
+        setBusinessVerificationId(null)
+        setVerifiedBusinessRegNumber('')
+      }
       setSuccess(true)
     } catch (requestError) {
       const fieldErrors = getApiFieldErrors(requestError)
@@ -298,6 +386,13 @@ export function StoreProfilePage() {
       )
       if (hoursError) {
         setBusinessHoursError(hoursError.message)
+        return
+      }
+      const businessNumberError = fieldErrors.find(
+        (fieldError) => fieldError.field === 'businessRegNumber',
+      )
+      if (businessNumberError) {
+        setBusinessRegNumberError(businessNumberError.message)
         return
       }
       setError(
@@ -325,8 +420,51 @@ export function StoreProfilePage() {
               <p className="form-success">매장 정보가 수정되었습니다.</p>
             )}
             <label>
-              사업자등록번호
-              <input value={businessRegNumber} readOnly disabled />
+              <span className="signup-field-label">사업자등록번호</span>
+              <div className="signup-inline-field">
+                <input
+                  type="text"
+                  aria-label="사업자등록번호"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="하이픈 없이 숫자 10자리를 입력해주세요"
+                  value={businessRegNumber}
+                  onChange={changeBusinessRegNumber}
+                />
+                <button
+                  type="button"
+                  className="signup-inline-action-btn"
+                  disabled={
+                    !hasBusinessRegNumberChanged ||
+                    !/^\d{10}$/.test(businessRegNumber) ||
+                    isVerifyingBusinessNumber ||
+                    isBusinessRegNumberVerified
+                  }
+                  onClick={verifyBusinessRegNumber}
+                >
+                  {isVerifyingBusinessNumber
+                    ? '인증 중...'
+                    : isBusinessRegNumberVerified
+                      ? '인증 완료'
+                      : '인증하기'}
+                </button>
+              </div>
+              {businessRegNumberError ? (
+                <small role="alert">{businessRegNumberError}</small>
+              ) : isBusinessRegNumberVerified ? (
+                <small className="signup-field-hint signup-field-hint--success">
+                  사업자 인증이 완료되었어요.
+                </small>
+              ) : hasBusinessRegNumberChanged ? (
+                <small className="signup-field-hint">
+                  변경한 번호는 인증 후 저장할 수 있어요.
+                </small>
+              ) : (
+                <small className="signup-field-hint">
+                  사업자등록번호를 변경할 때 새 번호 인증이 필요해요.
+                </small>
+              )}
             </label>
             <label>
               매장명

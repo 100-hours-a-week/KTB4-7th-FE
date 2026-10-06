@@ -11,7 +11,7 @@ export type StoreAddress = {
 
 export type StoreProfile = {
   id: number
-  businessRegNumber: string
+  businessRegNumber: string | null
   storeName: string
   address: StoreAddress
   businessHours: BusinessHours[]
@@ -19,6 +19,8 @@ export type StoreProfile = {
 
 export type StoreProfileUpdateRequest = {
   storeName?: string
+  businessRegNumber?: string
+  businessVerificationId?: number
   address?: {
     postalCode?: string
     roadAddress?: string
