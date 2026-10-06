@@ -211,6 +211,25 @@ test('매장 정보 입력칸에는 계정 자동완성이 적용되지 않는�
   )
 })
 
+test('상세 주소는 255자로 입력을 제한하고 초과 값은 검증한다', async () => {
+  await moveToBusinessStep()
+
+  const addressDetail = screen.getByLabelText('상세 주소') as HTMLInputElement
+  expect(addressDetail.maxLength).toBe(255)
+
+  fireEvent.change(addressDetail, { target: { value: '가'.repeat(256) } })
+  expect(
+    await screen.findByText('상세 주소는 255자 이하여야 합니다.'),
+  ).toBeInTheDocument()
+
+  fireEvent.change(addressDetail, { target: { value: '가'.repeat(255) } })
+  await waitFor(() =>
+    expect(
+      screen.queryByText('상세 주소는 255자 이하여야 합니다.'),
+    ).not.toBeInTheDocument(),
+  )
+})
+
 test('사업자 인증 API의 400 fieldErrors를 사업자등록번호 입력칸 아래에 표시한다', async () => {
   await moveToBusinessStep()
   verifyBusinessNumber.mockRejectedValue({
