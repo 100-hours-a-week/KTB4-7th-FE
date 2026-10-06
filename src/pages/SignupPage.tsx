@@ -703,7 +703,13 @@ export function SignupPage() {
               <ClearableInput
                 autoComplete="address-line2"
                 placeholder="동/호수 등 상세 주소를 입력해주세요"
-                {...business.register('addressDetail')}
+                maxLength={255}
+                {...business.register('addressDetail', {
+                  maxLength: {
+                    value: 255,
+                    message: '상세 주소는 255자 이하여야 합니다.',
+                  },
+                })}
               />
               {business.formState.errors.addressDetail && (
                 <small role="alert">
