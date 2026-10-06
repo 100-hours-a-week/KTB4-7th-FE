@@ -94,6 +94,7 @@ const timeHours = Array.from({ length: 24 }, (_, index) =>
   String(index).padStart(2, '0'),
 )
 const timeMinutes = ['00', '30']
+const storeNamePattern = /^[가-힣A-Za-z0-9 ,&·()-]+$/
 
 function isValidBusinessTimeRange(openTime: string, closeTime: string) {
   if (openTime === closeTime) return openTime === '00:00'
@@ -157,7 +158,9 @@ export function SignupPage() {
     verifiedRegNumber === businessValues.businessRegNumber
   const hasBusinessRegNumber = Boolean(businessValues.businessRegNumber)
   const isBusinessReady =
-    Boolean(businessValues.storeName) &&
+    Boolean(businessValues.storeName?.trim()) &&
+    businessValues.storeName.length <= 15 &&
+    storeNamePattern.test(businessValues.storeName) &&
     (!hasBusinessRegNumber || isBusinessVerified) &&
     Boolean(businessValues.postalCode) &&
     Boolean(businessValues.address) &&
@@ -608,7 +611,19 @@ export function SignupPage() {
                 aria-label="매장명"
                 autoComplete="organization"
                 placeholder="매장명을 입력해주세요"
-                {...business.register('storeName', { required: true })}
+                maxLength={15}
+                {...business.register('storeName', {
+                  required: '매장명을 입력해주세요.',
+                  maxLength: {
+                    value: 15,
+                    message: '매장명은 15자 이하여야 합니다.',
+                  },
+                  pattern: {
+                    value: storeNamePattern,
+                    message:
+                      '매장명에 사용할 수 없는 문자가 포함되어 있습니다.',
+                  },
+                })}
               />
               {business.formState.errors.storeName && (
                 <small role="alert">

@@ -230,6 +230,58 @@ test('상세 주소는 255자로 입력을 제한하고 초과 값은 검증한�
   )
 })
 
+test('매장명은 15자로 제한하며 초과 값으로는 가입을 제출할 수 없다', async () => {
+  await moveToBusinessStep()
+  searchAddress.mockResolvedValue({
+    addresses: [
+      {
+        postalCode: '06134',
+        roadAddress: '서울특별시 강남구 테헤란로 231',
+        jibunAddress: '',
+      },
+    ],
+    nextCursor: null,
+  })
+
+  const storeName = screen.getByLabelText('매장명') as HTMLInputElement
+  expect(storeName.maxLength).toBe(15)
+
+  fireEvent.change(storeName, { target: { value: '가'.repeat(15) } })
+  fireEvent.click(screen.getByRole('button', { name: '주소 검색' }))
+  fireEvent.change(
+    screen.getByPlaceholderText('도로명, 건물명 또는 지번으로 검색해주세요'),
+    { target: { value: '테헤란로' } },
+  )
+  fireEvent.click(
+    await screen.findByRole('button', {
+      name: /서울특별시 강남구 테헤란로 231/,
+    }),
+  )
+
+  const submitButton = screen.getByRole('button', { name: '회원가입 완료' })
+  expect(submitButton).toBeEnabled()
+
+  fireEvent.change(storeName, { target: { value: '가'.repeat(16) } })
+  expect(submitButton).toBeDisabled()
+  expect(
+    await screen.findByText('매장명은 15자 이하여야 합니다.'),
+  ).toBeInTheDocument()
+
+  fireEvent.change(storeName, { target: { value: '가'.repeat(15) } })
+  await waitFor(() => expect(submitButton).toBeEnabled())
+
+  fireEvent.change(storeName, { target: { value: '스타벅스(강남점)' } })
+  expect(submitButton).toBeEnabled()
+
+  fireEvent.change(storeName, { target: { value: '스타벅스@강남점' } })
+  expect(submitButton).toBeDisabled()
+  expect(
+    await screen.findByText(
+      '매장명에 사용할 수 없는 문자가 포함되어 있습니다.',
+    ),
+  ).toBeInTheDocument()
+})
+
 test('사업자 인증 API의 400 fieldErrors를 사업자등록번호 입력칸 아래에 표시한다', async () => {
   await moveToBusinessStep()
   verifyBusinessNumber.mockRejectedValue({
