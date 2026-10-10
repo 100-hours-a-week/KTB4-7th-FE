@@ -86,6 +86,7 @@ export function SalesUploadPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [validatedUploadId, setValidatedUploadId] = useState<number | null>(null)
 
   useEffect(() => {
     let ignore = false
@@ -112,6 +113,7 @@ export function SalesUploadPage() {
 
   const selectFile = (file?: File) => {
     if (!file) return
+    setValidatedUploadId(null)
     const extension = file.name.split('.').pop()?.toLowerCase()
     if (!extension || !supportedExtensions.includes(extension)) {
       setSelectedFile(null)
@@ -128,10 +130,12 @@ export function SalesUploadPage() {
     setIsSubmitting(true)
     setSubmitError('')
     try {
-      await uploadSalesFile(selectedFile)
-      navigate('/sales/analysis', {
-        state: { refreshForecastAfterUpload: true },
-      })
+      const result = await uploadSalesFile(selectedFile)
+      if (result.status !== 'COMPLETED') {
+        setSubmitError('매출 파일 처리가 완료된 뒤 다음 단계로 이동할 수 있습니다.')
+        return
+      }
+      setValidatedUploadId(result.data.uploadId)
     } catch (error) {
       if (isUnauthorized(error)) {
         navigate('/login')
@@ -224,11 +228,24 @@ export function SalesUploadPage() {
         <button
           type="button"
           className="primary-action full-width"
-          disabled={!selectedFile || isSubmitting}
+          disabled={!selectedFile || isSubmitting || validatedUploadId !== null}
           onClick={startAnalysis}
         >
           {isSubmitting ? '분석을 시작하는 중...' : '분석 시작'}
         </button>
+        {validatedUploadId !== null && (
+          <div className="upload-ready" role="status">
+            <strong>파일 오류 검사가 완료됐어요.</strong>
+            <span>다음 단계에서 순이익 분석 정보를 확인해주세요.</span>
+            <button
+              type="button"
+              className="primary-action"
+              onClick={() => navigate(`/sales/uploads/${validatedUploadId}/cost-items`)}
+            >
+              다음 단계
+            </button>
+          </div>
+        )}
 
         <section className="upload-history">
           <p className="section-label">업로드 기록</p>
