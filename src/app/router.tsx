@@ -15,6 +15,7 @@ import { PasswordChangePage } from '../pages/PasswordChangePage'
 import { StoreProfilePage } from '../pages/StoreProfilePage'
 import { SalesUploadPage } from '../pages/SalesUploadPage'
 import { SalesAnalysisPage } from '../pages/SalesAnalysisPage'
+import { SalesProfitCostEntryPage } from '../pages/SalesProfitCostEntryPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
 
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       { path: '/profile/password', element: <PasswordChangePage /> },
       { path: '/profile/store', element: <StoreProfilePage /> },
       { path: '/sales/upload', element: <SalesUploadPage /> },
+      { path: '/sales/uploads/:uploadId/cost-items', element: <SalesProfitCostEntryPage /> },
       { path: '/sales/analysis', element: <SalesAnalysisPage /> },
     ],
   },
