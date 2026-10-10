@@ -7,19 +7,19 @@ import { SolutionPage } from './SolutionPage'
 
 const {
   getSalesAnalysis,
-  getSalesAvailableMonths,
+  getSalesAnalysisMonthOptions,
   getNotifications,
   getTodaySolution,
 } = vi.hoisted(() => ({
   getSalesAnalysis: vi.fn(),
-  getSalesAvailableMonths: vi.fn(),
+  getSalesAnalysisMonthOptions: vi.fn(),
   getNotifications: vi.fn(),
   getTodaySolution: vi.fn(),
 }))
 
 vi.mock('../features/sales/api/salesApi', () => ({
   getSalesAnalysis,
-  getSalesAvailableMonths,
+  getSalesAnalysisMonthOptions,
 }))
 
 vi.mock('../features/notifications/api/notificationApi', () => ({
@@ -32,7 +32,7 @@ vi.mock('../features/solution/api/solutionApi', () => ({
 
 beforeEach(() => {
   getSalesAnalysis.mockReset()
-  getSalesAvailableMonths.mockReset()
+  getSalesAnalysisMonthOptions.mockReset()
   getNotifications.mockReset()
   getTodaySolution.mockReset()
   getNotifications.mockResolvedValue({
@@ -71,7 +71,7 @@ test('솔루션이 없으면 매출 업로드 행동을 제공한다', async () 
 })
 
 test('분석 가능한 월이 없으면 업로드 행동을 제공한다', async () => {
-  getSalesAvailableMonths.mockResolvedValue({ months: [] })
+  getSalesAnalysisMonthOptions.mockResolvedValue({ months: [] })
 
   render(
     <MemoryRouter>
