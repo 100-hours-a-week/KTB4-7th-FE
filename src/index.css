@@ -155,7 +155,7 @@ input {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(100%, 430px);
+  width: min(100%, 470px);
   height: 100dvh;
   min-height: 0;
   margin: 0 auto;
@@ -358,16 +358,22 @@ input {
 }
 
 /* --- 메인 랜딩: editorial storefront --- */
+.mobile-app-shell .app-content.landing-app-content {
+  padding: 12px 16px;
+}
 .mobile-app-shell .landing-page--editorial {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   background: #f5efe3;
 }
 .landing-editorial {
-  min-height: 100%;
+  height: 100%;
 }
 .mobile-app-shell .landing-page--editorial .landing-hero {
   display: flex;
-  min-height: 100%;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
   flex-direction: column;
   align-items: stretch;
   padding: 28px 20px 32px;
@@ -412,10 +418,11 @@ input {
 }
 .landing-illustration {
   display: block;
-  width: calc(100% + 28px);
+  flex: 1 1 0;
+  width: 100%;
   max-width: 390px;
-  height: auto;
-  margin: 14px -14px 4px;
+  min-height: 0;
+  margin: 14px auto 4px;
   object-fit: contain;
 }
 .landing-copy {
@@ -641,7 +648,7 @@ input {
 .auth-page {
   box-sizing: border-box;
   min-height: 100dvh;
-  width: min(100%, 430px);
+  width: min(100%, 470px);
   margin: 0 auto;
   padding: 24px 22px;
   background: var(--paper);
@@ -972,14 +979,14 @@ input {
   font-weight: 700;
   text-decoration: none;
 }
-@media (min-width: 431px) {
+@media (min-width: 471px) {
   body {
     min-height: 100dvh;
     background: var(--teal-dim);
   }
   .mobile-app-shell {
     box-sizing: border-box;
-    width: 430px;
+    width: 470px;
     height: min(844px, calc(100dvh - 40px));
     margin: 20px auto;
     border: 10px solid var(--ink);
@@ -2006,7 +2013,7 @@ input {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(100%, 430px);
+  width: min(100%, 470px);
   height: 100dvh;
   min-height: 0;
   margin: 0 auto;
@@ -2456,7 +2463,7 @@ input {
 }
 .signup-page.mobile-onboarding,
 .signup-page.signup-complete {
-  width: min(100%, 430px);
+  width: min(100%, 470px);
   min-height: 100dvh;
   margin: 0 auto;
   padding: 24px 22px 54px;
@@ -2837,7 +2844,7 @@ input {
     font-size: 28px;
   }
 }
-@media (min-width: 431px) {
+@media (min-width: 471px) {
   body {
     background: #eee4d3;
   }
@@ -2850,7 +2857,7 @@ input {
   }
   .mobile-app-shell {
     box-sizing: border-box;
-    width: 430px;
+    width: 470px;
     height: min(844px, calc(100dvh - 40px));
     margin: 20px auto;
     border: 10px solid var(--ink);

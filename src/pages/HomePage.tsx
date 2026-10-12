@@ -21,7 +21,7 @@ export function HomePage() {
   }, [])
 
   return (
-    <AppShell title="맴매" tone="paper">
+    <AppShell title="맴매" tone="paper" contentClassName="landing-app-content">
       <div className="landing-page landing-page--editorial">
         <main className="landing-editorial">
           <section className="landing-hero" aria-labelledby="landing-title">
