@@ -131,8 +131,8 @@ test('연결 상태와 업로드 기록을 실제 API로 불러온다', async ()
   expect(screen.getByText('202608_매출.xlsx')).toBeInTheDocument()
 })
 
-test('파일을 선택하고 분석 시작을 누르면 업로드 후 분석 페이지로 이동한다', async () => {
-  uploadSalesFile.mockResolvedValue({ uploadId: 10, analysisRunId: 20 })
+test('파일 검증 완료 후 다음 단계를 눌러 비용 입력으로 이동한다', async () => {
+  uploadSalesFile.mockResolvedValue({ status: 'COMPLETED', data: { uploadId: 10, analysisRunId: 20 } })
 
   render(
     <MemoryRouter>
@@ -155,11 +155,9 @@ test('파일을 선택하고 분석 시작을 누르면 업로드 후 분석 페
   fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
 
   await waitFor(() => expect(uploadSalesFile).toHaveBeenCalled())
-  await waitFor(() =>
-    expect(navigate).toHaveBeenCalledWith('/sales/analysis', {
-      state: { refreshForecastAfterUpload: true },
-    }),
-  )
+  expect(navigate).not.toHaveBeenCalled()
+  fireEvent.click(await screen.findByRole('button', { name: '다음 단계' }))
+  expect(navigate).toHaveBeenCalledWith('/sales/uploads/10/cost-items')
 })
 
 test('xlsx가 아닌 파일은 선택할 수 없다', async () => {

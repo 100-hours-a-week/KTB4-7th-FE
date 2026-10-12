@@ -1,0 +1,61 @@
+.profit-cost-form,
+.profit-cost-month {
+  display: grid;
+  gap: 16px;
+}
+
+.profit-cost-month {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper-raised);
+}
+
+.profit-cost-month-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.profit-cost-month-heading h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.profit-cost-month-heading span,
+.profit-cost-field small,
+.profit-cost-notice {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.profit-cost-field {
+  display: grid;
+  gap: 7px;
+}
+
+.profit-cost-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.profit-cost-input:focus-within { border-color: var(--teal); }
+
+.profit-cost-input input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.profit-cost-input em { font-style: normal; }
+.profit-cost-input input[aria-invalid='true'] { color: var(--stamp); }
+.profit-cost-field:has(input[aria-invalid='true']) small { color: var(--stamp); }
+.profit-cost-notice { line-height: 1.5; }

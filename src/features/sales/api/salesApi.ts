@@ -80,6 +80,45 @@ export async function uploadSalesFile(file: File) {
   ).data
 }
 
+export type SalesUploadCostMonth = {
+  costMonth: string
+  rentAmount: number | null
+  laborAmount: number | null
+  ingredientCostRate: number | null
+  source: 'SAVED' | 'SUGGESTED' | 'EMPTY'
+}
+
+export type SalesUploadCostEntry = {
+  uploadId: number
+  months: SalesUploadCostMonth[]
+}
+
+export type SalesUploadCostInput = {
+  costMonth: string
+  rentAmount: number
+  laborAmount: number
+  ingredientCostRate: number
+}
+
+export async function getSalesUploadCostEntry(uploadId: number) {
+  return (
+    await http.get<ApiResponse<SalesUploadCostEntry>>(
+      `/v2/sales/uploads/${uploadId}/cost-items`,
+    )
+  ).data.data
+}
+
+export async function saveSalesUploadCosts(
+  uploadId: number,
+  items: SalesUploadCostInput[],
+) {
+  return (
+    await http.put<
+      ApiResponse<{ uploadId: number; costMonths: string[]; next: string }>
+    >(`/v2/sales/uploads/${uploadId}/cost-items`, { items })
+  ).data.data
+}
+
 export async function retrySalesAnalysis(uploadId: number) {
   return (
     await http.post<
