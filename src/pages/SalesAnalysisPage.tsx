@@ -2,14 +2,16 @@ import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
-  getSalesAvailableMonths,
+  getSalesAnalysisMonthOptions,
   getSalesExpectedForecast,
+  type SalesAnalysisMonthOption,
   type SalesAnalysisData,
   type SalesDailyPoint,
   type SalesExpectedForecast,
 } from '../features/sales/api/salesApi'
 import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
+import { SalesProfitAnalysisContent } from './SalesProfitAnalysisContent'
 
 const weekdayLabels: Record<string, string> = {
   MONDAY: '월',
@@ -169,7 +171,9 @@ export function SalesAnalysisPage() {
     (location.state as { refreshForecastAfterUpload?: boolean } | null)
       ?.refreshForecastAfterUpload === true
   const [availableMonths, setAvailableMonths] = useState<string[] | null>(null)
+  const [monthOptions, setMonthOptions] = useState<SalesAnalysisMonthOption[]>([])
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
+  const [analysisView, setAnalysisView] = useState<'sales' | 'profit'>('sales')
   const [status, setStatus] = useState<'COMPLETED' | 'EMPTY' | null>(null)
   const [data, setData] = useState<SalesAnalysisData | null>(null)
   const [expectedForecast, setExpectedForecast] =
@@ -189,11 +193,13 @@ export function SalesAnalysisPage() {
 
   useEffect(() => {
     let ignore = false
-    getSalesAvailableMonths()
+    getSalesAnalysisMonthOptions()
       .then((response) => {
         if (ignore) return
-        setAvailableMonths(response.months)
-        setSelectedMonth(response.months[response.months.length - 1] ?? null)
+        setMonthOptions(response.months)
+        const months = response.months.map((option) => option.targetMonth)
+        setAvailableMonths(months)
+        setSelectedMonth(months[months.length - 1] ?? null)
       })
       .catch((requestError) => {
         if (ignore) return
@@ -333,26 +339,6 @@ export function SalesAnalysisPage() {
         <EmptyState
           title="분석할 매출 데이터가 없습니다"
           description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
-          action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
-        />
-      </AppShell>
-    )
-  }
-
-  if (!isLoadingMonths && !isLoading && (status === 'EMPTY' || error)) {
-    return (
-      <AppShell title="매출 분석">
-        <EmptyState
-          title={
-            error
-              ? '매출 분석을 불러오지 못했습니다'
-              : '분석할 매출 데이터가 없습니다'
-          }
-          description={
-            error
-              ? '잠시 후 다시 시도해 주세요.'
-              : '매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요.'
-          }
           action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
         />
       </AppShell>
@@ -580,16 +566,34 @@ export function SalesAnalysisPage() {
               value={selectedMonth ?? ''}
               onChange={(event) => setSelectedMonth(event.target.value)}
             >
-              {[...availableMonths].reverse().map((month) => (
-                <option key={month} value={month}>
-                  {formatMonthLabel(month)}
+              {[...monthOptions].reverse().map((option) => (
+                <option key={option.targetMonth} value={option.targetMonth}>
+                  {formatMonthLabel(option.targetMonth)} · {option.fileName}
                 </option>
               ))}
             </select>
           )}
         </header>
 
-        {isLoadingMonths || isLoading || !data ? (
+        {!isLoadingMonths && selectedMonth && (
+          <div className="analysis-view-switch" role="group" aria-label="분석 종류">
+            <button type="button" className={analysisView === 'sales' ? 'active' : ''}
+              aria-pressed={analysisView === 'sales'} onClick={() => setAnalysisView('sales')}>매출 분석</button>
+            <button type="button" className={analysisView === 'profit' ? 'active' : ''}
+              aria-pressed={analysisView === 'profit'} onClick={() => setAnalysisView('profit')}>순이익 분석</button>
+          </div>
+        )}
+        {analysisView === 'profit' && selectedMonth ? (
+          <SalesProfitAnalysisContent targetMonth={selectedMonth}
+            uploadId={monthOptions.find((option) => option.targetMonth === selectedMonth)?.uploadId ?? 0} />
+        ) : !isLoading && (status === 'EMPTY' || error) ? (
+          <EmptyState
+            title={error ? '매출 분석을 불러오지 못했습니다' : '분석할 매출 데이터가 없습니다'}
+            description={error ? '잠시 후 다시 시도해 주세요.' :
+              '매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요.'}
+            action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
+          />
+        ) : isLoadingMonths || isLoading || !data ? (
           <p>불러오는 중...</p>
         ) : (
           <>

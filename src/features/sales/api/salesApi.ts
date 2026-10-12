@@ -1,6 +1,7 @@
 import { http } from '../../../shared/api/http'
 
 type StatusResponse<T> = { message: string; status: string; data: T }
+type ApiResponse<T> = { message: string; data: T }
 
 export type SalesUploadStatus =
   'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
@@ -206,5 +207,55 @@ export type SalesAvailableMonthsResponse = {
 export async function getSalesAvailableMonths() {
   return (
     await http.get<SalesAvailableMonthsResponse>('/v1/sales/analyses/months')
+  ).data
+}
+
+export type SalesAnalysisMonthOption = {
+  targetMonth: string
+  uploadId: number
+  fileName: string
+  uploadedAt: string
+}
+
+export async function getSalesAnalysisMonthOptions() {
+  return (
+    await http.get<ApiResponse<{ months: SalesAnalysisMonthOption[] }>>(
+      '/v2/sales/analyses/month-options',
+    )
+  ).data.data
+}
+
+export type ProfitAnalysisSummary = {
+  totalNetAmount: number
+  ingredientCost: number
+  fixedCost: number
+  totalCost: number
+  netProfit: number
+  netProfitRate: number | null
+  previousNetProfit: number | null
+  netProfitChangeRate: number | null
+  previousTotalCost: number | null
+  totalCostChangeRate: number | null
+  previousNetProfitRate: number | null
+  netProfitRateDifference: number | null
+}
+
+export type ProfitAnalysisData = {
+  summary: ProfitAnalysisSummary
+  dailyProfits: { date: string; netProfit: number }[]
+  weekdayProfits: { dayOfWeek: string; netProfit: number }[]
+  aiInsight: { status: 'COMPLETED' | 'FAILED' | 'INSUFFICIENT_DATA'; insights: string[] }
+}
+
+export type ProfitAnalysisResponse =
+  | { status: 'COMPLETED'; message: string; data: ProfitAnalysisData }
+  | { status: 'COST_INPUT_REQUIRED'; message: string; data: { missingCostMonths: string[] } }
+  | { status: 'EMPTY'; message: string; data: null }
+
+export async function getProfitAnalysis(startDate: string, endDate: string) {
+  return (
+    await http.get<ProfitAnalysisResponse>('/v2/sales/profit-analyses', {
+      params: { periodType: 'CUSTOM', startDate, endDate },
+    })
   ).data
 }
