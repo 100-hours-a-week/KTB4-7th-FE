@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getTodaySolution,
+  retryTodaySolution,
   type SolutionCard,
   type SolutionTodayStatus,
 } from '../features/solution/api/solutionApi'
@@ -31,6 +32,7 @@ function formatTargetDate(value: string) {
 
 export function SolutionPage() {
   const navigate = useNavigate()
+  const retryInFlight = useRef(false)
   const [status, setStatus] = useState<SolutionTodayStatus | null>(null)
   const [message, setMessage] = useState('')
   const [storeName, setStoreName] = useState<string | null>(null)
@@ -40,6 +42,7 @@ export function SolutionPage() {
   const [helperText, setHelperText] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isRetrying, setIsRetrying] = useState(false)
+  const [retryError, setRetryError] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -76,6 +79,7 @@ export function SolutionPage() {
         if (!ignore) {
           if (refreshKey === 0) setIsLoading(false)
           setIsRetrying(false)
+          retryInFlight.current = false
         }
       })
     return () => {
@@ -83,6 +87,51 @@ export function SolutionPage() {
       if (refreshTimer) window.clearTimeout(refreshTimer)
     }
   }, [navigate, refreshKey])
+
+  async function handleRetry() {
+    if (status !== 'FAILED' || retryInFlight.current) return
+    retryInFlight.current = true
+    setIsRetrying(true)
+    setRetryError(null)
+    try {
+      await retryTodaySolution()
+      setRefreshKey((previous) => previous + 1)
+    } catch (requestError) {
+      if (isUnauthorized(requestError)) {
+        retryInFlight.current = false
+        setIsRetrying(false)
+        navigate('/login')
+        return
+      }
+      const response =
+        typeof requestError === 'object' &&
+        requestError !== null &&
+        'response' in requestError
+          ? (
+              requestError as {
+                response?: {
+                  status?: number
+                  data?: { status?: string; message?: string }
+                }
+              }
+            ).response
+          : undefined
+      if (
+        response?.status === 409 &&
+        (response.data?.status === 'IN_PROGRESS' ||
+          response.data?.status === 'NOT_ALLOWED')
+      ) {
+        setRefreshKey((previous) => previous + 1)
+        return
+      }
+      setRetryError(
+        response?.data?.message ??
+          '솔루션 재시도에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+      )
+      retryInFlight.current = false
+      setIsRetrying(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -206,14 +255,12 @@ export function SolutionPage() {
                   type="button"
                   className="primary-action"
                   disabled={isRetrying}
-                  onClick={() => {
-                    setIsRetrying(true)
-                    setRefreshKey((previous) => previous + 1)
-                  }}
+                  onClick={handleRetry}
                 >
                   <span>{isRetrying ? '확인 중...' : '다시 확인하기'}</span>
                   <span aria-hidden="true">→</span>
                 </button>
+                {retryError && <p role="alert">{retryError}</p>}
                 {isRetrying && (
                   <p
                     role="status"
@@ -395,9 +442,7 @@ function SolutionResults({
                       </span>
                     )}
                   </div>
-                  <p className="solution-results-card-keyword">
-                    {keyword}
-                  </p>
+                  <p className="solution-results-card-keyword">{keyword}</p>
                   <div className="solution-results-card-copy">
                     <h3>{card.title}</h3>
                     <p>{card.summaryText}</p>

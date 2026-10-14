@@ -39,6 +39,19 @@ export async function getTodaySolution() {
   return (await http.get<SolutionTodayResponse>('/v1/solutions/today')).data
 }
 
+export type SolutionManualRetryResponse = {
+  message: string
+  status:
+    'COMPLETED' | 'IN_PROGRESS' | 'NOT_ALLOWED' | 'DATA_NOT_READY' | 'FAILED'
+  data: { solutionBundleId: number | null } | null
+}
+
+export async function retryTodaySolution() {
+  return (
+    await http.post<SolutionManualRetryResponse>('/v1/solutions/today/retries')
+  ).data
+}
+
 export type SolutionBundleDetail = {
   id: number
   targetDate: string
