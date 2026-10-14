@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getTodaySolution,
@@ -7,6 +7,7 @@ import {
 } from '../features/solution/api/solutionApi'
 import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
+import { getSolutionCardKeyword } from './solutionCardVisual'
 
 function isUnauthorized(error: unknown) {
   return (
@@ -159,8 +160,6 @@ export function SolutionPage() {
     )
   }
 
-  const primary = cards[0]
-
   if (status === 'PENDING' || status === 'GENERATING' || status === 'FAILED') {
     const isGenerating = status === 'PENDING' || status === 'GENERATING'
     return (
@@ -232,7 +231,7 @@ export function SolutionPage() {
     )
   }
 
-  if (!primary || !bundleId) {
+  if (cards.length === 0 || !bundleId) {
     return (
       <AppShell title="솔루션">
         <EmptyState
@@ -245,39 +244,282 @@ export function SolutionPage() {
   }
 
   return (
+    <SolutionResults
+      storeName={storeName}
+      targetDate={targetDate}
+      bundleId={bundleId}
+      cards={cards}
+      helperText={helperText}
+    />
+  )
+}
+
+function SolutionResults({
+  storeName,
+  targetDate,
+  bundleId,
+  cards,
+  helperText,
+}: {
+  storeName: string | null
+  targetDate: string | null
+  bundleId: number
+  cards: SolutionCard[]
+  helperText: string | null
+}) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const settleTimerRef = useRef<number | undefined>(undefined)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const isCarousel = cards.length > 1
+  const visibleCards = isCarousel ? [...cards, ...cards, ...cards] : cards
+
+  function getSlideStep(element: HTMLDivElement) {
+    const first = element.children[0] as HTMLElement | undefined
+    const second = element.children[1] as HTMLElement | undefined
+    return first && second ? second.offsetLeft - first.offsetLeft : 0
+  }
+
+  useLayoutEffect(() => {
+    const element = carouselRef.current
+    if (!element || !isCarousel) return
+    element.scrollLeft = getSlideStep(element) * cards.length
+  }, [cards.length, isCarousel])
+
+  useEffect(() => () => window.clearTimeout(settleTimerRef.current), [])
+
+  function handleCarouselScroll(element: HTMLDivElement) {
+    const step = getSlideStep(element)
+    if (!step) return
+    const position = Math.round(element.scrollLeft / step)
+    setActiveIndex(((position % cards.length) + cards.length) % cards.length)
+    window.clearTimeout(settleTimerRef.current)
+    settleTimerRef.current = window.setTimeout(() => {
+      const settledPosition = Math.round(element.scrollLeft / step)
+      if (settledPosition < cards.length) {
+        element.scrollLeft += cards.length * step
+      } else if (settledPosition >= cards.length * 2) {
+        element.scrollLeft -= cards.length * step
+      }
+    }, 140)
+  }
+
+  function moveCarousel(direction: number) {
+    const element = carouselRef.current
+    if (!element) return
+    const step = getSlideStep(element)
+    element.scrollTo({
+      left: element.scrollLeft + direction * step,
+      behavior: 'smooth',
+    })
+  }
+
+  function goToCard(index: number) {
+    const element = carouselRef.current
+    if (!element) return
+    const step = getSlideStep(element)
+    const position = Math.round(element.scrollLeft / step)
+    const currentIndex =
+      ((position % cards.length) + cards.length) % cards.length
+    const difference = index - currentIndex
+    const shortestDifference =
+      Math.abs(difference) > cards.length / 2
+        ? difference > 0
+          ? difference - cards.length
+          : difference + cards.length
+        : difference
+    element.scrollTo({
+      left: element.scrollLeft + shortestDifference * step,
+      behavior: 'smooth',
+    })
+  }
+
+  return (
     <AppShell title="솔루션">
-      <div className="solution-page">
-        <section className="solution-lead">
-          <p>오늘의 우선순위</p>
-          <h1>
-            {storeName}에<br />
-            먼저 필요한 일
-          </h1>
-          <small>
-            분석 기준 {targetDate ? formatTargetDate(targetDate) : ''}
-          </small>
+      <div className="solution-results">
+        <section
+          className="solution-results-intro"
+          aria-labelledby="solution-results-title"
+        >
+          <p className="solution-results-eyebrow">
+            {storeName || '우리 매장'} 맞춤 제안
+          </p>
+          <h1 id="solution-results-title">오늘의 솔루션</h1>
+          {targetDate && (
+            <p className="solution-results-date">
+              분석 기준 {formatTargetDate(targetDate)}
+            </p>
+          )}
         </section>
-        <div className="solution-list">
-          {cards.map((card, index) => (
-            <Link key={card.id} to={`/solution/${bundleId}/${card.id}`}>
-              <span className="solution-row-no">0{index + 1}</span>
-              <span className="solution-row-body">
-                <strong>{card.title}</strong>
-                <small>{card.summaryText}</small>
+
+        <section
+          className="solution-results-priorities"
+          aria-labelledby="solution-priorities-title"
+        >
+          <div className="solution-results-section-heading">
+            <div>
+              <span className="solution-results-section-kicker">
+                TODAY'S PRIORITIES
               </span>
-            </Link>
-          ))}
-        </div>
-        <Link className="light-button solution-chat-link" to="/solution/chat">
-          AI에게 질문하기
-        </Link>
+              <h2 id="solution-priorities-title">먼저 해볼 일</h2>
+            </div>
+            <span className="solution-results-count">
+              {cards.length}가지 제안
+            </span>
+          </div>
+          <div
+            className="solution-results-list"
+            ref={carouselRef}
+            onScroll={(event) => handleCarouselScroll(event.currentTarget)}
+            aria-label="오늘의 솔루션 카드"
+          >
+            {visibleCards.map((card, position) => {
+              const index = position % cards.length
+              const keyword = getSolutionCardKeyword(card.title)
+              const isCopy =
+                isCarousel && Math.floor(position / cards.length) !== 1
+              return (
+                <Link
+                  className={`solution-results-card${index === 0 ? ' solution-results-card--first' : ''}`}
+                  key={`${position}-${card.id}`}
+                  to={`/solution/${bundleId}/${card.id}`}
+                  aria-hidden={isCopy || undefined}
+                  tabIndex={isCopy ? -1 : undefined}
+                >
+                  <div className="solution-results-card-top">
+                    <span className="solution-results-card-rank">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    {index === 0 && (
+                      <span className="solution-results-card-badge">
+                        가장 먼저
+                      </span>
+                    )}
+                  </div>
+                  <p className="solution-results-card-keyword">
+                    {keyword}
+                  </p>
+                  <div className="solution-results-card-copy">
+                    <h3>{card.title}</h3>
+                    <p>{card.summaryText}</p>
+                  </div>
+                  <span
+                    className="solution-results-card-arrow"
+                    aria-hidden="true"
+                  >
+                    ↗
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
+          {isCarousel && (
+            <div className="solution-results-carousel-controls">
+              <button
+                type="button"
+                onClick={() => moveCarousel(-1)}
+                aria-label="이전 솔루션"
+              >
+                ←
+              </button>
+              <div
+                className="solution-results-carousel-dots"
+                aria-label="솔루션 선택"
+              >
+                {cards.map((card, index) => (
+                  <button
+                    type="button"
+                    key={card.id}
+                    className={index === activeIndex ? 'is-active' : ''}
+                    onClick={() => goToCard(index)}
+                    aria-label={`${index + 1}번 솔루션 보기`}
+                    aria-current={index === activeIndex ? 'true' : undefined}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => moveCarousel(1)}
+                aria-label="다음 솔루션"
+              >
+                →
+              </button>
+            </div>
+          )}
+        </section>
+
+        <section className="solution-results-chat" aria-label="솔루션 질문">
+          <div className="solution-results-chat-copy">
+            <span>NEED A HAND?</span>
+            <p>
+              실행 방법이 궁금하다면
+              <br />
+              AI에게 물어보세요.
+            </p>
+          </div>
+          <div className="solution-results-chat-art" aria-hidden="true">
+            <img src="/assets/solution/help-barista.png" alt="" />
+          </div>
+          <Link to="/solution/chat" aria-label="AI에게 질문하기">
+            질문하기 <span aria-hidden="true">↗</span>
+          </Link>
+        </section>
         {helperText && (
-          <section className="solution-helper-text">
+          <section className="solution-results-note">
             <h2>솔루션 안내</h2>
             <p>{helperText}</p>
           </section>
         )}
       </div>
     </AppShell>
+  )
+}
+
+export function SolutionPreviewPage() {
+  const showDrinkExample =
+    new URLSearchParams(window.location.search).get('example') === 'drink'
+
+  return (
+    <SolutionResults
+      storeName="광명 더콤마라운지"
+      targetDate="2026-10-13"
+      bundleId={1}
+      cards={[
+        {
+          id: 1,
+          rankNo: 1,
+          title: showDrinkExample
+            ? '음료 메뉴 구성을 다시 살펴보세요'
+            : '메뉴를 카테고리별로 분류하세요',
+          summaryText: showDrinkExample
+            ? '잘 팔리는 음료와 새로운 음료를 함께 비교해 보세요.'
+            : '메뉴별 매출을 비교할 수 있도록 먼저 분류해 보세요.',
+          detailText: '',
+          evidence: '',
+          isSaved: false,
+          savedId: null,
+        },
+        {
+          id: 2,
+          rankNo: 2,
+          title: '오늘은 추가 매출 확보에 집중하세요',
+          summaryText: '영업 종료 전까지 예상 매출과의 차이를 줄여보세요.',
+          detailText: '',
+          evidence: '',
+          isSaved: false,
+          savedId: null,
+        },
+        {
+          id: 3,
+          rankNo: 3,
+          title: '오픈 직후 매출 공백을 줄이세요',
+          summaryText: '9시 오픈 직후 방문을 늘릴 방법을 확인해 보세요.',
+          detailText: '',
+          evidence: '',
+          isSaved: false,
+          savedId: null,
+        },
+      ]}
+      helperText={null}
+    />
   )
 }
