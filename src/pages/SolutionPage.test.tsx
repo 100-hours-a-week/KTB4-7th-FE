@@ -3,16 +3,19 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { SolutionPage, SolutionPreviewPage } from './SolutionPage'
 
-const { getTodaySolution } = vi.hoisted(() => ({
+const { getTodaySolution, retryTodaySolution } = vi.hoisted(() => ({
   getTodaySolution: vi.fn(),
+  retryTodaySolution: vi.fn(),
 }))
 
 vi.mock('../features/solution/api/solutionApi', () => ({
   getTodaySolution,
+  retryTodaySolution,
 }))
 
 beforeEach(() => {
   getTodaySolution.mockReset()
+  retryTodaySolution.mockReset()
 })
 
 test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결한다', async () => {
@@ -353,7 +356,7 @@ test('솔루션 생성 실패 상태를 모달로 보여준다', async () => {
   ).toBeInTheDocument()
 })
 
-test('실패 상태에서 다시 확인하기를 누르면 확인 중 상태를 보여주고 다시 조회한다', async () => {
+test('실패 화면에서 재시도 중 중복 클릭을 막고 완료 후 다시 조회한다', async () => {
   let resolveRetry: ((value: unknown) => void) | undefined
   getTodaySolution
     .mockResolvedValueOnce({
@@ -367,12 +370,34 @@ test('실패 상태에서 다시 확인하기를 누르면 확인 중 상태를 
         solutionCards: [],
       },
     })
-    .mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveRetry = resolve
-        }),
-    )
+    .mockResolvedValueOnce({
+      message: '조회에 성공했습니다.',
+      status: 'COMPLETED',
+      data: {
+        storeName: '맴매 베이커리',
+        screenTitle: null,
+        solutionBundleId: 81,
+        targetDate: '2026-09-27',
+        solutionCards: [
+          {
+            id: 1,
+            rankNo: 1,
+            title: '재고 점검',
+            summaryText: '요약',
+            detailText: '상세',
+            evidence: '근거',
+            isSaved: false,
+            savedId: null,
+          },
+        ],
+      },
+    })
+  retryTodaySolution.mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        resolveRetry = resolve
+      }),
+  )
 
   render(
     <MemoryRouter>
@@ -383,14 +408,121 @@ test('실패 상태에서 다시 확인하기를 누르면 확인 중 상태를 
   fireEvent.click(await screen.findByRole('button', { name: '다시 확인하기' }))
 
   expect(
-    await screen.findByRole('status', { name: '솔루션 상태 확인 중' }),
-  ).toBeInTheDocument()
-  await waitFor(() => expect(getTodaySolution).toHaveBeenCalledTimes(2))
+    await screen.findByRole('button', { name: '확인 중...' }),
+  ).toBeDisabled()
+  fireEvent.click(screen.getByRole('button', { name: '확인 중...' }))
+  expect(retryTodaySolution).toHaveBeenCalledTimes(1)
+  expect(getTodaySolution).toHaveBeenCalledTimes(1)
 
   await act(async () => {
     resolveRetry?.({
-      message: '생성 요청을 완료하지 못했습니다.',
+      message: '솔루션 재시도가 완료되었습니다.',
+      status: 'COMPLETED',
+      data: { solutionBundleId: 81 },
+    })
+  })
+  await waitFor(() => expect(getTodaySolution).toHaveBeenCalledTimes(2))
+  expect(await screen.findByText('재고 점검')).toBeInTheDocument()
+})
+
+test('이미 생성 중이면 GET으로 동기화하고 재시도 POST를 반복하지 않는다', async () => {
+  getTodaySolution
+    .mockResolvedValueOnce({
+      message: '생성 실패',
       status: 'FAILED',
+      data: {
+        storeName: '맴매 베이커리',
+        screenTitle: null,
+        solutionBundleId: 81,
+        targetDate: '2026-09-27',
+        solutionCards: [],
+      },
+    })
+    .mockResolvedValueOnce({
+      message: '생성 중',
+      status: 'GENERATING',
+      data: {
+        storeName: '맴매 베이커리',
+        screenTitle: null,
+        solutionBundleId: 81,
+        targetDate: '2026-09-27',
+        solutionCards: [],
+      },
+    })
+  retryTodaySolution.mockRejectedValueOnce({
+    response: {
+      status: 409,
+      data: {
+        message: '이미 생성하고 있습니다.',
+        status: 'IN_PROGRESS',
+        data: { solutionBundleId: 81 },
+      },
+    },
+  })
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByRole('button', { name: '다시 확인하기' }))
+  expect(
+    await screen.findByText('자동으로 확인하고 있어요'),
+  ).toBeInTheDocument()
+  expect(getTodaySolution).toHaveBeenCalledTimes(2)
+  expect(retryTodaySolution).toHaveBeenCalledTimes(1)
+})
+
+test('데이터 미준비 응답은 안내하고 재조회나 자동 재시도하지 않는다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '생성 실패',
+    status: 'FAILED',
+    data: {
+      storeName: '맴매 베이커리',
+      screenTitle: null,
+      solutionBundleId: 81,
+      targetDate: '2026-09-27',
+      solutionCards: [],
+    },
+  })
+  retryTodaySolution.mockRejectedValueOnce({
+    response: {
+      status: 422,
+      data: {
+        message: '솔루션 생성에 필요한 데이터가 준비되지 않았습니다.',
+        status: 'DATA_NOT_READY',
+        data: null,
+      },
+    },
+  })
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByRole('button', { name: '다시 확인하기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '솔루션 생성에 필요한 데이터가 준비되지 않았습니다.',
+  )
+  expect(getTodaySolution).toHaveBeenCalledTimes(1)
+  expect(retryTodaySolution).toHaveBeenCalledTimes(1)
+})
+
+test('재시도 불가 응답은 GET으로 현재 상태를 다시 동기화한다', async () => {
+  getTodaySolution
+    .mockResolvedValueOnce({
+      message: '생성 실패',
+      status: 'FAILED',
+      data: {
+        storeName: '맴매 베이커리',
+        screenTitle: null,
+        solutionBundleId: 81,
+        targetDate: '2026-09-27',
+        solutionCards: [],
+      },
+    })
+    .mockResolvedValueOnce({
+      message: '조회에 성공했습니다.',
+      status: 'EMPTY',
       data: {
         storeName: '맴매 베이커리',
         screenTitle: null,
@@ -399,5 +531,57 @@ test('실패 상태에서 다시 확인하기를 누르면 확인 중 상태를 
         solutionCards: [],
       },
     })
+  retryTodaySolution.mockRejectedValueOnce({
+    response: {
+      status: 409,
+      data: {
+        message: '오늘 실패한 솔루션만 다시 생성할 수 있습니다.',
+        status: 'NOT_ALLOWED',
+        data: null,
+      },
+    },
   })
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByRole('button', { name: '다시 확인하기' }))
+  await waitFor(() => expect(getTodaySolution).toHaveBeenCalledTimes(2))
+  expect(retryTodaySolution).toHaveBeenCalledTimes(1)
+})
+
+test('재생성 실패 응답은 안내하고 임의로 다시 호출하지 않는다', async () => {
+  getTodaySolution.mockResolvedValue({
+    message: '생성 실패',
+    status: 'FAILED',
+    data: {
+      storeName: '맴매 베이커리',
+      screenTitle: null,
+      solutionBundleId: 81,
+      targetDate: '2026-09-27',
+      solutionCards: [],
+    },
+  })
+  retryTodaySolution.mockRejectedValueOnce({
+    response: {
+      status: 500,
+      data: {
+        message: '솔루션 재시도에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        status: 'FAILED',
+        data: null,
+      },
+    },
+  })
+  render(
+    <MemoryRouter>
+      <SolutionPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByRole('button', { name: '다시 확인하기' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '솔루션 재시도에 실패했습니다.',
+  )
+  expect(getTodaySolution).toHaveBeenCalledTimes(1)
+  expect(retryTodaySolution).toHaveBeenCalledTimes(1)
 })
