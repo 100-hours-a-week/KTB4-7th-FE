@@ -113,49 +113,52 @@ export function SolutionDetailPage() {
   }
 
   return (
-    <AppShell title="솔루션 상세">
-      <div className="detail-page">
-        <Link to="/solution">← 솔루션 요약</Link>
-        <p>오늘의 실행 가이드</p>
-        <h1>오늘의 솔루션</h1>
-        {expirationNotice && <p>{expirationNotice}</p>}
-        {saveError && (
-          <p className="form-error" role="alert">
-            {saveError}
-          </p>
-        )}
-        <section>
-          <article>
-            {item.isSaved && (
-              <div className="saved-stamp">
-                <span>
-                  저장
-                  <br />
-                  완료
-                </span>
-              </div>
-            )}
-            <small>0{item.rankNo}</small>
-            <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
-            <h2>{item.title}</h2>
-            <p>{item.summaryText}</p>
-            <p style={{ whiteSpace: 'pre-line' }}>{item.detailText}</p>
-            <div className="detail-page-actions">
-              <button
-                type="button"
-                className="light-button"
-                onClick={handleSave}
-                disabled={isSaving || item.isSaved}
-              >
-                {item.isSaved
-                  ? '저장됨'
-                  : isSaving
-                    ? '저장 중...'
-                    : '이 솔루션 저장하기'}
-              </button>
-            </div>
-          </article>
-        </section>
+    <AppShell title="솔루션 상세" backTo="/solution">
+      <div className="solution-result-detail">
+        <Link className="solution-result-detail-back" to="/solution">
+          <span aria-hidden="true">←</span> 오늘의 제안으로
+        </Link>
+        <header className="solution-result-detail-hero">
+          <div className="solution-result-detail-meta">
+            <span>ACTION {String(item.rankNo).padStart(2, '0')}</span>
+            <span>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</span>
+          </div>
+          <h1>{item.title}</h1>
+          <p>{item.summaryText}</p>
+        </header>
+
+        <div className="solution-result-detail-content">
+          <section
+            className="solution-result-detail-section"
+            aria-labelledby="solution-action-title"
+          >
+            <span className="solution-result-detail-index">01 / ACTION</span>
+            <h2 id="solution-action-title">이렇게 실행해 보세요</h2>
+            <p className="solution-result-detail-text">{item.detailText}</p>
+          </section>
+
+          {expirationNotice && (
+            <p className="solution-result-detail-notice">{expirationNotice}</p>
+          )}
+          {saveError && (
+            <p className="form-error" role="alert">
+              {saveError}
+            </p>
+          )}
+          <button
+            type="button"
+            className="solution-result-detail-save"
+            onClick={handleSave}
+            disabled={isSaving || item.isSaved}
+          >
+            {item.isSaved
+              ? '저장됨'
+              : isSaving
+                ? '저장 중...'
+                : '이 솔루션 저장하기'}
+            <span aria-hidden="true">{item.isSaved ? '✓' : '↗'}</span>
+          </button>
+        </div>
       </div>
     </AppShell>
   )

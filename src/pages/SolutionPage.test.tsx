@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
-import { SolutionPage } from './SolutionPage'
+import { SolutionPage, SolutionPreviewPage } from './SolutionPage'
 
 const { getTodaySolution } = vi.hoisted(() => ({
   getTodaySolution: vi.fn(),
@@ -65,14 +65,21 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
     </MemoryRouter>,
   )
 
-  expect(await screen.findByText('재고 점검')).toBeInTheDocument()
-  expect(screen.getByText('재방문 혜택')).toBeInTheDocument()
-  expect(screen.getByText('메뉴 구성')).toBeInTheDocument()
-  expect(screen.getByText('재고 점검').closest('a')).toHaveAttribute(
+  expect(
+    await screen.findByRole('link', { name: /재고 점검/ }),
+  ).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /재방문 혜택/ })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /메뉴 구성/ })).toBeInTheDocument()
+  expect(
+    screen.getByRole('heading', { name: '오늘의 솔루션' }),
+  ).toBeInTheDocument()
+  expect(screen.getByText('3가지 제안')).toBeInTheDocument()
+  expect(screen.getAllByRole('link', { name: /요약[123]/ })).toHaveLength(3)
+  expect(screen.getByRole('link', { name: /재고 점검/ })).toHaveAttribute(
     'href',
     '/solution/12/1',
   )
-  expect(screen.getByText('재방문 혜택').closest('a')).toHaveAttribute(
+  expect(screen.getByRole('link', { name: /재방문 혜택/ })).toHaveAttribute(
     'href',
     '/solution/12/2',
   )
@@ -80,6 +87,45 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
     'href',
     '/solution/chat',
   )
+})
+
+test('다음과 이전 버튼으로 솔루션 3개를 순환한다', () => {
+  render(
+    <MemoryRouter>
+      <SolutionPreviewPage />
+    </MemoryRouter>,
+  )
+
+  const carousel = screen.getByLabelText('오늘의 솔루션 카드')
+  Array.from(carousel.children).forEach((card, index) => {
+    Object.defineProperty(card, 'offsetLeft', { value: index * 300 })
+  })
+  Object.defineProperty(carousel, 'scrollTo', {
+    value: ({ left }: { left: number }) => {
+      carousel.scrollLeft = left
+      fireEvent.scroll(carousel)
+    },
+  })
+  carousel.scrollLeft = 900
+  fireEvent.scroll(carousel)
+
+  const next = screen.getByRole('button', { name: '다음 솔루션' })
+  fireEvent.click(next)
+  expect(
+    screen.getByRole('button', { name: '2번 솔루션 보기' }),
+  ).toHaveAttribute('aria-current', 'true')
+  fireEvent.click(next)
+  expect(
+    screen.getByRole('button', { name: '3번 솔루션 보기' }),
+  ).toHaveAttribute('aria-current', 'true')
+  fireEvent.click(next)
+  expect(
+    screen.getByRole('button', { name: '1번 솔루션 보기' }),
+  ).toHaveAttribute('aria-current', 'true')
+  fireEvent.click(screen.getByRole('button', { name: '이전 솔루션' }))
+  expect(
+    screen.getByRole('button', { name: '3번 솔루션 보기' }),
+  ).toHaveAttribute('aria-current', 'true')
 })
 
 test('데이터 기간이 1년 미만이면 솔루션 정확도 안내를 보여준다', async () => {

@@ -6,6 +6,7 @@ import { initializeCsrfToken } from './shared/api/http'
 import { initializeGoogleAnalytics } from './shared/lib/googleAnalytics'
 import { initializeSentry } from './shared/lib/sentry'
 import './index.css'
+import './solution-results.css'
 
 initializeSentry({
   dsn: import.meta.env.VITE_SENTRY_DSN,

@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { HomePage } from '../pages/HomePage'
 import { SignupPage } from '../pages/SignupPage'
-import { SolutionPage } from '../pages/SolutionPage'
+import { SolutionPage, SolutionPreviewPage } from '../pages/SolutionPage'
 import { SolutionDetailPage } from '../pages/SolutionDetailPage'
 import { MySolutionsPage } from '../pages/MySolutionsPage'
 import { MySolutionDetailPage } from '../pages/MySolutionDetailPage'
@@ -30,6 +30,9 @@ export const router = createBrowserRouter([
   },
   { path: '/login', element: <LoginPage /> },
   { path: '/password-reset', element: <PasswordResetPage /> },
+  ...(import.meta.env.DEV
+    ? [{ path: '/preview/solution', element: <SolutionPreviewPage /> }]
+    : []),
   {
     element: <ProtectedRoute />,
     children: [
