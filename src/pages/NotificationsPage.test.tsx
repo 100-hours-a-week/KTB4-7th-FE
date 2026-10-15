@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { NotificationsPage } from './NotificationsPage'
 
 const { getNotifications, markNotificationsAsRead, navigate } = vi.hoisted(
@@ -23,9 +23,15 @@ vi.mock('react-router-dom', async () => {
 })
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-09-26T12:00:00+09:00'))
   getNotifications.mockReset()
   markNotificationsAsRead.mockReset()
   navigate.mockReset()
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 test('알림 목록을 불러와 제목과 읽음 여부를 표시한다', async () => {
@@ -113,6 +119,109 @@ test('읽지 않은 솔루션 알림을 클릭하면 읽음 처리 후 솔루션
   expect(navigate).toHaveBeenCalledWith('/solution')
 })
 
+test('지난 솔루션 알림은 읽음 처리하되 오늘의 솔루션으로 이동하지 않고 만료를 안내한다', async () => {
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: {
+      items: [
+        {
+          id: 3,
+          type: 'SOLUTION_READY',
+          title: '지난 솔루션 알림',
+          content: '솔루션을 확인해 주세요.',
+          relatedEntityType: 'SOLUTION_BUNDLE',
+          relatedEntityId: 33,
+          sentAt: '2026-09-25T08:00:00+09:00',
+          readAt: null,
+        },
+      ],
+    },
+  })
+  markNotificationsAsRead.mockResolvedValue({
+    updatedCount: 1,
+    readAt: '2026-09-26T12:00:00+09:00',
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationsPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByText('지난 솔루션 알림'))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '이 솔루션은 만료됐어요',
+  )
+  expect(navigate).not.toHaveBeenCalled()
+  await waitFor(() => expect(markNotificationsAsRead).toHaveBeenCalledWith([3]))
+})
+
+test('한국 시간 자정을 넘긴 솔루션 알림은 UTC 날짜가 같아도 만료 처리한다', async () => {
+  vi.setSystemTime(new Date('2026-09-27T00:05:00+09:00'))
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: {
+      items: [
+        {
+          id: 4,
+          type: 'SOLUTION_READY',
+          title: '자정 전 솔루션 알림',
+          content: '솔루션을 확인해 주세요.',
+          relatedEntityType: 'SOLUTION_BUNDLE',
+          relatedEntityId: 34,
+          sentAt: '2026-09-26T23:30:00+09:00',
+          readAt: '2026-09-26T23:40:00+09:00',
+        },
+      ],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationsPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByText('자정 전 솔루션 알림'))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '이 솔루션은 만료됐어요',
+  )
+  expect(navigate).not.toHaveBeenCalled()
+})
+
+test('UTC 날짜가 어제여도 한국 시간으로 오늘 받은 솔루션 알림은 이동한다', async () => {
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: {
+      items: [
+        {
+          id: 5,
+          type: 'SOLUTION_READY',
+          title: '오늘 솔루션 알림',
+          content: '솔루션을 확인해 주세요.',
+          relatedEntityType: 'SOLUTION_BUNDLE',
+          relatedEntityId: 35,
+          sentAt: '2026-09-25T23:00:00Z',
+          readAt: '2026-09-26T09:00:00+09:00',
+        },
+      ],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationsPage />
+    </MemoryRouter>,
+  )
+  fireEvent.click(await screen.findByText('오늘 솔루션 알림'))
+
+  expect(navigate).toHaveBeenCalledWith('/solution')
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
 test('매출 업로드 알림을 클릭하면 업로드 화면으로 이동한다', async () => {
   getNotifications.mockResolvedValue({
     message: '조회 성공',
@@ -126,7 +235,7 @@ test('매출 업로드 알림을 클릭하면 업로드 화면으로 이동한�
           content: '오늘 매출을 분석해 보세요.',
           relatedEntityType: null,
           relatedEntityId: null,
-          sentAt: '2026-09-26T08:00:00+09:00',
+          sentAt: '2026-09-25T08:00:00+09:00',
           readAt: '2026-09-26T09:00:00+09:00',
         },
       ],
