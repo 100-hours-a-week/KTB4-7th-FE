@@ -166,7 +166,7 @@ export function SalesProfitCostEntryPage() {
         <header className="page-title">
           <p>SALES · 순이익 분석</p>
           <h1>순이익 분석 정보 입력</h1>
-          <span>파일에 포함된 달마다 비용을 확인해주세요.</span>
+          <span>파일에 포함된 달마다 비용을 확인해주세요. 나중에 입력해도 됩니다.</span>
         </header>
         {isLoading && <p role="status">매출 월과 저장된 비용을 확인하고 있어요.</p>}
         {loadError && <p className="form-error" role="alert">{loadError}</p>}
@@ -245,6 +245,16 @@ export function SalesProfitCostEntryPage() {
               {isSubmitting ? '저장 중...' : '다음 단계'}
             </button>
           </form>
+        )}
+        {Number.isSafeInteger(uploadId) && uploadId > 0 && (
+          <button
+            className="profit-cost-skip"
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => navigate('/sales/analysis', { state: { refreshForecastAfterUpload: true } })}
+          >
+            건너뛰고 매출 분석 보기
+          </button>
         )}
       </div>
     </AppShell>
