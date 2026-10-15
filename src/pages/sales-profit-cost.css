@@ -59,3 +59,19 @@
 .profit-cost-input input[aria-invalid='true'] { color: var(--stamp); }
 .profit-cost-field:has(input[aria-invalid='true']) small { color: var(--stamp); }
 .profit-cost-notice { line-height: 1.5; }
+
+.profit-cost-skip {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.profit-cost-skip:hover { color: var(--ink); }
+.profit-cost-skip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

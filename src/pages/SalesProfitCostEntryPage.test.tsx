@@ -96,3 +96,32 @@ test('저장 실패 시 입력값을 유지한다', async () => {
   expect(screen.getByDisplayValue('1,800,000')).toBeInTheDocument()
   expect(navigate).not.toHaveBeenCalled()
 })
+
+test('비용을 입력하지 않고 건너뛰면 저장 요청 없이 매출 분석으로 이동한다', async () => {
+  getSalesUploadCostEntry.mockResolvedValue({
+    uploadId: 10,
+    months: [{ costMonth: '2026-09', rentAmount: null, laborAmount: null,
+      ingredientCostRate: null, source: 'EMPTY' }],
+  })
+  renderPage()
+
+  fireEvent.click(await screen.findByRole('button', { name: '건너뛰고 매출 분석 보기' }))
+
+  expect(saveSalesUploadCosts).not.toHaveBeenCalled()
+  expect(navigate).toHaveBeenCalledWith('/sales/analysis', {
+    state: { refreshForecastAfterUpload: true },
+  })
+})
+
+test('비용 조회가 실패해도 매출 분석으로 건너뛸 수 있다', async () => {
+  getSalesUploadCostEntry.mockRejectedValue(new Error('network'))
+  renderPage()
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('불러오지 못했습니다')
+  fireEvent.click(screen.getByRole('button', { name: '건너뛰고 매출 분석 보기' }))
+
+  expect(saveSalesUploadCosts).not.toHaveBeenCalled()
+  expect(navigate).toHaveBeenCalledWith('/sales/analysis', {
+    state: { refreshForecastAfterUpload: true },
+  })
+})
