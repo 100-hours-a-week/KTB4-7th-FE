@@ -21,11 +21,29 @@ function formatSentAt(sentAt: string) {
   const date = new Date(sentAt)
   if (Number.isNaN(date.getTime())) return sentAt
   return date.toLocaleString('ko-KR', {
+    timeZone: 'Asia/Seoul',
     month: 'long',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
   })
+}
+
+function seoulCalendarDate(date: Date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+function isExpiredSolutionNotification(sentAt: string) {
+  const sentDate = new Date(sentAt)
+  return (
+    Number.isNaN(sentDate.getTime()) ||
+    seoulCalendarDate(sentDate) !== seoulCalendarDate(new Date())
+  )
 }
 
 function notificationDestination(notification: NotificationItem) {
@@ -39,6 +57,7 @@ export function NotificationsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState('')
+  const [expiredNotice, setExpiredNotice] = useState('')
 
   useEffect(() => {
     let ignore = false
@@ -106,6 +125,14 @@ export function NotificationsPage() {
     if (!notification.readAt) {
       void handleMarkAsRead(notification)
     }
+    if (
+      notification.type === 'SOLUTION_READY' &&
+      isExpiredSolutionNotification(notification.sentAt)
+    ) {
+      setExpiredNotice('이 솔루션은 만료됐어요')
+      return
+    }
+    setExpiredNotice('')
     navigate(notificationDestination(notification))
   }
 
@@ -118,6 +145,7 @@ export function NotificationsPage() {
           <span>매장에 필요한 소식을 놓치지 않도록 알려드릴게요.</span>
         </header>
         {error && <p role="alert">{error}</p>}
+        {expiredNotice && <p role="alert">{expiredNotice}</p>}
         {isLoading ? (
           <p>불러오는 중...</p>
         ) : items.length === 0 ? (
