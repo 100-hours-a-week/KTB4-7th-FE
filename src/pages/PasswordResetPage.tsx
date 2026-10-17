@@ -33,6 +33,17 @@ function getApiFieldErrors(error: unknown): ApiFieldError[] {
   return response?.data?.fieldErrors ?? []
 }
 
+function PasswordResetHeader() {
+  return (
+    <header>
+      <Link className="signup-brand" to="/login" aria-label="맴매 로그인">
+        memme
+      </Link>
+      <span className="login-document-number">FORM 03 / RESET</span>
+    </header>
+  )
+}
+
 function EmailRequestForm() {
   const [error, setError] = useState('')
   const [isSent, setIsSent] = useState(false)
@@ -58,8 +69,9 @@ function EmailRequestForm() {
   })
 
   return (
-    <div className="auth-page">
-      <section className="auth-intro">
+    <div className="auth-page login-editorial-page password-reset-editorial-page">
+      <PasswordResetHeader />
+      <section className="auth-intro login-intro">
         <p>PASSWORD RESET</p>
         <h1>
           비밀번호를
@@ -68,10 +80,16 @@ function EmailRequestForm() {
         </h1>
         <span>가입하신 이메일로 재설정 링크를 보내드려요.</span>
       </section>
-      <form className="login-form" onSubmit={submit} noValidate>
+      <form
+        className="login-form login-form-underline password-reset-form"
+        onSubmit={submit}
+        noValidate
+      >
         {error && <p role="alert">{error}</p>}
         <label>
-          이메일
+          <span className="login-field-heading">
+            <b aria-hidden="true">01</b> 이메일
+          </span>
           <ClearableInput
             aria-label="이메일"
             type="email"
@@ -92,7 +110,7 @@ function EmailRequestForm() {
           )}
         </label>
         <button
-          className="primary-action"
+          className="primary-action login-submit-action password-reset-email-action"
           type="submit"
           disabled={isSubmitting}
         >
@@ -176,8 +194,9 @@ function NewPasswordForm({ token }: { token: string }) {
   })
 
   return (
-    <div className="auth-page">
-      <section className="auth-intro">
+    <div className="auth-page login-editorial-page password-reset-editorial-page">
+      <PasswordResetHeader />
+      <section className="auth-intro login-intro">
         <p>PASSWORD RESET</p>
         <h1>
           새 비밀번호를
@@ -185,7 +204,11 @@ function NewPasswordForm({ token }: { token: string }) {
           설정해주세요.
         </h1>
       </section>
-      <form className="login-form" onSubmit={submit} noValidate>
+      <form
+        className="login-form login-form-underline password-reset-form"
+        onSubmit={submit}
+        noValidate
+      >
         {error && (
           <div role="alert">
             <p>{error}</p>
@@ -193,7 +216,9 @@ function NewPasswordForm({ token }: { token: string }) {
           </div>
         )}
         <label>
-          새 비밀번호
+          <span className="login-field-heading">
+            <b aria-hidden="true">01</b> 새 비밀번호
+          </span>
           <ClearableInput
             aria-label="새 비밀번호"
             type="password"
@@ -216,7 +241,9 @@ function NewPasswordForm({ token }: { token: string }) {
           )}
         </label>
         <label>
-          새 비밀번호 확인
+          <span className="login-field-heading">
+            <b aria-hidden="true">02</b> 새 비밀번호 확인
+          </span>
           <ClearableInput
             aria-label="새 비밀번호 확인"
             type="password"
@@ -234,7 +261,7 @@ function NewPasswordForm({ token }: { token: string }) {
           )}
         </label>
         <button
-          className="primary-action"
+          className="primary-action login-submit-action"
           type="submit"
           disabled={isSubmitting}
         >
@@ -250,7 +277,7 @@ export function PasswordResetPage() {
   const token = searchParams.get('token')
 
   return (
-    <main className="mobile-app-shell mobile-app-shell--white auth-app-shell">
+    <main className="mobile-app-shell mobile-app-shell--white auth-app-shell auth-app-shell--editorial">
       <div className="device-notch" aria-hidden="true" />
       {token ? <NewPasswordForm token={token} /> : <EmailRequestForm />}
     </main>

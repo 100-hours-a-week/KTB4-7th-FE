@@ -145,7 +145,11 @@ export function SolutionChatPage() {
       <div className="chat-page">
         <header className="chat-page-header">
           <p>MEMME AI</p>
-          <h1>오늘의 솔루션, 무엇이든 물어보세요</h1>
+          <h1>
+            궁금한 점이 있다면
+            <br />
+            AI에게 물어보세요.
+          </h1>
           {serviceGuide && <small>{serviceGuide}</small>}
           {pageError && (
             <p className="form-error" role="alert">
@@ -192,7 +196,8 @@ export function SolutionChatPage() {
                       onClick={() => handleSend(question)}
                       disabled={isSending}
                     >
-                      {question}
+                      <span>{question}</span>
+                      <span aria-hidden="true">↗</span>
                     </button>
                   ))}
                 </div>
@@ -200,13 +205,14 @@ export function SolutionChatPage() {
               <div ref={bottomRef} />
             </div>
             <form
+              className="chat-composer"
               onSubmit={(event) => {
                 event.preventDefault()
                 handleSend(inputValue)
               }}
             >
               <label>
-                메시지 입력
+                <span className="chat-input-label">메시지 입력</span>
                 <input
                   value={inputValue}
                   onChange={(event) => setInputValue(event.target.value)}
@@ -214,8 +220,12 @@ export function SolutionChatPage() {
                   disabled={isSending}
                 />
               </label>
-              <button type="submit" disabled={isSending}>
-                {isSending ? '전송 중...' : '전송'}
+              <button
+                type="submit"
+                aria-label={isSending ? '전송 중...' : '전송'}
+                disabled={isSending || !inputValue.trim()}
+              >
+                <span aria-hidden="true">{isSending ? '…' : '↑'}</span>
               </button>
             </form>
           </>

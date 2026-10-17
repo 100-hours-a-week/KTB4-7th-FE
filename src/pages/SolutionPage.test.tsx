@@ -92,7 +92,7 @@ test('오늘의 솔루션 카드 3개를 보여주고 상세 페이지로 연결
   )
 })
 
-test('다음과 이전 버튼으로 솔루션 3개를 순환한다', () => {
+test('페이지 표시로 솔루션을 선택하고 스크롤 위치를 반영한다', () => {
   render(
     <MemoryRouter>
       <SolutionPreviewPage />
@@ -112,20 +112,19 @@ test('다음과 이전 버튼으로 솔루션 3개를 순환한다', () => {
   carousel.scrollLeft = 900
   fireEvent.scroll(carousel)
 
-  const next = screen.getByRole('button', { name: '다음 솔루션' })
-  fireEvent.click(next)
+  expect(
+    screen.queryByRole('button', { name: '다음 솔루션' }),
+  ).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('button', { name: '이전 솔루션' }),
+  ).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '2번 솔루션 보기' }))
+  expect(carousel.scrollLeft).toBe(1200)
   expect(
     screen.getByRole('button', { name: '2번 솔루션 보기' }),
   ).toHaveAttribute('aria-current', 'true')
-  fireEvent.click(next)
-  expect(
-    screen.getByRole('button', { name: '3번 솔루션 보기' }),
-  ).toHaveAttribute('aria-current', 'true')
-  fireEvent.click(next)
-  expect(
-    screen.getByRole('button', { name: '1번 솔루션 보기' }),
-  ).toHaveAttribute('aria-current', 'true')
-  fireEvent.click(screen.getByRole('button', { name: '이전 솔루션' }))
+  carousel.scrollLeft = 1500
+  fireEvent.scroll(carousel)
   expect(
     screen.getByRole('button', { name: '3번 솔루션 보기' }),
   ).toHaveAttribute('aria-current', 'true')

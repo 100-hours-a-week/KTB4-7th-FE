@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   getSalesUploadHistory,
@@ -7,9 +7,12 @@ import {
   type SalesUploadStatus,
 } from '../features/sales/api/salesApi'
 import { AppShell } from '../shared/ui/AppShell'
+import { AnalysisLoadingDialog } from '../features/sales/ui/AnalysisLoadingDialog'
 
 const supportedExtensions = ['xlsx']
 const MAX_REQUESTABLE_PAGE = 5
+const HISTORY_PAGE_SIZE = 5
+const API_PAGE_SIZE = 10
 
 function isUnauthorized(error: unknown) {
   return (
@@ -83,15 +86,21 @@ export function SalesUploadPage() {
     null,
   )
   const [historyPage, setHistoryPage] = useState(1)
+  const historyApiPage = Math.ceil(
+    historyPage / (API_PAGE_SIZE / HISTORY_PAGE_SIZE),
+  )
+  const historyTouchStart = useRef<{ x: number; y: number } | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
-  const [validatedUploadId, setValidatedUploadId] = useState<number | null>(null)
+  const [validatedUploadId, setValidatedUploadId] = useState<number | null>(
+    null,
+  )
 
   useEffect(() => {
     let ignore = false
     setIsLoadingHistory(true)
-    getSalesUploadHistory({ page: historyPage })
+    getSalesUploadHistory({ page: historyApiPage, size: API_PAGE_SIZE })
       .then((response) => {
         if (!ignore) setHistory(response)
       })
@@ -109,7 +118,7 @@ export function SalesUploadPage() {
     return () => {
       ignore = true
     }
-  }, [navigate, historyPage])
+  }, [navigate, historyApiPage])
 
   const selectFile = (file?: File) => {
     if (!file) return
@@ -132,7 +141,9 @@ export function SalesUploadPage() {
     try {
       const result = await uploadSalesFile(selectedFile)
       if (result.status !== 'COMPLETED') {
-        setSubmitError('매출 파일 처리가 완료된 뒤 다음 단계로 이동할 수 있습니다.')
+        setSubmitError(
+          '매출 파일 처리가 완료된 뒤 다음 단계로 이동할 수 있습니다.',
+        )
         return
       }
       setValidatedUploadId(result.data.uploadId)
@@ -149,16 +160,33 @@ export function SalesUploadPage() {
 
   const connection = history?.connection
   const maxNavigablePage = history
-    ? Math.min(history.totalPages, MAX_REQUESTABLE_PAGE)
+    ? Math.max(
+        1,
+        Math.min(
+          Math.ceil(history.totalCount / HISTORY_PAGE_SIZE),
+          MAX_REQUESTABLE_PAGE * (API_PAGE_SIZE / HISTORY_PAGE_SIZE),
+        ),
+      )
     : 1
+  const historyOffset =
+    ((historyPage - 1) % (API_PAGE_SIZE / HISTORY_PAGE_SIZE)) *
+    HISTORY_PAGE_SIZE
+  const visibleHistory =
+    history?.items.slice(historyOffset, historyOffset + HISTORY_PAGE_SIZE) ?? []
+  const changeHistoryPage = (direction: number) => {
+    if (isLoadingHistory) return
+    setHistoryPage((page) =>
+      Math.min(maxNavigablePage, Math.max(1, page + direction)),
+    )
+  }
 
   return (
-    <AppShell title="매출 데이터 연결">
+    <AppShell title="매출 데이터 연결" contentClassName="sales-upload-content">
       <div className="page-stack sales-upload-page">
-        <header className="page-title">
+        <header className="page-title sales-upload-intro">
           <p className="page-eyebrow-date">{formatEyebrowDate(new Date())}</p>
-          <h1>매출 장부</h1>
-          <span>업로드한 매출을 장부처럼 모아두고 있어요</span>
+          <h1>매출 분석</h1>
+          <span>매출 파일을 업로드하고 분석 결과를 확인해 보세요.</span>
         </header>
 
         <label className="upload-dropzone">
@@ -169,9 +197,7 @@ export function SalesUploadPage() {
             onChange={(event) => selectFile(event.target.files?.[0])}
           />
           <span aria-hidden="true">↑</span>
-          <strong>
-            {selectedFile?.name || '매출 파일을 여기에 놓아주세요'}
-          </strong>
+          <strong>{selectedFile?.name || '매출 파일을 선택해 주세요'}</strong>
           <small>xlsx · 최대 10MB · 한 번에 한 개</small>
         </label>
         {fileError && (
@@ -179,12 +205,35 @@ export function SalesUploadPage() {
             {fileError}
           </p>
         )}
-        {selectedFile && !fileError && (
-          <div className="upload-ready">
-            <strong>파일을 확인했어요</strong>
-            <span>{selectedFile.name}</span>
-          </div>
+
+        {submitError && (
+          <p className="form-error" role="alert">
+            {submitError}
+          </p>
         )}
+
+        {validatedUploadId !== null ? (
+          <button
+            type="button"
+            className="primary-action full-width"
+            onClick={() =>
+              navigate(`/sales/uploads/${validatedUploadId}/cost-items`)
+            }
+          >
+            다음 단계
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="primary-action full-width"
+            aria-busy={isSubmitting}
+            disabled={!selectedFile || isSubmitting}
+            onClick={startAnalysis}
+          >
+            {isSubmitting ? '분석 중...' : '분석 시작'}
+          </button>
+        )}
+        {isSubmitting && <AnalysisLoadingDialog />}
 
         <section className="connection-status">
           <p className="section-label">누적 반영 매출</p>
@@ -219,41 +268,37 @@ export function SalesUploadPage() {
           </p>
         </section>
 
-        {submitError && (
-          <p className="form-error" role="alert">
-            {submitError}
-          </p>
-        )}
-
-        <button
-          type="button"
-          className="primary-action full-width"
-          disabled={!selectedFile || isSubmitting || validatedUploadId !== null}
-          onClick={startAnalysis}
-        >
-          {isSubmitting ? '분석을 시작하는 중...' : '분석 시작'}
-        </button>
-        {validatedUploadId !== null && (
-          <div className="upload-ready" role="status">
-            <strong>파일 오류 검사가 완료됐어요.</strong>
-            <span>다음 단계에서 순이익 분석 정보를 확인해주세요.</span>
-            <button
-              type="button"
-              className="primary-action"
-              onClick={() => navigate(`/sales/uploads/${validatedUploadId}/cost-items`)}
-            >
-              다음 단계
-            </button>
-          </div>
-        )}
-
         <section className="upload-history">
           <p className="section-label">업로드 기록</p>
-          <div className="upload-history-list">
-            {history?.items.map((item) => (
+          <div
+            className="upload-history-list"
+            aria-label="업로드 기록 목록"
+            aria-busy={isLoadingHistory}
+            onTouchStart={(event) => {
+              const touch = event.touches[0]
+              historyTouchStart.current = touch
+                ? { x: touch.clientX, y: touch.clientY }
+                : null
+            }}
+            onTouchCancel={() => {
+              historyTouchStart.current = null
+            }}
+            onTouchEnd={(event) => {
+              const start = historyTouchStart.current
+              historyTouchStart.current = null
+              const touch = event.changedTouches[0]
+              if (!start || !touch) return
+              const dx = touch.clientX - start.x
+              const dy = touch.clientY - start.y
+              if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+                changeHistoryPage(dx < 0 ? 1 : -1)
+              }
+            }}
+          >
+            {visibleHistory.map((item) => (
               <div className="upload-history-row" key={item.uploadId}>
                 <div>
-                  <strong>{item.fileName}</strong>
+                  <strong title={item.fileName}>{item.fileName}</strong>
                   <span>{formatDate(item.uploadedAt)}</span>
                 </div>
                 <div className="upload-history-meta">
@@ -280,26 +325,26 @@ export function SalesUploadPage() {
               </p>
             )}
           </div>
-          {!isLoadingHistory && history && maxNavigablePage > 1 && (
+          {history && maxNavigablePage > 1 && (
             <div className="upload-history-pagination">
               <button
                 type="button"
-                disabled={historyPage <= 1}
-                onClick={() => setHistoryPage((prev) => Math.max(1, prev - 1))}
+                aria-label="이전"
+                disabled={isLoadingHistory || historyPage <= 1}
+                onClick={() => changeHistoryPage(-1)}
               >
-                이전
+                <span aria-hidden="true">←</span>
               </button>
-              <span>
+              <span aria-live="polite">
                 {historyPage} / {maxNavigablePage}
               </span>
               <button
                 type="button"
-                disabled={historyPage >= maxNavigablePage}
-                onClick={() =>
-                  setHistoryPage((prev) => Math.min(maxNavigablePage, prev + 1))
-                }
+                aria-label="다음"
+                disabled={isLoadingHistory || historyPage >= maxNavigablePage}
+                onClick={() => changeHistoryPage(1)}
               >
-                다음
+                <span aria-hidden="true">→</span>
               </button>
             </div>
           )}
