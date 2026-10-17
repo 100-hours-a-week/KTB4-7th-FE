@@ -112,3 +112,24 @@ test('로그인 화면에 메인 페이지와 이어지는 에디토리얼 문�
     screen.getByText('오늘의 기록을 이어갈 사장님을 확인합니다.'),
   ).toBeInTheDocument()
 })
+
+test('CSRF 오류는 사용자 안내로 바꿔 보여준다', async () => {
+  login.mockRejectedValue({
+    response: {
+      status: 403,
+      data: { message: 'CSRF 토큰이 유효하지 않습니다.' },
+    },
+  })
+  renderLoginPage()
+  fireEvent.change(screen.getByLabelText('이메일'), {
+    target: { value: 'owner@memme.kr' },
+  })
+  fireEvent.change(screen.getByLabelText('비밀번호'), {
+    target: { value: 'wrong-password' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '로그인 연결이 만료되었습니다. 새로고침 후 다시 시도해주세요.',
+  )
+  expect(screen.queryByText(/CSRF/)).not.toBeInTheDocument()
+})

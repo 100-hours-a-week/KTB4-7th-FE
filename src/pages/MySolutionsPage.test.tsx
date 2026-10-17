@@ -42,10 +42,10 @@ test('저장한 솔루션이 없으면 빈 화면을 보여준다', async () => 
 
   expect(screen.getByRole('main')).toHaveClass('saved-solutions-content')
   expect(screen.queryByRole('img')).not.toBeInTheDocument()
-  expect(screen.getByText('저장한 솔루션')).toBeVisible()
   expect(
-    screen.getByRole('heading', { name: '다시 보고 싶은 일' }),
-  ).toBeVisible()
+    screen.queryByText('저장한 솔루션', { exact: true }),
+  ).not.toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: '저장된 솔루션' })).toBeVisible()
   expect(await screen.findByText('저장한 솔루션이 없습니다')).toBeVisible()
 })
 

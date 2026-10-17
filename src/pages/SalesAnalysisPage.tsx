@@ -171,7 +171,9 @@ export function SalesAnalysisPage() {
     (location.state as { refreshForecastAfterUpload?: boolean } | null)
       ?.refreshForecastAfterUpload === true
   const [availableMonths, setAvailableMonths] = useState<string[] | null>(null)
-  const [monthOptions, setMonthOptions] = useState<SalesAnalysisMonthOption[]>([])
+  const [monthOptions, setMonthOptions] = useState<SalesAnalysisMonthOption[]>(
+    [],
+  )
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [analysisView, setAnalysisView] = useState<'sales' | 'profit'>('sales')
   const [status, setStatus] = useState<'COMPLETED' | 'EMPTY' | null>(null)
@@ -335,7 +337,7 @@ export function SalesAnalysisPage() {
 
   if (!isLoadingMonths && (!availableMonths || availableMonths.length === 0)) {
     return (
-      <AppShell title="매출 분석">
+      <AppShell title="매출 분석" contentClassName="sales-analysis-content">
         <EmptyState
           title="분석할 매출 데이터가 없습니다"
           description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
@@ -551,7 +553,7 @@ export function SalesAnalysisPage() {
   }
 
   return (
-    <AppShell title="매출 분석">
+    <AppShell title="매출 분석" contentClassName="sales-analysis-content">
       <div className="page-stack sales-analysis-page">
         <header className="page-title analysis-page-title">
           <div>
@@ -576,21 +578,50 @@ export function SalesAnalysisPage() {
         </header>
 
         {!isLoadingMonths && selectedMonth && (
-          <div className="analysis-view-switch" role="group" aria-label="분석 종류">
-            <button type="button" className={analysisView === 'sales' ? 'active' : ''}
-              aria-pressed={analysisView === 'sales'} onClick={() => setAnalysisView('sales')}>매출 분석</button>
-            <button type="button" className={analysisView === 'profit' ? 'active' : ''}
-              aria-pressed={analysisView === 'profit'} onClick={() => setAnalysisView('profit')}>순이익 분석</button>
+          <div
+            className="analysis-view-switch"
+            role="group"
+            aria-label="분석 종류"
+          >
+            <button
+              type="button"
+              className={analysisView === 'sales' ? 'active' : ''}
+              aria-pressed={analysisView === 'sales'}
+              onClick={() => setAnalysisView('sales')}
+            >
+              매출 분석
+            </button>
+            <button
+              type="button"
+              className={analysisView === 'profit' ? 'active' : ''}
+              aria-pressed={analysisView === 'profit'}
+              onClick={() => setAnalysisView('profit')}
+            >
+              순이익 분석
+            </button>
           </div>
         )}
         {analysisView === 'profit' && selectedMonth ? (
-          <SalesProfitAnalysisContent targetMonth={selectedMonth}
-            uploadId={monthOptions.find((option) => option.targetMonth === selectedMonth)?.uploadId ?? 0} />
+          <SalesProfitAnalysisContent
+            targetMonth={selectedMonth}
+            uploadId={
+              monthOptions.find(
+                (option) => option.targetMonth === selectedMonth,
+              )?.uploadId ?? 0
+            }
+          />
         ) : !isLoading && (status === 'EMPTY' || error) ? (
           <EmptyState
-            title={error ? '매출 분석을 불러오지 못했습니다' : '분석할 매출 데이터가 없습니다'}
-            description={error ? '잠시 후 다시 시도해 주세요.' :
-              '매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요.'}
+            title={
+              error
+                ? '매출 분석을 불러오지 못했습니다'
+                : '분석할 매출 데이터가 없습니다'
+            }
+            description={
+              error
+                ? '잠시 후 다시 시도해 주세요.'
+                : '매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요.'
+            }
             action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
           />
         ) : isLoadingMonths || isLoading || !data ? (

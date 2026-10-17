@@ -98,3 +98,15 @@ test('CSRF 토큰 발급이 끝나기 전에 상태 변경 요청이 오면, 발
 
   expect(request?.headers?.['X-XSRF-TOKEN']).toBe('late-csrf-value')
 })
+
+test('로컬 API 호스트를 현재 화면과 맞춰 CSRF 쿠키를 공유한다', () => {
+  expect(
+    getApiBaseUrl({ VITE_API_BASE_URL: 'http://localhost:8081' }, '127.0.0.1'),
+  ).toBe('http://127.0.0.1:8081')
+  expect(
+    getApiBaseUrl({ VITE_API_BASE_URL: 'http://127.0.0.1:8081' }, 'localhost'),
+  ).toBe('http://localhost:8081')
+  expect(
+    getApiBaseUrl({ VITE_API_BASE_URL: 'https://api.memme.kr' }, '127.0.0.1'),
+  ).toBe('https://api.memme.kr')
+})

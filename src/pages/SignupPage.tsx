@@ -399,7 +399,10 @@ export function SignupPage() {
   }
 
   return (
-    <main className="signup-page mobile-onboarding signup-page--editorial">
+    <main
+      className="signup-page mobile-onboarding signup-page--editorial"
+      data-step={step}
+    >
       <header>
         <a href="/" className="signup-brand">
           memme

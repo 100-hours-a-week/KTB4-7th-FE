@@ -1,27 +1,240 @@
-.profit-analysis-content { display: grid; gap: 22px; }
-.profit-analysis-estimate { color: #666; line-height: 1.5; }
-.profit-analysis-notice { padding: 28px; background: #fff; border-radius: 16px; display: grid; gap: 16px; }
-.profit-analysis-notice .primary-action { width: fit-content; text-decoration: none; }
-.profit-analysis-content .stat-card { display: grid; gap: 8px; }
-.profit-analysis-content .stat-card > span { color: #666; font-size: 13px; }
-.profit-chart-section { display: grid; gap: 18px; }
-.profit-daily-chart svg { width: 100%; height: 220px; overflow: visible; }
-.profit-line { stroke: #ed6755; stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
-.profit-dot { fill: #ed6755; }
-.profit-zero-line { stroke: #a6a6a6; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 4 4; }
-.profit-chart-range { display: flex; justify-content: space-between; color: #777; font-size: 12px; }
-.profit-daily-chart details { margin-top: 12px; }
-.profit-daily-chart ul { max-height: 180px; overflow: auto; }
-.profit-weekday-chart { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-.profit-weekday-item { display: grid; gap: 6px; justify-items: center; min-width: 0; font-size: 12px; }
-.profit-weekday-item small { text-align: center; overflow-wrap: anywhere; }
-.profit-weekday-track { height: 160px; width: 100%; display: grid; grid-template-rows: 1fr 1fr; }
-.profit-weekday-positive, .profit-weekday-negative { display: flex; justify-content: center; min-height: 0; }
-.profit-weekday-positive { align-items: flex-end; border-bottom: 1px solid #ddd; }
-.profit-weekday-negative { align-items: flex-start; }
-.profit-weekday-bar { width: min(28px, 80%); min-height: 3px; background: #ed6755; border-radius: 4px; }
-.profit-weekday-bar.negative { background: #64748b; }
-@media (max-width: 600px) { .profit-weekday-chart { gap: 3px; } .profit-weekday-item small { font-size: 10px; } }
-.analysis-view-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 24px; }
-.analysis-view-switch button { padding: 14px; border: 1px solid #d8d8d8; border-radius: 12px; background: #fff; font-weight: 700; cursor: pointer; }
-.analysis-view-switch button.active { border-color: #ed6755; background: #fff3f0; color: #b84332; }
+.profit-analysis-content {
+  display: grid;
+  gap: 22px;
+}
+.profit-analysis-estimate {
+  color: #666;
+  line-height: 1.5;
+}
+.profit-analysis-notice {
+  padding: 28px;
+  background: #fff;
+  border-radius: 16px;
+  display: grid;
+  gap: 16px;
+}
+.profit-analysis-notice .primary-action {
+  width: fit-content;
+  text-decoration: none;
+}
+.profit-analysis-content .stat-card {
+  display: grid;
+  gap: 8px;
+}
+.profit-analysis-content .stat-card > span {
+  color: #666;
+  font-size: 13px;
+}
+.profit-analysis-content .stat-card > span.negative {
+  color: #235fca;
+}
+.profit-analysis-content .stat-card > span.positive {
+  color: #c6342e;
+}
+.profit-chart-section {
+  display: grid;
+  gap: 18px;
+}
+.profit-daily-plot {
+  position: relative;
+}
+.profit-daily-chart svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+  overflow: visible;
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+.profit-daily-chart svg:focus {
+  outline: none;
+}
+.profit-daily-chart svg:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+.profit-line {
+  stroke: #111;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.profit-dot {
+  fill: #111;
+}
+.profit-hover-line {
+  stroke: #9a9a9a;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 3 3;
+}
+.profit-zero-line {
+  stroke: #a6a6a6;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 4 4;
+}
+.profit-chart-tooltip {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 3px;
+  min-width: 126px;
+  padding: 9px 12px;
+  border: 1px solid var(--ink);
+  background: var(--paper-raised);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+  white-space: nowrap;
+}
+.profit-chart-tooltip.below {
+  transform: translate(-50%, 12px);
+}
+.profit-chart-tooltip span {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.profit-chart-tooltip strong {
+  font-size: 16px;
+}
+.profit-chart-hint {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.profit-chart-range {
+  display: flex;
+  justify-content: space-between;
+  color: #777;
+  font-size: 12px;
+}
+.profit-weekday-chart {
+  display: grid;
+  gap: 10px;
+}
+.profit-weekday-chart-header {
+  position: relative;
+  height: 54px;
+}
+.profit-weekday-chart-header p {
+  margin: 0;
+  padding-top: 17px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.profit-weekday-tooltip {
+  position: absolute;
+  top: 0;
+  display: grid;
+  gap: 3px;
+  min-width: 126px;
+  padding: 8px 11px;
+  border: 1px solid var(--ink);
+  background: var(--paper-raised);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.profit-weekday-tooltip span {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.profit-weekday-tooltip strong {
+  font-size: 16px;
+}
+.profit-weekday-bars {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 39px,
+    #e9e6df 40px
+  );
+}
+.profit-weekday-item {
+  display: grid;
+  grid-template-rows: 160px auto;
+  gap: 10px;
+  justify-items: stretch;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.profit-weekday-item.active {
+  background: rgb(0 0 0 / 5%);
+}
+.profit-weekday-item:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.profit-weekday-item strong {
+  text-align: center;
+  font-size: 13px;
+}
+.profit-weekday-track {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 160px;
+}
+.profit-weekday-positive,
+.profit-weekday-negative {
+  display: flex;
+  justify-content: center;
+  min-height: 0;
+}
+.profit-weekday-positive {
+  align-items: flex-end;
+  border-bottom: 1px solid var(--ink);
+}
+.profit-weekday-negative {
+  align-items: flex-start;
+}
+.profit-weekday-bars.positive-only .profit-weekday-track,
+.profit-weekday-bars.negative-only .profit-weekday-track {
+  grid-template-rows: 1fr;
+}
+.profit-weekday-bars.positive-only .profit-weekday-negative,
+.profit-weekday-bars.negative-only .profit-weekday-positive {
+  display: none;
+}
+.profit-weekday-bars.negative-only .profit-weekday-negative {
+  border-top: 1px solid var(--ink);
+}
+.profit-weekday-bar {
+  display: block;
+  width: min(28px, 78%);
+  min-height: 2px;
+  background: #111;
+}
+.analysis-view-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0 24px;
+}
+.analysis-view-switch button {
+  padding: 14px;
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+  background: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+.analysis-view-switch button.active {
+  border-color: #ed6755;
+  background: #fff3f0;
+  color: #b84332;
+}

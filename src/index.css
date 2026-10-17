@@ -364,7 +364,7 @@ input {
 .mobile-app-shell .landing-page--editorial {
   height: 100%;
   min-height: 0;
-  background: #f5efe3;
+  background: #ffffff;
 }
 .landing-editorial {
   height: 100%;
@@ -374,6 +374,7 @@ input {
   box-sizing: border-box;
   height: 100%;
   min-height: 0;
+  container-type: inline-size;
   flex-direction: column;
   align-items: stretch;
   padding: 28px 20px 32px;
@@ -390,7 +391,8 @@ input {
 .mobile-app-shell .landing-page--editorial .landing-hero h1 {
   margin: 0;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(64px, 19vw, 82px);
+  font-size: min(82px, 27cqi);
+  padding-inline-end: 0.095em;
   font-weight: 400;
   letter-spacing: -0.095em;
   line-height: 0.9;
@@ -440,7 +442,7 @@ input {
   line-height: 1.25;
 }
 .landing-copy p {
-  max-width: 32ch;
+  max-width: 100%;
   margin: 0;
   color: var(--ink-soft);
   font-size: 11px;
@@ -458,10 +460,15 @@ input {
   align-items: center;
   justify-content: center;
   padding: 0 18px;
-  border: 2px solid #101313;
-  border-radius: 999px;
-  background: transparent;
-  color: #101313;
+  border: 1px solid #ffffffb8;
+  border-radius: 20px;
+  background: #000000d1;
+  box-shadow:
+    inset 0 1px 0 #ffffff26,
+    0 12px 32px #1c202526;
+  -webkit-backdrop-filter: blur(7px) saturate(0.7);
+  backdrop-filter: blur(7px) saturate(0.7);
+  color: #ffffff;
   font-size: 14px;
   font-weight: 800;
   text-decoration: none;
@@ -476,8 +483,8 @@ input {
 }
 .landing-primary-action:hover {
   transform: translateY(-2px);
-  background: #101313;
-  color: var(--paper-raised);
+  background: #000000;
+  color: #ffffff;
 }
 .landing-primary-action:focus-visible,
 .landing-secondary-actions a:focus-visible {
@@ -501,7 +508,7 @@ input {
     padding-inline: 14px;
   }
   .mobile-app-shell .landing-page--editorial .landing-hero h1 {
-    font-size: 61px;
+    font-size: min(61px, 27cqi);
   }
   .landing-keywords li:not(:last-child)::after {
     margin-inline: 7px;
@@ -986,7 +993,7 @@ input {
   }
   .mobile-app-shell {
     box-sizing: border-box;
-    width: 470px;
+    width: min(410px, calc((100dvh - 40px) * 410 / 844));
     height: min(844px, calc(100dvh - 40px));
     margin: 20px auto;
     border: 10px solid var(--ink);
@@ -2220,7 +2227,7 @@ input {
 }
 .saved-solutions-intro h1 {
   margin: 13px 0 10px;
-  font-size: clamp(34px, 10vw, 43px);
+  font-size: 28px;
   font-weight: 500;
   letter-spacing: -0.06em;
   line-height: 1.08;
@@ -2525,9 +2532,10 @@ input {
 .login-bean-backdrop {
   position: absolute;
   z-index: -1;
-  top: 76px;
+  top: 60px;
   left: -20px;
-  width: 440px;
+  width: calc(100% + 20px);
+  max-width: 440px;
   height: 390px;
   overflow: hidden;
   pointer-events: none;
@@ -2541,7 +2549,7 @@ input {
 }
 .login-editorial-page .auth-intro.login-intro {
   position: relative;
-  padding: 148px 0 24px;
+  padding: clamp(48px, 10dvh, 88px) 0 20px;
 }
 .login-editorial-page .auth-intro.login-intro h1 {
   margin: 7px 0 9px;
@@ -2555,11 +2563,18 @@ input {
   line-height: 1.5;
 }
 .login-editorial-page .login-form-underline {
+  position: relative;
+  overflow: hidden;
   gap: 18px;
   padding: 18px 16px 16px;
-  border: 1.5px solid var(--ink);
-  background: #ffffff;
-  box-shadow: none;
+  border: 1px solid #ffffffb8;
+  border-radius: 20px;
+  background: #b9b9b999;
+  box-shadow:
+    inset 0 1px 0 #ffffffb8,
+    0 12px 32px #1c202526;
+  -webkit-backdrop-filter: blur(7px) saturate(0.7);
+  backdrop-filter: blur(7px) saturate(0.7);
 }
 .login-editorial-page .login-form-underline label {
   gap: 5px;
@@ -2568,7 +2583,7 @@ input {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--ink);
+  color: #252525;
   font-size: 11px;
   letter-spacing: 0.02em;
 }
@@ -2578,20 +2593,41 @@ input {
   height: 20px;
   place-items: center;
   border-radius: 50%;
-  background: var(--ink);
+  background: #252525;
   color: #ffffff;
   font-family: var(--font-num);
   font-size: 8px;
 }
 .login-editorial-page .login-form.login-form-underline input {
   padding-inline: 0 58px;
-  border-bottom-color: var(--ink);
+  border-bottom-color: #666666;
+  color: #202020;
   font-family: var(--font-num);
   font-size: 13px;
 }
+.login-editorial-page .login-form.login-form-underline input::placeholder {
+  color: #575757;
+  opacity: 1;
+}
+.login-editorial-page .login-form.login-form-underline input:focus {
+  border-bottom-color: #111111;
+}
+.login-editorial-page .clearable-input-clear,
+.login-editorial-page .clearable-input-toggle {
+  color: #454545;
+}
+.login-editorial-page .clearable-input-clear:hover,
+.login-editorial-page .clearable-input-toggle:hover {
+  background: #bcbcbc;
+  color: #202020;
+}
+.login-editorial-page .login-form > [role='alert'],
+.login-editorial-page .login-form label small[role='alert'] {
+  color: #9c2b22;
+}
 .login-editorial-page .login-forgot-password {
   margin-top: -4px;
-  color: var(--ink);
+  color: #252525;
   font-size: 11px;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -2602,9 +2638,10 @@ input {
   min-height: 46px;
   margin-top: 0;
   padding-inline: 18px;
-  border: 1.5px solid var(--ink);
-  border-radius: 0;
-  background: var(--ink);
+  border: 1.5px solid #252525;
+  border-radius: 11px;
+  background: #252525;
+  color: #ffffff;
   font-size: 13px;
   letter-spacing: -0.01em;
 }
@@ -2614,7 +2651,11 @@ input {
 }
 .login-editorial-page .login-submit-action:hover:not(:disabled) {
   background: transparent;
-  color: var(--ink);
+  color: #252525;
+}
+.login-editorial-page .login-submit-action:focus-visible {
+  outline: 2px solid #252525;
+  outline-offset: 3px;
 }
 .login-editorial-page .login-submit-action:disabled {
   cursor: wait;
@@ -2634,6 +2675,41 @@ input {
   background: #f3f3f3;
   color: var(--ink);
   font-size: 12px;
+}
+
+/* --- 비밀번호 재설정: login-matched editorial --- */
+.password-reset-editorial-page .auth-intro.login-intro {
+  padding: 76px 0 28px;
+}
+.password-reset-editorial-page .auth-intro.login-intro h1 {
+  margin: 10px 0 14px;
+}
+.password-reset-editorial-page .password-reset-email-action {
+  font-weight: 400;
+}
+.password-reset-form > [role='alert'] {
+  padding: 10px 12px;
+  border: 1px solid #9c2b2233;
+  border-radius: 10px;
+  background: #ffffff66;
+  line-height: 1.6;
+}
+.password-reset-form > [role='alert'] p {
+  margin: 0;
+}
+.password-reset-form > [role='alert'] a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+.password-reset-editorial-page .auth-modal {
+  border: 1px solid #ffffffb8;
+  border-radius: 20px;
+  background: #e1e1e1;
+  box-shadow: 0 12px 32px #1c202526;
+}
+.password-reset-editorial-page .auth-modal .primary-action {
+  border-radius: 11px;
+  background: #252525;
 }
 
 /* --- 회원가입: login-matched editorial --- */
@@ -2681,7 +2757,8 @@ input {
   z-index: -1;
   top: 76px;
   left: -20px;
-  width: 440px;
+  width: calc(100% + 20px);
+  max-width: 440px;
   height: 390px;
   overflow: hidden;
   pointer-events: none;
@@ -2724,13 +2801,19 @@ input {
   width: 100%;
   margin: 0;
   padding: 18px 16px 16px;
-  border: 1.5px solid var(--ink);
-  background: #ffffff;
-  box-shadow: none;
+  border: 1px solid #ffffffb8;
+  border-radius: 20px;
+  background: #b9b9b999;
+  box-shadow:
+    inset 0 1px 0 #ffffffb8,
+    0 12px 32px #1c202526;
+  -webkit-backdrop-filter: blur(7px) saturate(0.7);
+  backdrop-filter: blur(7px) saturate(0.7);
 }
 .signup-page--editorial label {
   gap: 6px;
   padding: 13px 0;
+  border-bottom-color: #666666;
 }
 .signup-page--editorial .signup-field-label {
   font-size: 11px;
@@ -2758,6 +2841,7 @@ input {
 .signup-page--editorial .signup-button,
 .signup-page--editorial .signup-previous {
   border-width: 1.5px;
+  border-radius: 11px;
   font-weight: 800;
 }
 .signup-page--editorial .signup-button:not(:disabled):hover,
@@ -2857,7 +2941,7 @@ input {
   }
   .mobile-app-shell {
     box-sizing: border-box;
-    width: 470px;
+    width: min(410px, calc((100dvh - 40px) * 410 / 844));
     height: min(844px, calc(100dvh - 40px));
     margin: 20px auto;
     border: 10px solid var(--ink);
@@ -2899,6 +2983,7 @@ input {
   }
   .signup-page.mobile-onboarding,
   .signup-page.signup-complete {
+    width: min(410px, calc((100dvh - 40px) * 410 / 844));
     height: min(844px, calc(100dvh - 40px));
     min-height: 0;
     margin: 20px auto;
@@ -3057,11 +3142,12 @@ input {
 }
 .upload-history-list {
   display: grid;
+  touch-action: pan-y pinch-zoom;
 }
 .upload-history-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 14px 0;
   border-top: 1px dashed var(--line);
@@ -3071,11 +3157,19 @@ input {
 }
 .upload-history-row > div:first-child {
   display: grid;
-  gap: 4px;
+  min-width: 0;
+  gap: 6px;
 }
 .upload-history-row strong {
-  font-size: 13.5px;
+  display: -webkit-box;
+  min-height: 2.9em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1.45;
 }
 .upload-history-row span {
   color: var(--ink-soft);
@@ -3083,11 +3177,21 @@ input {
   font-size: 11.5px;
 }
 .upload-history-meta {
-  display: flex;
+  display: grid;
+  grid-template-columns: 64px 44px;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+.upload-history-meta .status-badge {
+  box-sizing: border-box;
+  width: 44px;
+  padding: 4px 0;
+  text-align: center;
+  white-space: nowrap;
 }
 .upload-history-count {
+  text-align: right;
+  white-space: nowrap;
   color: var(--ink-soft);
   font-family: var(--font-num);
   font-size: 12.5px;
@@ -4013,4 +4117,568 @@ input {
 }
 .notification-list li.notification-link {
   cursor: pointer;
+}
+
+/* 로그인은 짧은 화면에서도 폼과 가입 링크가 이어 보이도록 배치한다. */
+.login-editorial-page:not(.password-reset-editorial-page)
+  .login-form-underline {
+  gap: 14px;
+  padding: 16px;
+}
+.login-editorial-page:not(.password-reset-editorial-page) .auth-footer {
+  margin-top: 14px;
+}
+
+.upload-analysis-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.latte-analysis-loader {
+  display: block;
+  flex: none;
+  width: 70px;
+  height: 60px;
+  overflow: visible;
+}
+.latte-analysis-heart {
+  transform-origin: 38px 38px;
+  animation: latte-heart-clockwise 2.8s linear infinite;
+}
+@keyframes latte-heart-clockwise {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.primary-action.upload-analysis-pending:disabled {
+  cursor: progress;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .latte-analysis-heart {
+    animation: none;
+  }
+}
+
+.signup-page.mobile-onboarding.signup-page--editorial[data-step='1'] {
+  padding-bottom: 24px;
+}
+.signup-page.mobile-onboarding.signup-page--editorial[data-step='1']
+  .signup-intro {
+  padding: 12px 0;
+}
+.signup-page--editorial[data-step='1'] .signup-account-form {
+  padding: 10px 16px 14px;
+}
+.signup-page--editorial[data-step='1'] .signup-account-form > label {
+  gap: 4px;
+  padding: 5px 0;
+}
+.signup-page--editorial[data-step='1']
+  .signup-account-form
+  .clearable-input
+  input {
+  min-height: 28px;
+  padding-block: 3px;
+}
+.signup-page--editorial[data-step='1'] .signup-agreements {
+  margin-top: 12px;
+}
+.signup-page--editorial[data-step='1'] .signup-agreement {
+  min-height: 40px;
+}
+.signup-page--editorial[data-step='1'] .signup-account-form > .signup-button {
+  min-height: 44px;
+  margin-top: 14px;
+}
+.signup-page.mobile-onboarding.signup-page--editorial[data-step='1']
+  .signup-intro {
+  padding: 12px 0;
+}
+.signup-page.mobile-onboarding.signup-page--editorial[data-step='1']
+  .signup-intro
+  h1 {
+  font-size: 26px;
+  margin-block: 6px 8px;
+}
+.signup-page--editorial[data-step='1'] .signup-intro > p:last-child {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+:is(.solution-empty-content, .sales-analysis-content, .saved-solutions-content)
+  .empty-state {
+  padding: 48px 12px;
+}
+:is(.solution-empty-content, .sales-analysis-content, .saved-solutions-content)
+  .empty-state
+  h1 {
+  font-size: 20px;
+  line-height: 1.45;
+  letter-spacing: -0.045em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+:is(.solution-empty-content, .sales-analysis-content, .saved-solutions-content)
+  .empty-state
+  p {
+  font-size: 13px;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+:is(.solution-empty-content, .sales-analysis-content, .saved-solutions-content)
+  .empty-state
+  a {
+  font-size: 13px;
+  word-break: keep-all;
+}
+.saved-solutions-intro h1,
+.saved-solutions-intro p {
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+
+/* 좌우 요소의 너비가 달라도 페이지 제목은 화면 중앙에 둔다. */
+.mobile-app-shell .mobile-app-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  column-gap: 8px;
+}
+.mobile-app-shell .mobile-app-header > a:first-child {
+  justify-self: start;
+}
+.mobile-app-shell .mobile-app-header > strong {
+  text-align: center;
+}
+.mobile-app-shell .mobile-app-header > a:last-child {
+  justify-self: end;
+}
+.mobile-app-shell .app-content:has(> .empty-state) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mobile-app-shell .app-content > .empty-state {
+  box-sizing: border-box;
+  width: 100%;
+  margin-block: auto;
+}
+
+.analysis-loading-dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(300px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 32px 20px;
+  border: 1px solid #ffffffb8;
+  border-radius: 24px;
+  background: #f6f6f6;
+  color: #202020;
+  box-shadow: 0 24px 80px #00000040;
+  text-align: center;
+}
+.analysis-loading-dialog::backdrop {
+  background: #00000080;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.analysis-loading-dialog .coffee-pour-loader {
+  display: block;
+  width: calc(100% + 40px);
+  height: auto;
+  margin: 0 -20px 28px;
+  overflow: hidden;
+  mix-blend-mode: multiply;
+}
+.coffee-pour-hand {
+  animation: coffee-pour-hand 2.4s ease-in-out infinite;
+}
+.coffee-pour-stream {
+  transform-origin: 690px 388px;
+  animation: coffee-pour-stream 2.4s ease-in-out infinite;
+}
+@keyframes coffee-pour-hand {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-36px);
+  }
+}
+@keyframes coffee-pour-stream {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.706);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coffee-pour-hand,
+  .coffee-pour-stream {
+    animation: none;
+  }
+}
+.analysis-loading-dialog h2 {
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+.analysis-loading-dialog p {
+  margin: 0;
+  color: #666666;
+  font-size: 12px;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+.analysis-loading-dialog:focus {
+  outline: none;
+}
+
+/* 매출 업로드: 메인과 로그인에 맞춘 흑백 유리 테마 */
+.sales-upload-page {
+  gap: 20px;
+}
+.sales-upload-intro {
+  position: relative;
+  isolation: isolate;
+  padding: 8px 0 12px;
+}
+
+.sales-upload-intro p.page-eyebrow-date {
+  font-size: 10px;
+  letter-spacing: 0.03em;
+}
+.sales-upload-intro h1 {
+  margin: 10px 0;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.055em;
+}
+.sales-upload-intro > span {
+  display: block;
+  max-width: 26ch;
+  font-size: 12px;
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+.sales-upload-page .upload-dropzone {
+  position: relative;
+  min-height: 150px;
+  box-sizing: border-box;
+  gap: 10px;
+  padding: 20px 16px;
+  border: 1px solid #ffffffb8;
+  border-radius: 20px;
+  background: #b9b9b999;
+  box-shadow:
+    inset 0 1px 0 #ffffffb8,
+    0 12px 32px #1c20251a;
+  -webkit-backdrop-filter: blur(7px) saturate(0.7);
+  backdrop-filter: blur(7px) saturate(0.7);
+  transition: background 0.18s ease;
+}
+.sales-upload-page .upload-dropzone:hover {
+  background: #b9b9b9b3;
+}
+.sales-upload-page .upload-dropzone:focus-within {
+  outline: 2px solid #252525;
+  outline-offset: 3px;
+}
+.sales-upload-page .upload-dropzone > span {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #252525;
+  color: #ffffff;
+}
+.sales-upload-page .upload-dropzone strong {
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.sales-upload-page .upload-dropzone small {
+  color: #575757;
+  font-family: var(--font-num);
+  font-size: 10px;
+}
+.sales-upload-page > .primary-action {
+  min-height: 48px;
+  border: 1px solid #ffffff66;
+  border-radius: 16px;
+  background: #000000d1;
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 #ffffff26,
+    0 10px 24px #1c20251a;
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  font-size: 13px;
+  transition: background 0.18s ease;
+}
+.sales-upload-page > .primary-action:hover:not(:disabled) {
+  background: #000000;
+}
+.sales-upload-page > .primary-action:disabled {
+  background: #dddddd;
+  color: #777777;
+  box-shadow: none;
+}
+.sales-upload-page .connection-status {
+  margin-top: 8px;
+}
+.sales-upload-page .section-label {
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.sales-upload-page .passbook {
+  padding: 18px 16px;
+  border: 1px solid #e7e7e7;
+  border-radius: 18px;
+  background: #f6f6f6;
+}
+.sales-upload-page .passbook::before {
+  display: none;
+}
+.sales-upload-page .passbook-num {
+  margin-bottom: 14px;
+  font-size: 30px;
+  letter-spacing: -0.05em;
+}
+.sales-upload-page .passbook-num span {
+  font-size: 12px;
+}
+.sales-upload-page .passbook-meta {
+  gap: 8px;
+  padding-top: 12px;
+  border-top-color: #cccccc;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.sales-upload-page .connection-status-guide {
+  margin-top: 10px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #777777;
+  word-break: keep-all;
+}
+.sales-upload-page .upload-history {
+  padding-top: 20px;
+  border-top: 1px solid #dddddd;
+}
+.sales-upload-page .upload-history-row {
+  padding-block: 8px;
+  border-top-color: #d3d3d3;
+}
+.sales-upload-page .upload-history-row > div:first-child {
+  gap: 3px;
+}
+.sales-upload-page .upload-history-row > div:first-child > span {
+  line-height: 1.4;
+}
+.sales-upload-page .upload-history-pagination button {
+  border-color: #e4e4e4;
+  border-radius: 10px;
+  background: #f3f3f3;
+}
+.sales-upload-page .upload-history-pagination button:disabled {
+  opacity: 0.4;
+}
+
+/* AI 채팅: 흑백 유리 테마 */
+.mobile-app-shell .chat-page {
+  padding: 8px 0 0;
+  gap: 0;
+}
+.chat-page-header {
+  padding: 0 0 20px;
+}
+.chat-page-header > p:first-child {
+  margin: 0 0 10px;
+  color: #666666;
+  font-family: var(--font-num);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.mobile-app-shell .chat-page h1 {
+  margin: 0 0 12px;
+  font-size: 25px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.055em;
+  word-break: keep-all;
+}
+.chat-page-header small {
+  display: block;
+  color: #777777;
+  font-size: 11px;
+  line-height: 1.7;
+  word-break: keep-all;
+  text-wrap: pretty;
+}
+.mobile-app-shell .chat-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  padding: 4px 2px 20px;
+  border: 0;
+}
+.chat-recommended-questions {
+  display: grid;
+  gap: 10px;
+  padding: 4px 0;
+}
+.chat-page .chat-recommended-questions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #ffffffcc;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff99, #ffffff0d), #b9b9b945;
+  color: #333333;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 5px 16px #1c20250d;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.7;
+  word-break: keep-all;
+  cursor: pointer;
+}
+.chat-page .chat-recommended-questions button > span:last-child {
+  flex: none;
+  color: #666666;
+  font-size: 17px;
+}
+.chat-page .chat-recommended-questions button:hover:not(:disabled) {
+  background-color: #b9b9b96b;
+}
+.chat-page .chat-message {
+  flex: none;
+  max-width: 90%;
+  align-self: start;
+}
+.chat-page .chat-message p {
+  padding: 13px 14px;
+  border: 1px solid #ffffffcc;
+  border-radius: 16px;
+  background: #b9b9b933;
+  color: #333333;
+  font-size: 13px;
+  line-height: 1.8;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.chat-page .chat-message-assistant::before,
+.chat-page .chat-message-user::after {
+  display: none;
+}
+.chat-page .chat-assistant-label {
+  padding-left: 4px;
+  color: #666666;
+  font-family: var(--font-num);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+.chat-page .chat-message-user {
+  align-self: end;
+  margin-right: 6px;
+}
+.chat-page .chat-message-user p {
+  border-color: #ffffff40;
+  background: #000000d1;
+  color: #ffffff;
+}
+.chat-page .chat-user-avatar {
+  width: 20px;
+  height: 20px;
+  right: -8px;
+  background: #555555;
+  font-size: 8px;
+}
+.chat-page .chat-composer {
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 8px;
+  border: 1px solid #ffffffcc;
+  border-radius: 18px;
+  background: #b9b9b94d;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 8px 24px #1c20251a;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.chat-composer label {
+  min-width: 0;
+}
+.chat-input-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.chat-page .chat-composer input {
+  min-height: 40px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 12px;
+  color: #252525;
+}
+.chat-page .chat-composer input::placeholder {
+  color: #777777;
+}
+.chat-page .chat-composer button {
+  flex: none;
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #252525;
+  color: #ffffff;
+  font-size: 22px;
+  cursor: pointer;
+}
+.chat-page .chat-composer button:disabled {
+  background: #bcbcbc;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+.chat-page button:focus-visible,
+.chat-page input:focus-visible {
+  outline: 2px solid #555555;
+  outline-offset: 3px;
+}
+.chat-page .form-error {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: keep-all;
 }

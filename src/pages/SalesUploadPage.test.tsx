@@ -1,4 +1,5 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -46,6 +47,18 @@ const emptyHistory = {
 }
 
 beforeEach(() => {
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+    configurable: true,
+    value() {
+      this.setAttribute('open', '')
+    },
+  })
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+    configurable: true,
+    value() {
+      this.removeAttribute('open')
+    },
+  })
   getSalesUploadHistory.mockReset()
   uploadSalesFile.mockReset()
   getNotifications.mockReset()
@@ -132,7 +145,10 @@ test('연결 상태와 업로드 기록을 실제 API로 불러온다', async ()
 })
 
 test('파일 검증 완료 후 다음 단계를 눌러 비용 입력으로 이동한다', async () => {
-  uploadSalesFile.mockResolvedValue({ status: 'COMPLETED', data: { uploadId: 10, analysisRunId: 20 } })
+  uploadSalesFile.mockResolvedValue({
+    status: 'COMPLETED',
+    data: { uploadId: 10, analysisRunId: 20 },
+  })
 
   render(
     <MemoryRouter>
@@ -156,7 +172,14 @@ test('파일 검증 완료 후 다음 단계를 눌러 비용 입력으로 이�
 
   await waitFor(() => expect(uploadSalesFile).toHaveBeenCalled())
   expect(navigate).not.toHaveBeenCalled()
-  fireEvent.click(await screen.findByRole('button', { name: '다음 단계' }))
+  const nextStep = await screen.findByRole('button', { name: '다음 단계' })
+  expect(
+    screen.queryByRole('button', { name: '분석 시작' }),
+  ).not.toBeInTheDocument()
+  expect(
+    screen.queryByText('파일 오류 검사가 완료됐어요.'),
+  ).not.toBeInTheDocument()
+  fireEvent.click(nextStep)
   expect(navigate).toHaveBeenCalledWith('/sales/uploads/10/cost-items')
 })
 
@@ -208,62 +231,88 @@ test('업로드에 실패하면 오류 메시지를 보여준다', async () => {
   )
 })
 
-test('업로드 기록이 여러 페이지면 다음/이전 버튼으로 페이지를 넘긴다', async () => {
-  const pageOne = {
-    connection: {
-      lastUploadedAt: '2026-09-27T00:00:00+09:00',
-      totalAppliedRecordCount: 20,
-      latestStatus: 'COMPLETED',
-    },
-    items: [
-      {
-        uploadId: 2,
-        fileName: '202609_매출.xlsx',
-        uploadedAt: '2026-09-27T00:00:00+09:00',
-        recordCount: 10,
-        appliedRecordCount: 10,
-        status: 'COMPLETED',
-        failReason: null,
-      },
-    ],
-    page: 1,
-    size: 10,
-    totalPages: 2,
-    totalCount: 11,
-  }
-  const pageTwo = {
-    ...pageOne,
-    items: [
-      {
-        uploadId: 1,
-        fileName: '202608_매출.xlsx',
-        uploadedAt: '2026-08-27T00:00:00+09:00',
-        recordCount: 10,
-        appliedRecordCount: 10,
-        status: 'COMPLETED',
-        failReason: null,
-      },
-    ],
-    page: 2,
-  }
-  getSalesUploadHistory.mockImplementation(({ page } = {}) =>
-    Promise.resolve(page === 2 ? pageTwo : pageOne),
+test('업로드 기록은 5개씩 표시하고 버튼과 가로 스와이프로 넘긴다', async () => {
+  const items = Array.from({ length: 11 }, (_, i) => ({
+    uploadId: i + 1,
+    fileName: `매출-${i + 1}.xlsx`,
+    uploadedAt: '2026-10-17T00:00:00+09:00',
+    recordCount: 10,
+    appliedRecordCount: 10,
+    status: 'COMPLETED',
+    failReason: null,
+  }))
+  getSalesUploadHistory.mockImplementation(({ page = 1 } = {}) =>
+    Promise.resolve({
+      ...emptyHistory,
+      items: items.slice((page - 1) * 10, page * 10),
+      page,
+      size: 10,
+      totalPages: 2,
+      totalCount: 11,
+    }),
   )
-
   render(
     <MemoryRouter>
       <SalesUploadPage />
     </MemoryRouter>,
   )
-
-  expect(await screen.findByText('202609_매출.xlsx')).toBeInTheDocument()
-  expect(screen.getByText('1 / 2')).toBeInTheDocument()
+  expect(await screen.findByText('매출-1.xlsx')).toBeInTheDocument()
+  expect(screen.getByText('매출-5.xlsx')).toBeInTheDocument()
+  expect(screen.queryByText('매출-6.xlsx')).not.toBeInTheDocument()
+  expect(screen.getByText('1 / 3')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '이전' })).toBeDisabled()
-
   fireEvent.click(screen.getByRole('button', { name: '다음' }))
-
-  expect(await screen.findByText('202608_매출.xlsx')).toBeInTheDocument()
-  expect(getSalesUploadHistory).toHaveBeenLastCalledWith({ page: 2 })
-  expect(screen.getByText('2 / 2')).toBeInTheDocument()
+  expect(await screen.findByText('매출-6.xlsx')).toBeInTheDocument()
+  expect(screen.queryByText('매출-1.xlsx')).not.toBeInTheDocument()
+  expect(screen.getByText('2 / 3')).toBeInTheDocument()
+  const list = screen.getByLabelText('업로드 기록 목록')
+  fireEvent.touchStart(list, { touches: [{ clientX: 200, clientY: 100 }] })
+  fireEvent.touchEnd(list, { changedTouches: [{ clientX: 80, clientY: 105 }] })
+  expect(await screen.findByText('매출-11.xlsx')).toBeInTheDocument()
+  expect(getSalesUploadHistory).toHaveBeenLastCalledWith({ page: 2, size: 10 })
+  expect(screen.getByText('3 / 3')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '다음' })).toBeDisabled()
+  fireEvent.touchStart(list, { touches: [{ clientX: 80, clientY: 100 }] })
+  fireEvent.touchEnd(list, { changedTouches: [{ clientX: 200, clientY: 105 }] })
+  expect(await screen.findByText('매출-6.xlsx')).toBeInTheDocument()
+  expect(screen.getByText('2 / 3')).toBeInTheDocument()
+  fireEvent.touchStart(list, { touches: [{ clientX: 80, clientY: 100 }] })
+  fireEvent.touchEnd(list, { changedTouches: [{ clientX: 85, clientY: 240 }] })
+  expect(screen.getByText('2 / 3')).toBeInTheDocument()
+})
+
+test('분석 요청을 기다리는 동안 진행 상태를 알리고 중복 제출을 막는다', async () => {
+  let finishUpload!: (value: unknown) => void
+  uploadSalesFile.mockReturnValue(
+    new Promise((resolve) => {
+      finishUpload = resolve
+    }),
+  )
+  render(
+    <MemoryRouter>
+      <SalesUploadPage />
+    </MemoryRouter>,
+  )
+  await waitFor(() => expect(getSalesUploadHistory).toHaveBeenCalled())
+  fireEvent.change(screen.getByLabelText('매출 파일 선택'), {
+    target: { files: [new File(['x'], 'sales.xlsx')] },
+  })
+  fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
+  const pendingButton = await screen.findByRole('button', {
+    name: '분석 중...',
+  })
+  expect(pendingButton).toBeDisabled()
+  expect(pendingButton).toHaveAttribute('aria-busy', 'true')
+  expect(
+    screen.getByRole('dialog', { name: '매출을 분석하고 있어요' }),
+  ).toHaveAttribute('aria-modal', 'true')
+  expect(screen.getByRole('status')).toHaveTextContent('매출을 분석하고 있어요')
+  await act(async () => {
+    finishUpload({
+      status: 'COMPLETED',
+      data: { uploadId: 10, analysisRunId: 20 },
+    })
+  })
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(navigate).not.toHaveBeenCalled()
 })

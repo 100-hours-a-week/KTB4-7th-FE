@@ -350,16 +350,6 @@ function SolutionResults({
     }, 140)
   }
 
-  function moveCarousel(direction: number) {
-    const element = carouselRef.current
-    if (!element) return
-    const step = getSlideStep(element)
-    element.scrollTo({
-      left: element.scrollLeft + direction * step,
-      behavior: 'smooth',
-    })
-  }
-
   function goToCard(index: number) {
     const element = carouselRef.current
     if (!element) return
@@ -459,13 +449,6 @@ function SolutionResults({
           </div>
           {isCarousel && (
             <div className="solution-results-carousel-controls">
-              <button
-                type="button"
-                onClick={() => moveCarousel(-1)}
-                aria-label="이전 솔루션"
-              >
-                ←
-              </button>
               <div
                 className="solution-results-carousel-dots"
                 aria-label="솔루션 선택"
@@ -481,13 +464,6 @@ function SolutionResults({
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => moveCarousel(1)}
-                aria-label="다음 솔루션"
-              >
-                →
-              </button>
             </div>
           )}
         </section>
@@ -496,17 +472,17 @@ function SolutionResults({
           <div className="solution-results-chat-copy">
             <span>NEED A HAND?</span>
             <p>
-              실행 방법이 궁금하다면
+              궁금한 점이 있다면
               <br />
               AI에게 물어보세요.
             </p>
+            <Link to="/solution/chat" aria-label="AI에게 질문하기">
+              질문하기 <span aria-hidden="true">↗</span>
+            </Link>
           </div>
           <div className="solution-results-chat-art" aria-hidden="true">
             <img src="/assets/solution/help-barista.png" alt="" />
           </div>
-          <Link to="/solution/chat" aria-label="AI에게 질문하기">
-            질문하기 <span aria-hidden="true">↗</span>
-          </Link>
         </section>
         {helperText && (
           <section className="solution-results-note">

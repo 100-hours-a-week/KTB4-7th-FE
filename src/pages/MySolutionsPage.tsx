@@ -129,8 +129,7 @@ export function MySolutionsPage() {
     <AppShell title="내 솔루션" contentClassName="saved-solutions-content">
       <div className="page-stack my-solutions-page">
         <section className="saved-solutions-intro">
-          <span>저장한 솔루션</span>
-          <h1>다시 보고 싶은 일</h1>
+          <h1>저장된 솔루션</h1>
           <p>필요한 순간에 바로 실행할 수 있도록 저장했어요.</p>
         </section>
         {error && <p role="alert">{error}</p>}

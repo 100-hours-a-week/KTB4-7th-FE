@@ -21,7 +21,7 @@ export function HomePage() {
   }, [])
 
   return (
-    <AppShell title="맴매" tone="paper" contentClassName="landing-app-content">
+    <AppShell title="맴매" tone="white" contentClassName="landing-app-content">
       <div className="landing-page landing-page--editorial">
         <main className="landing-editorial">
           <section className="landing-hero" aria-labelledby="landing-title">
@@ -46,19 +46,20 @@ export function HomePage() {
                 오늘의 다음 한 가지를 제안해요.
               </h2>
               <p>
-                복잡한 숫자는 맴매가 정리할게요. 사장님은 지금 필요한 일에만
-                집중하세요.
+                복잡한 숫자는 맴매가 정리할게요.
+                <br />
+                사장님은 지금 필요한 일에만 집중하세요.
               </p>
             </div>
 
             <div className="landing-actions">
               {!isAuthenticated ? (
                 <Link className="landing-primary-action" to="/signup">
-                  무료로 시작하기 <span aria-hidden="true">↗</span>
+                  무료로 시작하기
                 </Link>
               ) : (
                 <Link className="landing-primary-action" to="/solution">
-                  오늘의 솔루션 보기 <span aria-hidden="true">↗</span>
+                  오늘의 솔루션 보기
                 </Link>
               )}
               {!isAuthenticated && (

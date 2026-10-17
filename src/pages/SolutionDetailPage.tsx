@@ -123,7 +123,17 @@ export function SolutionDetailPage() {
             <span>ACTION {String(item.rankNo).padStart(2, '0')}</span>
             <span>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</span>
           </div>
-          <h1>{item.title}</h1>
+          <h1>
+            {item.title.split(/(\S+·\S+)/).map((part, index) =>
+              part.includes('·') ? (
+                <span className="solution-detail-title-word" key={index}>
+                  {part}
+                </span>
+              ) : (
+                part
+              ),
+            )}
+          </h1>
           <p>{item.summaryText}</p>
         </header>
 
