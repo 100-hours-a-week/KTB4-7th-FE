@@ -178,9 +178,13 @@ test('비용을 입력하지 않고 건너뛰면 저장 요청 없이 매출 분
   })
   renderPage()
 
-  fireEvent.click(
-    await screen.findByRole('button', { name: '건너뛰고 매출 분석 보기' }),
+  const skipButton = await screen.findByRole('button', {
+    name: '건너뛰고 매출 분석 보기',
+  })
+  expect(skipButton).toHaveAccessibleDescription(
+    '비용 입력을 건너뛰면 순이익 분석을 확인할 수 없어요. 나중에 비용을 입력하면 확인할 수 있어요.',
   )
+  fireEvent.click(skipButton)
 
   expect(saveSalesUploadCosts).not.toHaveBeenCalled()
   expect(navigate).toHaveBeenCalledWith('/sales/analysis', {
