@@ -184,6 +184,29 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
   expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-09')
 })
 
+test('월 선택지가 순서 없이 와도 가장 최근 달의 파일을 먼저 표시하고 선택한다', async () => {
+  getSalesAnalysisMonthOptions.mockResolvedValue({
+    months: [
+      { targetMonth: '2026-08', uploadId: 2, fileName: '8월.xlsx', uploadedAt: '2026-09-01T12:00:00+09:00' },
+      { targetMonth: '2026-09', uploadId: 3, fileName: '최신.xlsx', uploadedAt: '2026-10-01T12:00:00+09:00' },
+      { targetMonth: '2026-07', uploadId: 1, fileName: '7월.xlsx', uploadedAt: '2026-08-01T12:00:00+09:00' },
+    ],
+  })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+
+  render(<MemoryRouter><SalesAnalysisPage /></MemoryRouter>)
+
+  expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
+  const monthSelect = screen.getByRole('combobox', { name: '조회할 월' })
+  expect(monthSelect).toHaveValue('2026-09')
+  expect(within(monthSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
+    '2026년 9월 · 최신.xlsx', '2026년 8월 · 8월.xlsx', '2026년 7월 · 7월.xlsx',
+  ])
+  expect(getSalesAnalysis).toHaveBeenCalledWith({
+    periodType: 'CUSTOM', startDate: '2026-09-01', endDate: '2026-09-30',
+  })
+})
+
 test('최신 업로드 월의 예측 데이터가 없으면 예상 총매출을 자동으로 다시 조회한다', async () => {
   getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
   getSalesAnalysis.mockResolvedValue(completedResponse)

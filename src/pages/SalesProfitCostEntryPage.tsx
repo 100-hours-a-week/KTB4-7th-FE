@@ -424,18 +424,25 @@ export function SalesProfitCostEntryPage() {
           </form>
         )}
         {Number.isSafeInteger(uploadId) && uploadId > 0 && (
-          <button
-            className="profit-cost-skip"
-            type="button"
-            disabled={isSubmitting}
-            onClick={() =>
-              navigate('/sales/analysis', {
-                state: { refreshForecastAfterUpload: true },
-              })
-            }
-          >
-            건너뛰고 매출 분석 보기
-          </button>
+          <>
+            <p className="profit-cost-skip-notice" id="profit-cost-skip-notice">
+              비용 입력을 건너뛰면 순이익 분석을 확인할 수 없어요. 나중에 비용을
+              입력하면 확인할 수 있어요.
+            </p>
+            <button
+              className="profit-cost-skip"
+              type="button"
+              aria-describedby="profit-cost-skip-notice"
+              disabled={isSubmitting}
+              onClick={() =>
+                navigate('/sales/analysis', {
+                  state: { refreshForecastAfterUpload: true },
+                })
+              }
+            >
+              건너뛰고 매출 분석 보기
+            </button>
+          </>
         )}
       </div>
     </AppShell>

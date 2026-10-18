@@ -198,8 +198,11 @@ export function SalesAnalysisPage() {
     getSalesAnalysisMonthOptions()
       .then((response) => {
         if (ignore) return
-        setMonthOptions(response.months)
-        const months = response.months.map((option) => option.targetMonth)
+        const options = [...response.months].sort((first, second) =>
+          first.targetMonth.localeCompare(second.targetMonth),
+        )
+        setMonthOptions(options)
+        const months = options.map((option) => option.targetMonth)
         setAvailableMonths(months)
         setSelectedMonth(months[months.length - 1] ?? null)
       })
