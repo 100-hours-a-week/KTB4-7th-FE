@@ -320,3 +320,54 @@ test('401 응답을 받으면 로그인 페이지로 이동한다', async () => 
 
   await waitFor(() => expect(navigate).toHaveBeenCalledWith('/login'))
 })
+
+test('휠로 앞뒤 카드를 선택하고 연속 휠 입력과 양 끝 경계를 처리한다', async () => {
+  getSavedSolutions.mockResolvedValue({
+    nextCursor: null,
+    data: {
+      groups: [
+        {
+          year: 2026,
+          items: [1, 2, 3].map((id) => ({
+            savedId: id,
+            savedDate: '2026-10-18',
+            displayTitle: `저장 카드 ${id}`,
+            firstTitle: `카드 ${id}`,
+            remainingItemCount: 0,
+          })),
+        },
+      ],
+    },
+  })
+  renderPage()
+  await screen.findByText('저장 카드 1')
+  const viewport = document.querySelector(
+    '.saved-solution-carousel-viewport',
+  ) as Element
+  const clock = vi.spyOn(performance, 'now').mockReturnValue(1000)
+  const wheel = (deltaY: number) => {
+    const event = new WheelEvent('wheel', {
+      deltaY,
+      bubbles: true,
+      cancelable: true,
+    })
+    fireEvent(viewport, event)
+    return event
+  }
+  try {
+    expect(wheel(-80).defaultPrevented).toBe(false)
+    expect(wheel(80).defaultPrevented).toBe(true)
+    expect(screen.getByText('02 / 03')).toBeVisible()
+    wheel(80)
+    expect(screen.getByText('02 / 03')).toBeVisible()
+    clock.mockReturnValue(1600)
+    wheel(80)
+    expect(screen.getByText('03 / 03')).toBeVisible()
+    expect(wheel(80).defaultPrevented).toBe(false)
+    clock.mockReturnValue(2200)
+    wheel(-80)
+    expect(screen.getByText('02 / 03')).toBeVisible()
+  } finally {
+    clock.mockRestore()
+  }
+})
