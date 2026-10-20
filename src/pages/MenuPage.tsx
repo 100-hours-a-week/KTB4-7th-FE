@@ -173,6 +173,8 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
   const [success, setSuccess] = useState('')
   const [focusReview, setFocusReview] = useState(false)
   const batchId = batch?.batchId
+  const hasMenuChanges =
+    !!list && JSON.stringify(items) !== JSON.stringify(toSavedForm(list))
 
   const loadList = async () => {
     const next = await getMenuList()
@@ -359,7 +361,7 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
       order: item.order,
       ...(batch ? { priceConfirmed: true } : {}),
     }))
-    if (!batch && JSON.stringify(items) === JSON.stringify(toSavedForm(list))) {
+    if (!batch && !hasMenuChanges) {
       setError('수정된 메뉴 정보가 없습니다.')
       return
     }
@@ -620,7 +622,7 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
               <button
                 className="menu-primary-button"
                 type="submit"
-                disabled={saving || uploading}
+                disabled={saving || uploading || (!batch && !hasMenuChanges)}
               >
                 {saving
                   ? '저장하는 중…'
