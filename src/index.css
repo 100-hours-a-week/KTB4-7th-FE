@@ -3277,6 +3277,172 @@ input {
 }
 
 /* --- Sales analysis --- */
+.growth-ranking-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 80px;
+  padding: 16px 18px;
+  border: 1px solid #111;
+  background: #fff;
+  color: #000;
+  text-decoration: none;
+}
+.mobile-app-shell
+  .app-content.sales-analysis-content:has(> .sales-analysis-empty-layout) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.growth-ranking-entry strong,
+.growth-ranking-entry small {
+  display: block;
+}
+.growth-ranking-entry strong {
+  font-size: 15px;
+}
+.growth-ranking-entry small {
+  margin-top: 5px;
+  color: #555;
+  font-size: 12px;
+}
+.growth-ranking-entry > span:last-child {
+  font-size: 24px;
+}
+.growth-ranking-entry:focus-visible,
+.growth-ranking-my-card a:focus-visible,
+.growth-ranking-feedback button:focus-visible {
+  outline: 3px solid #111;
+  outline-offset: 3px;
+}
+.growth-ranking-page {
+  display: grid;
+  gap: 26px;
+  color: #000;
+}
+.growth-ranking-heading h1 {
+  margin: 0 0 7px;
+  font-size: 26px;
+  letter-spacing: -0.05em;
+}
+.growth-ranking-heading p {
+  margin: 0;
+  font-size: 13px;
+  color: #555;
+}
+.growth-ranking-heading p strong {
+  color: #000;
+}
+.growth-ranking-my-card,
+.growth-ranking-feedback {
+  padding: 20px;
+  border: 1px solid #111;
+  background: #f5efe3;
+}
+.growth-ranking-my-card small {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #555;
+}
+.growth-ranking-my-card > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.growth-ranking-my-card > div strong {
+  font-size: 35px;
+  letter-spacing: -0.06em;
+}
+.growth-ranking-my-card > div b {
+  font-size: 17px;
+}
+.growth-ranking-my-card > strong,
+.growth-ranking-feedback > strong {
+  display: block;
+  font-size: 18px;
+}
+.growth-ranking-my-card p,
+.growth-ranking-feedback p {
+  margin: 8px 0 0;
+  color: #555;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.growth-ranking-my-card a,
+.growth-ranking-feedback button {
+  display: inline-block;
+  margin-top: 13px;
+  padding: 9px 12px;
+  border: 1px solid #111;
+  background: #fff;
+  color: #000;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.growth-ranking-feedback--empty {
+  display: flex;
+  min-height: 390px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.growth-ranking-list-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.growth-ranking-list-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.growth-ranking-list-heading small {
+  font-size: 10px;
+  color: #555;
+}
+.growth-ranking-list {
+  padding: 0;
+  margin: 0;
+  border-top: 2px solid #111;
+  list-style: none;
+}
+.growth-ranking-list li {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 55px;
+  border-bottom: 1px solid #ddd;
+  font-size: 13px;
+}
+.growth-ranking-list li.mine {
+  background: #f5efe3;
+}
+.growth-ranking-list li > span {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.growth-ranking-list li > b {
+  font-variant-numeric: tabular-nums;
+}
+.growth-ranking-page .positive {
+  color: #c43d35;
+}
+.growth-ranking-page .negative {
+  color: #1769c2;
+}
+.growth-ranking-list-empty {
+  margin: 0;
+  color: #555;
+  font-size: 13px;
+}
 .analysis-page-title {
   display: grid;
   gap: 14px;
