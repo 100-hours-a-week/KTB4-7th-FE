@@ -45,6 +45,12 @@ export function MySolutionsPage() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
   const touchStartY = useRef<number | null>(null)
+  const carouselViewport = useRef<HTMLDivElement>(null)
+  const wheelGesture = useRef({
+    distance: 0,
+    lastEvent: 0,
+    lastTurn: -Infinity,
+  })
 
   useEffect(() => {
     let ignore = false
@@ -102,6 +108,48 @@ export function MySolutionsPage() {
       selectedMonth === null ||
       Number(item.savedDate.slice(5, 7)) === selectedMonth,
   )
+
+  useEffect(() => {
+    const viewport = carouselViewport.current
+    if (!viewport || savedCards.length < 2) return
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))
+        return
+      const direction = Math.sign(event.deltaY)
+      if (!direction) return
+      const canMove =
+        direction > 0 ? activeIndex < savedCards.length - 1 : activeIndex > 0
+      const gesture = wheelGesture.current
+      if (!canMove) {
+        gesture.distance = 0
+        return
+      }
+      event.preventDefault()
+      const now = performance.now()
+      const idle = now - gesture.lastEvent > 180
+      if (idle || Math.sign(gesture.distance) !== direction)
+        gesture.distance = 0
+      gesture.lastEvent = now
+      if (now - gesture.lastTurn < 450) return
+      const unit =
+        event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? viewport.clientHeight
+            : 1
+      gesture.distance += event.deltaY * unit
+      if (Math.abs(gesture.distance) < 40) return
+      gesture.distance = 0
+      gesture.lastTurn = now
+      setActiveIndex((current) =>
+        Math.max(0, Math.min(savedCards.length - 1, current + direction)),
+      )
+    }
+
+    viewport.addEventListener('wheel', handleWheel, { passive: false })
+    return () => viewport.removeEventListener('wheel', handleWheel)
+  }, [activeIndex, savedCards.length])
 
   const selectMonth = (month: number | null) => {
     setSelectedMonth(month)
@@ -174,6 +222,7 @@ export function MySolutionsPage() {
             >
               <div
                 className="saved-solution-carousel-viewport"
+                ref={carouselViewport}
                 onTouchStart={(event) => {
                   touchStartY.current = event.touches[0]?.clientY ?? null
                 }}
@@ -246,7 +295,9 @@ export function MySolutionsPage() {
                   ↓
                 </button>
               </div>
-              <p className="saved-solution-swipe-hint">SWIPE UP OR DOWN</p>
+              <p className="saved-solution-swipe-hint">
+                SCROLL OR SWIPE UP / DOWN
+              </p>
             </section>
             {nextCursor && (
               <button

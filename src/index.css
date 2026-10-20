@@ -26,6 +26,11 @@
   background: var(--paper);
 }
 
+:root:has(.mobile-app-shell--white),
+:root:has(.signup-page--editorial) {
+  background: #ffffff;
+}
+
 .mobile-onboarding {
   max-width: 640px;
   margin: 0 auto;
