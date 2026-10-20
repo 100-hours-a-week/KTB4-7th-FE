@@ -84,8 +84,14 @@ function renderPage() {
 test('등록된 메뉴를 조회하고 수정 시 개정 번호와 전체 메뉴를 전송한다', async () => {
   renderPage()
   const name = await screen.findByDisplayValue('아메리카노')
+  const saveButton = screen.getByRole('button', {
+    name: '변경사항 저장하기',
+  })
+  expect(saveButton).toBeDisabled()
+
   fireEvent.change(name, { target: { value: '아이스 아메리카노' } })
-  fireEvent.click(screen.getByRole('button', { name: '변경사항 저장하기' }))
+  expect(saveButton).toBeEnabled()
+  fireEvent.click(saveButton)
 
   await waitFor(() =>
     expect(updateMenuItems).toHaveBeenCalledWith(3, [
@@ -97,6 +103,20 @@ test('등록된 메뉴를 조회하고 수정 시 개정 번호와 전체 메뉴
       }),
     ]),
   )
+})
+
+test('기존 메뉴 값을 원래대로 되돌리면 저장 버튼을 비활성화한다', async () => {
+  renderPage()
+  const name = await screen.findByDisplayValue('아메리카노')
+  const saveButton = screen.getByRole('button', {
+    name: '변경사항 저장하기',
+  })
+
+  fireEvent.change(name, { target: { value: '아이스 아메리카노' } })
+  expect(saveButton).toBeEnabled()
+
+  fireEvent.change(name, { target: { value: '아메리카노' } })
+  expect(saveButton).toBeDisabled()
 })
 
 test('분석 후 인식된 메뉴로 이동하고 수정 없이 저장한다', async () => {
