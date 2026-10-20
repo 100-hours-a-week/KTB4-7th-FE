@@ -3443,9 +3443,27 @@ input {
   color: #555;
   font-size: 13px;
 }
+.sales-analysis-page {
+  min-width: 0;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr);
+}
 .analysis-page-title {
   display: grid;
+  min-width: 0;
   gap: 14px;
+}
+.analysis-page-title > div {
+  min-width: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #252525;
+}
+.analysis-page-title > div > span {
+  display: block;
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
 }
 .period-tabs {
   display: inline-flex;
@@ -3472,21 +3490,32 @@ input {
   color: var(--paper-raised);
 }
 .month-select {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  background: var(--paper-raised);
+  box-sizing: border-box;
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 1px solid #d8d8d8;
+  border-radius: 11px;
+  background: #f3f3f3;
   color: var(--ink);
   font-size: 13px;
   font-weight: 700;
-  width: fit-content;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.stat-card-grid {
+.sales-analysis-page .stat-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.sales-analysis-page .stat-card:first-child {
+  grid-column: 1 / -1;
 }
 .forecast-total-card {
   position: relative;
@@ -3497,12 +3526,13 @@ input {
   isolation: isolate;
   overflow: hidden;
   margin: 0 0 16px;
-  padding: 20px;
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  background: #f5efe3;
+  min-width: 0;
+  padding: 20px 16px;
+  border: 1px solid #dedede;
+  border-radius: 20px;
+  background: #f1f1f1;
   color: #111111;
-  box-shadow: none;
+  box-shadow: 0 12px 32px #1c202514;
 }
 .forecast-feedback {
   display: grid;
@@ -3539,10 +3569,12 @@ input {
   text-align: center;
 }
 .forecast-total-card strong {
-  font-size: clamp(29px, 6vw, 36px);
+  min-width: 0;
+  font-size: clamp(27px, 8vw, 36px);
   letter-spacing: -0.06em;
   line-height: 1.08;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 .forecast-range {
   margin: 0;
@@ -3574,6 +3606,7 @@ input {
   color: #111111;
   font-size: 14px;
   letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
 }
 .stat-card {
   display: grid;
@@ -3592,6 +3625,19 @@ input {
   font-size: 14px;
   letter-spacing: -0.02em;
   white-space: nowrap;
+}
+.sales-analysis-page .stat-card {
+  min-width: 0;
+  border-color: #e1e1e1;
+  border-radius: 16px;
+  background: #f4f4f4;
+}
+.sales-analysis-page .stat-card:first-child strong {
+  font-size: 23px;
+}
+.sales-analysis-page .stat-card strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 380px) {
   .stat-card {
@@ -3627,6 +3673,13 @@ input {
   border-radius: 0;
   background: #f5efe3;
   color: #111111;
+}
+.sales-analysis-page .ai-insight-box {
+  min-width: 0;
+  padding: 20px 16px;
+  border: 1px solid #dedede;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px #1c202514;
 }
 .ai-insight-box h2 {
   margin: 0 0 10px;
@@ -3672,8 +3725,24 @@ input {
 }
 .sales-analysis-page .forecast-total-card,
 .sales-analysis-page .ai-insight-box:not(.ai-insight-box--notice) {
-  background-color: #f5efe3;
+  background-color: #f1f1f1;
   color: #111111;
+}
+.sales-analysis-page .analysis-chart-section,
+.sales-analysis-page .profit-analysis-content {
+  min-width: 0;
+}
+.mobile-app-shell--white .sales-analysis-page .section-card {
+  min-width: 0;
+  border: 1px solid #e1e1e1;
+  border-radius: 18px;
+  background: #f7f7f7;
+  box-shadow: none;
+}
+.mobile-app-shell--white .sales-analysis-page > .secondary-action {
+  border: 1px solid #d8d8d8;
+  border-radius: 11px;
+  background: #f3f3f3;
 }
 .chart-carousel {
   display: flex;
