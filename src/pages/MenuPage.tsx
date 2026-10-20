@@ -153,6 +153,8 @@ function toDetectedForm(batch: MenuBatch): FormItem[] {
 export function MenuPage({ preview = false }: { preview?: boolean }) {
   const navigate = useNavigate()
   const reviewRef = useRef<HTMLFormElement>(null)
+  const uploadPanelRef = useRef<HTMLElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [list, setList] = useState<MenuList | null>(
     preview ? previewList : null,
   )
@@ -172,9 +174,26 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [focusReview, setFocusReview] = useState(false)
+  const [isEditingMenu, setIsEditingMenu] = useState(false)
+  const [isReuploading, setIsReuploading] = useState(false)
   const batchId = batch?.batchId
+  const hasSavedMenus = Boolean(list?.items.length)
   const hasMenuChanges =
     !!list && JSON.stringify(items) !== JSON.stringify(toSavedForm(list))
+  const showUploadPanel =
+    preview ||
+    isReuploading ||
+    (!loading &&
+      !hasSavedMenus &&
+      (!batch ||
+        batchStatus === 'FAILED' ||
+        (batchStatus === 'COMPLETED' && !items.length)))
+  const showMenuEditor = Boolean(
+    list &&
+    items.length > 0 &&
+    ((batch && batchStatus === 'COMPLETED') || (!batch && isEditingMenu)),
+  )
+  const showSavedMenu = Boolean(list && list.items.length > 0 && !isEditingMenu)
 
   const loadList = async () => {
     const next = await getMenuList()
@@ -269,9 +288,18 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
     setFocusReview(false)
   }, [batchStatus, focusReview, items.length])
 
+  useEffect(() => {
+    if (!isReuploading || !files.length) return
+    uploadPanelRef.current?.scrollIntoView?.({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }, [files.length, isReuploading])
+
   const selectFiles = (event: ChangeEvent<HTMLInputElement>) => {
     setError('')
     const selected = Array.from(event.target.files ?? [])
+    event.currentTarget.value = ''
     if (selected.length > 10 || selected.length === 0) {
       setFiles([])
       setError('메뉴판 이미지는 1장부터 10장까지 선택해주세요.')
@@ -306,6 +334,7 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
         setBatchStatus('COMPLETED')
         setItems(toDetectedForm(previewBatch))
         setFiles([])
+        setIsReuploading(false)
         setFocusReview(true)
         return
       }
@@ -316,6 +345,7 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
       setItems(result.status === 'COMPLETED' ? toDetectedForm(result.data) : [])
       if (result.status === 'COMPLETED') setFocusReview(true)
       setFiles([])
+      setIsReuploading(false)
       if (result.status === 'FAILED')
         setError(
           '메뉴판을 인식하지 못했습니다. 다른 이미지로 다시 시도해주세요.',
@@ -332,6 +362,42 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
     setItems((current) =>
       current.map((item) => (item.id === id ? { ...item, ...update } : item)),
     )
+  }
+
+  const startEditingMenu = () => {
+    if (!list) return
+    setItems(toSavedForm(list))
+    setBatch(null)
+    setBatchStatus(null)
+    setIsReuploading(false)
+    setIsEditingMenu(true)
+    setError('')
+    setSuccess('')
+  }
+
+  const cancelEditingMenu = () => {
+    if (list) setItems(toSavedForm(list))
+    setIsEditingMenu(false)
+    setError('')
+    setSuccess('')
+  }
+
+  const startReupload = () => {
+    setFiles([])
+    setBatch(null)
+    setBatchStatus(null)
+    setIsEditingMenu(false)
+    setIsReuploading(true)
+    setError('')
+    setSuccess('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    fileInputRef.current?.click()
+  }
+
+  const cancelReupload = () => {
+    setFiles([])
+    setIsReuploading(false)
+    setError('')
   }
 
   const save = async (event: FormEvent<HTMLFormElement>) => {
@@ -384,6 +450,8 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
         setBatch(null)
         setBatchStatus(null)
         setItems(toSavedForm(next))
+        setIsEditingMenu(false)
+        setIsReuploading(false)
         setSuccess('미리보기에서 메뉴가 저장되었습니다.')
         return
       }
@@ -400,6 +468,8 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
         )
       }
       await loadList()
+      setIsEditingMenu(false)
+      setIsReuploading(false)
       setSuccess('메뉴 정보가 저장되었습니다.')
     } catch (requestError) {
       if (isUnauthorized(requestError)) navigate('/login')
@@ -427,13 +497,28 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
   return (
     <AppShell title="메뉴판 관리" backTo="/profile" tone="white">
       <div className="menu-page page-stack">
+        <input
+          ref={fileInputRef}
+          id="menu-images"
+          className="menu-file-input"
+          aria-label="메뉴판 이미지 선택"
+          type="file"
+          accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+          multiple
+          onChange={selectFiles}
+          disabled={uploading || saving}
+        />
         <header className="menu-page-header">
           <div className="menu-page-index">
             <span>STORE RECORD / 03</span>
             <span>MEMME ARCHIVE</span>
           </div>
           <h1>우리 매장 메뉴판</h1>
-          <p>메뉴판을 올리고 인식한 메뉴를 확인해 저장하세요.</p>
+          <p>
+            {showSavedMenu && !batch
+              ? '저장된 메뉴를 확인하고 수정하거나 메뉴판 사진을 다시 올릴 수 있어요.'
+              : '메뉴판을 올리고 인식한 메뉴를 확인해 저장하세요.'}
+          </p>
           {preview && (
             <p className="menu-preview-label">
               샘플 화면 · 실제 AI 분석과 서버 저장은 로그인 후 이용할 수 있어요.
@@ -441,52 +526,58 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
           )}
         </header>
 
-        <section className="menu-panel" aria-labelledby="menu-upload-heading">
-          <div className="menu-section-heading">
-            <span className="menu-section-number">01</span>
-            <div>
-              <p className="menu-section-kicker">IMAGE UPLOAD</p>
-              <h2 id="menu-upload-heading">메뉴판 사진 올리기</h2>
-            </div>
-          </div>
-          <p className="menu-section-description">
-            메뉴판을 촬영하거나 앨범에서 선택해주세요.
-          </p>
-          <input
-            id="menu-images"
-            className="menu-file-input"
-            aria-label="메뉴판 이미지 선택"
-            type="file"
-            accept="image/jpeg,image/png,.jpg,.jpeg,.png"
-            multiple
-            onChange={selectFiles}
-            disabled={uploading || saving}
-          />
-          <label className="menu-upload-target" htmlFor="menu-images">
-            <span className="menu-upload-icon" aria-hidden="true">
-              ↑
-            </span>
-            <strong>
-              {files.length > 0
-                ? `${files.length}장 선택됨`
-                : '메뉴판 이미지 선택'}
-            </strong>
-            <small>JPG · PNG / 최대 10장 / 장당 5MiB</small>
-          </label>
-          <button
-            className="menu-primary-button"
-            type="button"
-            onClick={upload}
-            disabled={!files.length || uploading || saving}
+        {showUploadPanel && (
+          <section
+            className="menu-panel"
+            aria-labelledby="menu-upload-heading"
+            ref={uploadPanelRef}
           >
-            {uploading ? '메뉴를 인식하고 있어요…' : '메뉴판 분석하기'}
-          </button>
-          {batch && (
-            <p className="menu-note">
-              새 메뉴판을 저장하면 기존 메뉴 목록이 교체됩니다.
+            <div className="menu-section-heading">
+              <span className="menu-section-number">01</span>
+              <div>
+                <p className="menu-section-kicker">IMAGE UPLOAD</p>
+                <h2 id="menu-upload-heading">메뉴판 사진 올리기</h2>
+              </div>
+            </div>
+            <p className="menu-section-description">
+              메뉴판을 촬영하거나 앨범에서 선택해주세요.
             </p>
-          )}
-        </section>
+            <label className="menu-upload-target" htmlFor="menu-images">
+              <span className="menu-upload-icon" aria-hidden="true">
+                ↑
+              </span>
+              <strong>
+                {files.length > 0
+                  ? `${files.length}장 선택됨`
+                  : '메뉴판 이미지 선택'}
+              </strong>
+              <small>JPG · PNG / 최대 10장 / 장당 5MiB</small>
+            </label>
+            <button
+              className="menu-primary-button"
+              type="button"
+              onClick={upload}
+              disabled={!files.length || uploading || saving}
+            >
+              {uploading ? '메뉴를 인식하고 있어요…' : '메뉴판 분석하기'}
+            </button>
+            {isReuploading && hasSavedMenus && !batch && (
+              <button
+                className="menu-secondary-button menu-cancel-reupload"
+                type="button"
+                onClick={cancelReupload}
+                disabled={uploading || saving}
+              >
+                취소
+              </button>
+            )}
+            {batch && (
+              <p className="menu-note">
+                새 메뉴판을 저장하면 기존 메뉴 목록이 교체됩니다.
+              </p>
+            )}
+          </section>
+        )}
 
         {error && (
           <p className="menu-alert" role="alert">
@@ -534,91 +625,102 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
             <p>다른 메뉴판 이미지를 올려주세요.</p>
           </section>
         )}
-        {list && !batch && items.length === 0 && !loading && (
+        {list && !batch && items.length === 0 && !loading && !hasSavedMenus && (
           <section className="menu-panel">
             <h2>등록된 메뉴가 없어요</h2>
             <p>메뉴판 사진을 올려 첫 메뉴를 등록해주세요.</p>
           </section>
         )}
-        {list &&
-          items.length > 0 &&
-          (!batch || batchStatus === 'COMPLETED') && (
-            <form
-              className="menu-panel menu-items"
-              onSubmit={save}
-              ref={reviewRef}
-            >
-              <div className="menu-section-heading">
-                <span className="menu-section-number">02</span>
-                <div>
-                  <p className="menu-section-kicker">
-                    {batch ? 'REVIEW & CONFIRM' : 'MENU LIST'}
-                  </p>
-                  <h2>{batch ? '현재 인식된 메뉴 확인' : '등록된 메뉴'}</h2>
-                </div>
+        {showMenuEditor && (
+          <form
+            className="menu-panel menu-items"
+            onSubmit={save}
+            ref={reviewRef}
+          >
+            <div className="menu-section-heading">
+              <span className="menu-section-number">02</span>
+              <div>
+                <p className="menu-section-kicker">
+                  {batch ? 'REVIEW & CONFIRM' : 'EDIT MENU'}
+                </p>
+                <h2>{batch ? '인식된 메뉴 확인' : '메뉴 수정'}</h2>
               </div>
-              <p>
-                {batch
-                  ? '인식된 내용이 맞으면 그대로 저장하세요. 수정할 부분만 바꾸면 됩니다.'
-                  : '메뉴 정보를 수정할 수 있습니다.'}
-              </p>
-              {items.map((item, index) => (
-                <fieldset key={item.id} className="menu-item">
-                  <legend>메뉴 {String(index + 1).padStart(2, '0')}</legend>
-                  <label>
-                    메뉴명
-                    <input
-                      value={item.name}
-                      maxLength={100}
-                      onChange={(event) =>
-                        changeItem(item.id, { name: event.target.value })
-                      }
-                    />
-                  </label>
-                  <label>
-                    가격 (원)
-                    <input
-                      type="number"
-                      min="0"
-                      max="1000000"
-                      step="1"
-                      value={item.price}
-                      onChange={(event) =>
-                        changeItem(item.id, {
-                          price: event.target.value,
-                        })
-                      }
-                    />
-                  </label>
-                  <label>
-                    카테고리
-                    <select
-                      value={item.category}
-                      onChange={(event) =>
-                        changeItem(item.id, {
-                          category: event.target.value as MenuCategory,
-                        })
-                      }
-                    >
-                      <option value="" disabled>
-                        카테고리 선택
+            </div>
+            <p>
+              {batch
+                ? '인식된 내용이 맞으면 그대로 저장하세요. 수정할 부분만 바꾸면 됩니다.'
+                : '메뉴 정보를 수정한 뒤 변경사항을 저장해주세요.'}
+            </p>
+            {items.map((item, index) => (
+              <fieldset key={item.id} className="menu-item">
+                <legend>메뉴 {String(index + 1).padStart(2, '0')}</legend>
+                <label>
+                  메뉴명
+                  <input
+                    value={item.name}
+                    maxLength={100}
+                    onChange={(event) =>
+                      changeItem(item.id, { name: event.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  가격 (원)
+                  <input
+                    type="number"
+                    min="0"
+                    max="1000000"
+                    step="1"
+                    value={item.price}
+                    onChange={(event) =>
+                      changeItem(item.id, {
+                        price: event.target.value,
+                      })
+                    }
+                  />
+                </label>
+                <label>
+                  카테고리
+                  <select
+                    value={item.category}
+                    onChange={(event) =>
+                      changeItem(item.id, {
+                        category: event.target.value as MenuCategory,
+                      })
+                    }
+                  >
+                    <option value="" disabled>
+                      카테고리 선택
+                    </option>
+                    {categories.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
                       </option>
-                      {categories.map((category) => (
-                        <option key={category.value} value={category.value}>
-                          {category.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  {item.priceReviewRequired && (
-                    <p className="menu-price-review-note">
-                      {item.price
-                        ? '인식된 가격을 확인해주세요.'
-                        : '가격을 인식하지 못했어요. 입력 후 저장해주세요.'}
-                    </p>
-                  )}
-                </fieldset>
-              ))}
+                    ))}
+                  </select>
+                </label>
+                {item.priceReviewRequired && (
+                  <p className="menu-price-review-note">
+                    {item.price
+                      ? '인식된 가격을 확인해주세요.'
+                      : '가격을 인식하지 못했어요. 입력 후 저장해주세요.'}
+                  </p>
+                )}
+              </fieldset>
+            ))}
+            <div
+              className={`menu-edit-actions${batch ? ' menu-edit-actions--single' : ''}`}
+            >
+              {!batch && (
+                <button
+                  className="menu-secondary-button"
+                  type="button"
+                  onClick={cancelEditingMenu}
+                  disabled={saving || uploading}
+                >
+                  취소
+                </button>
+              )}
               <button
                 className="menu-primary-button"
                 type="submit"
@@ -630,26 +732,64 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
                     ? '저장하기'
                     : '변경사항 저장하기'}
               </button>
-            </form>
-          )}
-        {list && batch && list.items.length > 0 && (
+            </div>
+          </form>
+        )}
+        {showSavedMenu && list && (
           <section className="menu-panel menu-current-panel">
             <div className="menu-section-heading">
-              <span className="menu-section-number">03</span>
+              <span className="menu-section-number">{batch ? '03' : '02'}</span>
               <div>
-                <p className="menu-section-kicker">CURRENT MENU</p>
-                <h2>현재 저장된 메뉴</h2>
+                <p className="menu-section-kicker">
+                  {batch ? 'CURRENT MENU' : 'SAVED MENU'}
+                </p>
+                <h2>{batch ? '현재 저장된 메뉴' : '저장된 메뉴'}</h2>
               </div>
             </div>
-            <p>새 메뉴판을 저장하기 전까지 아래 메뉴가 유지됩니다.</p>
+            <p>
+              {batch
+                ? '새 메뉴판을 저장하기 전까지 아래 메뉴가 유지됩니다.'
+                : '수정하거나 다시 올릴 메뉴판 사진을 선택해주세요.'}
+            </p>
             <ul className="menu-current-list">
               {list.items.map((item) => (
                 <li key={item.id}>
-                  <span>{item.name}</span>
-                  <span>{item.price.toLocaleString()}원</span>
+                  <div className="menu-current-item-copy">
+                    <strong>{item.name}</strong>
+                    <span>
+                      {categories.find(
+                        (category) => category.value === item.category,
+                      )?.label ?? '기타'}
+                    </span>
+                  </div>
+                  <strong className="menu-current-price">
+                    {item.price.toLocaleString()}원
+                  </strong>
                 </li>
               ))}
             </ul>
+            {(!batch ||
+              batchStatus === 'FAILED' ||
+              (batchStatus === 'COMPLETED' && !items.length)) && (
+              <div className="menu-management-actions">
+                <button
+                  className="menu-secondary-button"
+                  type="button"
+                  onClick={startEditingMenu}
+                  disabled={saving || uploading}
+                >
+                  수정하기
+                </button>
+                <button
+                  className="menu-primary-button"
+                  type="button"
+                  onClick={startReupload}
+                  disabled={saving || uploading}
+                >
+                  사진 다시 올리기
+                </button>
+              </div>
+            )}
           </section>
         )}
       </div>

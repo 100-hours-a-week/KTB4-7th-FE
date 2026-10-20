@@ -125,11 +125,13 @@
   display: grid;
   justify-items: center;
   gap: 8px;
+  width: 100%;
   padding: 24px 12px;
   border: 1px dashed #cfcfcf;
   border-radius: 15px;
   background: linear-gradient(145deg, #ffffff, #f4f4f4);
   color: #202020;
+  font: inherit;
   text-align: center;
   cursor: pointer;
   transition:
@@ -173,6 +175,7 @@
 }
 
 .menu-primary-button,
+.menu-secondary-button,
 .menu-page > button {
   display: block;
   width: 100%;
@@ -195,9 +198,21 @@
   margin-top: 12px;
 }
 
+.menu-secondary-button {
+  border-color: #dedede;
+  background: #ffffff;
+  color: #202020;
+}
+
 .menu-primary-button:hover:not(:disabled),
 .menu-page > button:hover {
   background: #3a3a3a;
+  transform: translateY(-1px);
+}
+
+.menu-secondary-button:hover:not(:disabled) {
+  border-color: #bcbcbc;
+  background: #f4f4f4;
   transform: translateY(-1px);
 }
 
@@ -208,7 +223,13 @@
   transform: none;
 }
 
+.menu-secondary-button:disabled {
+  color: #888888;
+  cursor: not-allowed;
+}
+
 .menu-primary-button:focus-visible,
+.menu-secondary-button:focus-visible,
 .menu-page > button:focus-visible,
 .menu-item input:focus-visible,
 .menu-item select:focus-visible {
@@ -257,6 +278,7 @@
 
 .menu-current-list li {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 13px 2px;
@@ -264,12 +286,53 @@
   font-size: 13px;
 }
 
-.menu-current-list li span:last-child {
+.menu-current-item-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.menu-current-item-copy strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.menu-current-item-copy span {
+  color: #777777;
+  font-size: 11px;
+}
+
+.menu-current-price {
   flex: 0 0 auto;
   color: #565656;
   font-family: var(--font-num);
   font-size: 11px;
   font-weight: 600;
+}
+
+.menu-management-actions,
+.menu-edit-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.menu-management-actions .menu-primary-button,
+.menu-management-actions .menu-secondary-button,
+.menu-edit-actions .menu-primary-button,
+.menu-edit-actions .menu-secondary-button {
+  min-width: 0;
+  padding-inline: 8px;
+  font-size: 13px;
+}
+
+.menu-edit-actions--single {
+  grid-template-columns: 1fr;
+}
+
+.menu-cancel-reupload {
+  margin-top: 10px;
 }
 
 .menu-items {
