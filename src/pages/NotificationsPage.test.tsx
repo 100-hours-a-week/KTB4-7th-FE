@@ -254,6 +254,42 @@ test('매출 업로드 알림을 클릭하면 업로드 화면으로 이동한�
   expect(markNotificationsAsRead).not.toHaveBeenCalled()
 })
 
+test('읽지 않은 랭킹 변동 알림을 클릭하면 읽음 처리 후 성장 랭킹으로 이동한다', async () => {
+  getNotifications.mockResolvedValue({
+    message: '조회 성공',
+    nextCursor: null,
+    data: {
+      items: [
+        {
+          id: 8,
+          type: 'RANKING_CHANGED',
+          title: '성장 랭킹 순위가 올랐어요',
+          content: '지난 집계보다 2단계 오른 5위예요.',
+          relatedEntityType: 'RANKING_SNAPSHOT',
+          relatedEntityId: 15,
+          sentAt: '2026-09-26T08:00:00+09:00',
+          readAt: null,
+        },
+      ],
+    },
+  })
+  markNotificationsAsRead.mockResolvedValue({
+    updatedCount: 1,
+    readAt: '2026-09-26T09:00:00+09:00',
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationsPage />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByText('성장 랭킹 순위가 올랐어요'))
+
+  await waitFor(() => expect(markNotificationsAsRead).toHaveBeenCalledWith([8]))
+  expect(navigate).toHaveBeenCalledWith('/ranking')
+})
+
 test('더 불러올 알림이 있으면 더보기 버튼으로 다음 페이지를 요청한다', async () => {
   // AppShell도 같은 getNotifications를 알림 배지 확인용으로 호출하므로,
   // 호출 순서가 아니라 요청 파라미터로 응답을 구분해야 두 호출이 서로

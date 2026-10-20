@@ -2,7 +2,8 @@ import { http } from '../../../shared/api/http'
 
 type ApiResponse<T> = { message: string; data: T }
 
-export type NotificationType = 'SOLUTION_READY' | 'SALES_UPLOAD_REMINDER'
+export type NotificationType =
+  'SOLUTION_READY' | 'SALES_UPLOAD_REMINDER' | 'RANKING_CHANGED'
 export type NotificationReadStatus = 'ALL' | 'UNREAD'
 
 export type NotificationItem = {
@@ -44,10 +45,12 @@ export async function markNotificationsAsRead(notificationIds: number[]) {
 export type NotificationPreferences = {
   solutionEnabled: boolean
   salesUploadReminderEnabled: boolean
+  rankingChangeEnabled: boolean
 }
 export type NotificationPreferenceUpdateRequest = {
   solutionEnabled?: boolean
   salesUploadReminderEnabled?: boolean
+  rankingChangeEnabled?: boolean
 }
 
 export async function getNotificationPreferences() {

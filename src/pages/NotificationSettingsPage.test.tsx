@@ -46,6 +46,7 @@ test('알림 설정을 불러와 토글 상태로 표시한다', async () => {
   getNotificationPreferences.mockResolvedValue({
     solutionEnabled: true,
     salesUploadReminderEnabled: false,
+    rankingChangeEnabled: true,
   })
 
   render(
@@ -60,19 +61,25 @@ test('알림 설정을 불러와 토글 상태로 표시한다', async () => {
   const salesToggle = screen.getByRole('switch', {
     name: '매출 데이터 업로드 알림',
   })
+  const rankingToggle = screen.getByRole('switch', {
+    name: '성장 랭킹 변동 알림',
+  })
 
   expect(solutionToggle).toHaveAttribute('aria-checked', 'true')
   expect(salesToggle).toHaveAttribute('aria-checked', 'false')
+  expect(rankingToggle).toHaveAttribute('aria-checked', 'true')
 })
 
 test('토글을 클릭하면 변경 요청을 보내고 응답으로 상태를 갱신한다', async () => {
   getNotificationPreferences.mockResolvedValue({
     solutionEnabled: true,
     salesUploadReminderEnabled: false,
+    rankingChangeEnabled: false,
   })
   updateNotificationPreferences.mockResolvedValue({
     solutionEnabled: false,
     salesUploadReminderEnabled: false,
+    rankingChangeEnabled: false,
   })
 
   render(
@@ -96,10 +103,11 @@ test('토글을 클릭하면 변경 요청을 보내고 응답으로 상태를 �
   )
 })
 
-test('변경 요청이 실패하면 토글을 이전 상태로 되돌린다', async () => {
+test('랭킹 변동 알림 설정 요청이 실패하면 토글을 이전 상태로 되돌린다', async () => {
   getNotificationPreferences.mockResolvedValue({
     solutionEnabled: true,
     salesUploadReminderEnabled: false,
+    rankingChangeEnabled: true,
   })
   updateNotificationPreferences.mockRejectedValue(new Error('network error'))
 
@@ -109,15 +117,15 @@ test('변경 요청이 실패하면 토글을 이전 상태로 되돌린다', as
     </MemoryRouter>,
   )
 
-  const solutionToggle = await screen.findByRole('switch', {
-    name: '솔루션 제공 알림',
+  const rankingToggle = await screen.findByRole('switch', {
+    name: '성장 랭킹 변동 알림',
   })
-  fireEvent.click(solutionToggle)
+  fireEvent.click(rankingToggle)
 
   expect(await screen.findByRole('alert')).toHaveTextContent(
     '알림 설정을 변경하지 못했습니다. 다시 시도해 주세요.',
   )
-  expect(solutionToggle).toHaveAttribute('aria-checked', 'true')
+  expect(rankingToggle).toHaveAttribute('aria-checked', 'true')
 })
 
 test('세션이 없으면 로그인 페이지로 이동한다', async () => {
@@ -130,4 +138,37 @@ test('세션이 없으면 로그인 페이지로 이동한다', async () => {
   )
 
   await waitFor(() => expect(navigate).toHaveBeenCalledWith('/login'))
+})
+
+test('랭킹 변동 알림 토글을 끄면 설정 API에 저장하고 화면 상태를 갱신한다', async () => {
+  getNotificationPreferences.mockResolvedValue({
+    solutionEnabled: true,
+    salesUploadReminderEnabled: false,
+    rankingChangeEnabled: true,
+  })
+  updateNotificationPreferences.mockResolvedValue({
+    solutionEnabled: true,
+    salesUploadReminderEnabled: false,
+    rankingChangeEnabled: false,
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationSettingsPage />
+    </MemoryRouter>,
+  )
+
+  const rankingToggle = await screen.findByRole('switch', {
+    name: '성장 랭킹 변동 알림',
+  })
+  fireEvent.click(rankingToggle)
+
+  await waitFor(() =>
+    expect(updateNotificationPreferences).toHaveBeenCalledWith({
+      rankingChangeEnabled: false,
+    }),
+  )
+  await waitFor(() =>
+    expect(rankingToggle).toHaveAttribute('aria-checked', 'false'),
+  )
 })
