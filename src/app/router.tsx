@@ -13,6 +13,7 @@ import { NotificationSettingsPage } from '../pages/NotificationSettingsPage'
 import { ProfilePage } from '../pages/ProfilePage'
 import { PasswordChangePage } from '../pages/PasswordChangePage'
 import { StoreProfilePage } from '../pages/StoreProfilePage'
+import { MenuPage } from '../pages/MenuPage'
 import { SalesUploadPage } from '../pages/SalesUploadPage'
 import { SalesAnalysisPage } from '../pages/SalesAnalysisPage'
 import { SalesProfitCostEntryPage } from '../pages/SalesProfitCostEntryPage'
@@ -31,7 +32,10 @@ export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/password-reset', element: <PasswordResetPage /> },
   ...(import.meta.env.DEV
-    ? [{ path: '/preview/solution', element: <SolutionPreviewPage /> }]
+    ? [
+        { path: '/preview/solution', element: <SolutionPreviewPage /> },
+        { path: '/preview/menu', element: <MenuPage preview /> },
+      ]
     : []),
   {
     element: <ProtectedRoute />,
@@ -49,6 +53,7 @@ export const router = createBrowserRouter([
       { path: '/profile', element: <ProfilePage /> },
       { path: '/profile/password', element: <PasswordChangePage /> },
       { path: '/profile/store', element: <StoreProfilePage /> },
+      { path: '/profile/menu', element: <MenuPage /> },
       { path: '/sales/upload', element: <SalesUploadPage /> },
       {
         path: '/sales/uploads/:uploadId/cost-items',

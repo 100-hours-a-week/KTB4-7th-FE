@@ -141,9 +141,15 @@ export function ProfilePage() {
             </span>
             <span aria-hidden="true">→</span>
           </Link>
+          <Link to="/profile/menu">
+            <span className="profile-menu-label">
+              <b>03</b> 메뉴판 관리
+            </span>
+            <span aria-hidden="true">→</span>
+          </Link>
           <Link to="/notifications/settings">
             <span className="profile-menu-label">
-              <b>03</b> 알림 설정
+              <b>04</b> 알림 설정
             </span>
             <span aria-hidden="true">→</span>
           </Link>
@@ -153,7 +159,7 @@ export function ProfilePage() {
             onClick={handleLogout}
           >
             <span className="profile-menu-label">
-              <b>04</b> 로그아웃
+              <b>05</b> 로그아웃
             </span>
             <span aria-hidden="true">→</span>
           </button>
@@ -163,7 +169,7 @@ export function ProfilePage() {
             onClick={() => setWithdrawModalOpen(true)}
           >
             <span className="profile-menu-label">
-              <b>05</b> 회원탈퇴
+              <b>06</b> 회원탈퇴
             </span>
             <span aria-hidden="true">→</span>
           </button>
