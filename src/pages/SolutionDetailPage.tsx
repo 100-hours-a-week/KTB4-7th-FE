@@ -5,6 +5,7 @@ import {
   saveSolutionCard,
   type SolutionCard,
 } from '../features/solution/api/solutionApi'
+import { SolutionActionDetail } from '../features/solution/ui/SolutionActionDetail'
 import { AppShell } from '../shared/ui/AppShell'
 
 function isUnauthorized(error: unknown) {
@@ -118,35 +119,7 @@ export function SolutionDetailPage() {
         <Link className="solution-result-detail-back" to="/solution">
           <span aria-hidden="true">←</span> 오늘의 제안으로
         </Link>
-        <header className="solution-result-detail-hero">
-          <div className="solution-result-detail-meta">
-            <span>ACTION {String(item.rankNo).padStart(2, '0')}</span>
-            <span>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</span>
-          </div>
-          <h1>
-            {item.title.split(/(\S+·\S+)/).map((part, index) =>
-              part.includes('·') ? (
-                <span className="solution-detail-title-word" key={index}>
-                  {part}
-                </span>
-              ) : (
-                part
-              ),
-            )}
-          </h1>
-          <p>{item.summaryText}</p>
-        </header>
-
-        <div className="solution-result-detail-content">
-          <section
-            className="solution-result-detail-section"
-            aria-labelledby="solution-action-title"
-          >
-            <span className="solution-result-detail-index">01 / ACTION</span>
-            <h2 id="solution-action-title">이렇게 실행해 보세요</h2>
-            <p className="solution-result-detail-text">{item.detailText}</p>
-          </section>
-
+        <SolutionActionDetail item={item}>
           {expirationNotice && (
             <p className="solution-result-detail-notice">{expirationNotice}</p>
           )}
@@ -168,7 +141,7 @@ export function SolutionDetailPage() {
                 : '이 솔루션 저장하기'}
             <span aria-hidden="true">{item.isSaved ? '✓' : '↗'}</span>
           </button>
-        </div>
+        </SolutionActionDetail>
       </div>
     </AppShell>
   )

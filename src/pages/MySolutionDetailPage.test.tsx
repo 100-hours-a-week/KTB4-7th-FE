@@ -41,7 +41,17 @@ function renderDetail(savedId: string) {
   )
 }
 
-function mockDetail() {
+function mockDetail(
+  items = [
+    {
+      rankNo: 1,
+      title: '점심 시간대 할인',
+      summaryText: '요약',
+      detailText: '상세',
+      evidence: '근거',
+    },
+  ],
+) {
   getSavedSolutionDetail.mockResolvedValue({
     message: '조회에 성공했습니다.',
     data: {
@@ -50,15 +60,7 @@ function mockDetail() {
         savedDate: '2026-09-27',
         displayTitle: '09/27 점심 시간대 할인',
         readOnly: true,
-        items: [
-          {
-            rankNo: 1,
-            title: '점심 시간대 할인',
-            summaryText: '요약',
-            detailText: '상세',
-            evidence: '근거',
-          },
-        ],
+        items,
       },
     },
   })
@@ -73,6 +75,43 @@ test('저장한 솔루션 상세를 보여준다', async () => {
   expect(screen.getByText('요약')).toBeVisible()
   expect(screen.getByText('상세')).toBeVisible()
   expect(getSavedSolutionDetail).toHaveBeenCalledWith(91)
+})
+
+test('기존 솔루션 상세와 같은 액션 구성으로 저장된 여러 항목을 보여준다', async () => {
+  mockDetail([
+    {
+      rankNo: 1,
+      title: '점심 시간대 할인',
+      summaryText: '첫 번째 요약',
+      detailText: '첫 번째 실행 방법',
+      evidence: '근거 1',
+    },
+    {
+      rankNo: 2,
+      title: '저녁 시간 세트 제안',
+      summaryText: '두 번째 요약',
+      detailText: '두 번째 실행 방법',
+      evidence: '근거 2',
+    },
+  ])
+
+  renderDetail('91')
+
+  expect(
+    await screen.findByRole('heading', {
+      level: 1,
+      name: '점심 시간대 할인',
+    }),
+  ).toBeVisible()
+  expect(
+    screen.getByRole('heading', { level: 2, name: '저녁 시간 세트 제안' }),
+  ).toBeVisible()
+  expect(screen.getByText('01 / ACTION')).toBeVisible()
+  expect(screen.getByText('02 / ACTION')).toBeVisible()
+  expect(screen.getByText('첫 번째 요약')).toBeVisible()
+  expect(screen.getByText('두 번째 실행 방법')).toBeVisible()
+  expect(screen.getByText('2026-09-27')).toBeVisible()
+  expect(screen.getByText('09/27 점심 시간대 할인')).toBeVisible()
 })
 
 test('저장 취소를 누르면 삭제하고 목록으로 돌아간다', async () => {

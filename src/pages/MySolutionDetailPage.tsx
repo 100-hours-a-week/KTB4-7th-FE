@@ -5,6 +5,7 @@ import {
   getSavedSolutionDetail,
   type SavedSolutionDetail,
 } from '../features/solution/api/savedSolutionApi'
+import { SolutionActionDetail } from '../features/solution/ui/SolutionActionDetail'
 import { AppShell } from '../shared/ui/AppShell'
 
 function isUnauthorized(error: unknown) {
@@ -72,7 +73,7 @@ export function MySolutionDetailPage() {
 
   if (isLoading) {
     return (
-      <AppShell title="내 솔루션">
+      <AppShell title="솔루션 상세" backTo="/my-solutions">
         <p>불러오는 중...</p>
       </AppShell>
     )
@@ -80,7 +81,7 @@ export function MySolutionDetailPage() {
 
   if (notFound || !solution) {
     return (
-      <AppShell title="내 솔루션">
+      <AppShell title="솔루션 상세" backTo="/my-solutions">
         <div className="detail-page">
           <Link to="/my-solutions">← 내 솔루션</Link>
           <p>저장한 솔루션을 찾을 수 없습니다.</p>
@@ -90,31 +91,33 @@ export function MySolutionDetailPage() {
   }
 
   return (
-    <AppShell title="내 솔루션">
-      <div className="detail-page">
-        <Link to="/my-solutions">← 내 솔루션</Link>
-        <p>{solution.savedDate}에 저장함</p>
-        <h1>{solution.displayTitle}</h1>
-        {deleteError && (
-          <p className="form-error" role="alert">
-            {deleteError}
-          </p>
-        )}
-        <section>
-          {solution.items.map((item) => (
-            <article key={item.rankNo}>
-              <small>0{item.rankNo}</small>
-              <b>{item.rankNo === 1 ? '우선 실행' : '함께 확인'}</b>
-              <h2>{item.title}</h2>
-              <p>{item.summaryText}</p>
-              <p style={{ whiteSpace: 'pre-line' }}>{item.detailText}</p>
-            </article>
+    <AppShell title="솔루션 상세" backTo="/my-solutions">
+      <div className="solution-result-detail my-solution-detail">
+        <Link className="solution-result-detail-back" to="/my-solutions">
+          <span aria-hidden="true">←</span> 내 솔루션
+        </Link>
+        <div className="my-solution-detail-saved-meta">
+          <time dateTime={solution.savedDate}>{solution.savedDate}</time>
+          <span>{solution.displayTitle}</span>
+        </div>
+        <div className="my-solution-detail-actions">
+          {solution.items.map((item, index) => (
+            <SolutionActionDetail
+              key={item.rankNo}
+              item={item}
+              titleLevel={index === 0 ? 1 : 2}
+            />
           ))}
-        </section>
-        <div className="detail-page-actions">
+        </div>
+        <div className="my-solution-detail-footer">
+          {deleteError && (
+            <p className="form-error" role="alert">
+              {deleteError}
+            </p>
+          )}
           <button
             type="button"
-            className="light-button"
+            className="my-solution-detail-delete"
             onClick={handleDelete}
             disabled={isDeleting}
           >
