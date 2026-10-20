@@ -114,6 +114,20 @@ export function NotificationSettingsPage() {
                 }
               />
             </div>
+            <div className="notification-preference-row">
+              <div>
+                <strong>성장 랭킹 변동 알림</strong>
+                <p>성장 랭킹 집계 후 순위 변동이 있으면 알려드려요</p>
+              </div>
+              <ToggleSwitch
+                label="성장 랭킹 변동 알림"
+                checked={preferences.rankingChangeEnabled}
+                disabled={pendingKey === 'rankingChangeEnabled'}
+                onChange={(value) =>
+                  handleToggle('rankingChangeEnabled', value)
+                }
+              />
+            </div>
           </div>
         )}
       </div>

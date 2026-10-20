@@ -47,7 +47,9 @@ function isExpiredSolutionNotification(sentAt: string) {
 }
 
 function notificationDestination(notification: NotificationItem) {
-  return notification.type === 'SOLUTION_READY' ? '/solution' : '/sales/upload'
+  if (notification.type === 'SOLUTION_READY') return '/solution'
+  if (notification.type === 'RANKING_CHANGED') return '/ranking'
+  return '/sales/upload'
 }
 
 export function NotificationsPage() {
