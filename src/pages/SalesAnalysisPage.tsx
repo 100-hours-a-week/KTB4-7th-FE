@@ -59,6 +59,18 @@ function formatMonthLabel(month: string) {
   return `${year}년 ${Number(monthNumber)}월`
 }
 
+function GrowthRankingEntry() {
+  return (
+    <Link className="growth-ranking-entry" to="/ranking">
+      <span>
+        <strong>다른 사장님과 내 성장 순위 보기</strong>
+        <small>지난달 성장 랭킹 확인하기</small>
+      </span>
+      <span aria-hidden="true">↗</span>
+    </Link>
+  )
+}
+
 function monthRange(month: string) {
   const [yearText, monthText] = month.split('-')
   const year = Number(yearText)
@@ -341,11 +353,14 @@ export function SalesAnalysisPage() {
   if (!isLoadingMonths && (!availableMonths || availableMonths.length === 0)) {
     return (
       <AppShell title="매출 분석" contentClassName="sales-analysis-content">
-        <EmptyState
-          title="분석할 매출 데이터가 없습니다"
-          description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
-          action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
-        />
+        <div className="page-stack sales-analysis-empty-layout">
+          <EmptyState
+            title="분석할 매출 데이터가 없습니다"
+            description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
+            action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
+          />
+          <GrowthRankingEntry />
+        </div>
       </AppShell>
     )
   }
@@ -801,6 +816,7 @@ export function SalesAnalysisPage() {
             </Link>
           </>
         )}
+        <GrowthRankingEntry />
       </div>
     </AppShell>
   )

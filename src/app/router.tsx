@@ -16,6 +16,7 @@ import { StoreProfilePage } from '../pages/StoreProfilePage'
 import { MenuPage } from '../pages/MenuPage'
 import { SalesUploadPage } from '../pages/SalesUploadPage'
 import { SalesAnalysisPage } from '../pages/SalesAnalysisPage'
+import { GrowthRankingPage } from '../pages/GrowthRankingPage'
 import { SalesProfitCostEntryPage } from '../pages/SalesProfitCostEntryPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
         element: <SalesProfitCostEntryPage />,
       },
       { path: '/sales/analysis', element: <SalesAnalysisPage /> },
+      { path: '/ranking', element: <GrowthRankingPage /> },
     ],
   },
   { path: '*', element: <NotFoundPage /> },

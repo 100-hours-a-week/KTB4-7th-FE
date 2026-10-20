@@ -127,12 +127,14 @@ beforeEach(() => {
   })
   getSalesAnalysisMonthOptions.mockImplementation(async () => {
     const result = await getSalesAvailableMonths()
-    return { months: result.months.map((targetMonth: string, index: number) => ({
-      targetMonth,
-      uploadId: index + 1,
-      fileName: `${targetMonth}.xlsx`,
-      uploadedAt: '2026-10-01T12:00:00+09:00',
-    })) }
+    return {
+      months: result.months.map((targetMonth: string, index: number) => ({
+        targetMonth,
+        uploadId: index + 1,
+        fileName: `${targetMonth}.xlsx`,
+        uploadedAt: '2026-10-01T12:00:00+09:00',
+      })),
+    }
   })
 })
 
@@ -162,7 +164,12 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
   )
 
   expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
-  expect(screen.getByRole('option', { name: '2026년 9월 · 2026-09.xlsx' })).toBeInTheDocument()
+  expect(
+    screen.getByRole('link', { name: /다른 사장님과 내 성장 순위 보기/ }),
+  ).toHaveAttribute('href', '/ranking')
+  expect(
+    screen.getByRole('option', { name: '2026년 9월 · 2026-09.xlsx' }),
+  ).toBeInTheDocument()
   expect(screen.getByText('2026년 10월 예상 총매출')).toBeInTheDocument()
   expect(screen.getByText('₩1,080,000')).toBeInTheDocument()
   expect(
@@ -187,23 +194,50 @@ test('가장 최근 달을 기본으로 조회해 통계와 AI 인사이트를 �
 test('월 선택지가 순서 없이 와도 가장 최근 달의 파일을 먼저 표시하고 선택한다', async () => {
   getSalesAnalysisMonthOptions.mockResolvedValue({
     months: [
-      { targetMonth: '2026-08', uploadId: 2, fileName: '8월.xlsx', uploadedAt: '2026-09-01T12:00:00+09:00' },
-      { targetMonth: '2026-09', uploadId: 3, fileName: '최신.xlsx', uploadedAt: '2026-10-01T12:00:00+09:00' },
-      { targetMonth: '2026-07', uploadId: 1, fileName: '7월.xlsx', uploadedAt: '2026-08-01T12:00:00+09:00' },
+      {
+        targetMonth: '2026-08',
+        uploadId: 2,
+        fileName: '8월.xlsx',
+        uploadedAt: '2026-09-01T12:00:00+09:00',
+      },
+      {
+        targetMonth: '2026-09',
+        uploadId: 3,
+        fileName: '최신.xlsx',
+        uploadedAt: '2026-10-01T12:00:00+09:00',
+      },
+      {
+        targetMonth: '2026-07',
+        uploadId: 1,
+        fileName: '7월.xlsx',
+        uploadedAt: '2026-08-01T12:00:00+09:00',
+      },
     ],
   })
   getSalesAnalysis.mockResolvedValue(completedResponse)
 
-  render(<MemoryRouter><SalesAnalysisPage /></MemoryRouter>)
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
 
   expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
   const monthSelect = screen.getByRole('combobox', { name: '조회할 월' })
   expect(monthSelect).toHaveValue('2026-09')
-  expect(within(monthSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
-    '2026년 9월 · 최신.xlsx', '2026년 8월 · 8월.xlsx', '2026년 7월 · 7월.xlsx',
+  expect(
+    within(monthSelect)
+      .getAllByRole('option')
+      .map((option) => option.textContent),
+  ).toEqual([
+    '2026년 9월 · 최신.xlsx',
+    '2026년 8월 · 8월.xlsx',
+    '2026년 7월 · 7월.xlsx',
   ])
   expect(getSalesAnalysis).toHaveBeenCalledWith({
-    periodType: 'CUSTOM', startDate: '2026-09-01', endDate: '2026-09-30',
+    periodType: 'CUSTOM',
+    startDate: '2026-09-01',
+    endDate: '2026-09-30',
   })
 })
 
@@ -684,6 +718,9 @@ test('분석 가능한 월이 없으면 업로드 행동을 제공한다', async
   expect(
     screen.getByRole('link', { name: '매출 데이터 업로드' }),
   ).toHaveAttribute('href', '/sales/upload')
+  expect(
+    screen.getByRole('link', { name: /다른 사장님과 내 성장 순위 보기/ }),
+  ).toHaveAttribute('href', '/ranking')
   expect(getSalesAnalysis).not.toHaveBeenCalled()
 })
 
@@ -823,13 +860,21 @@ test('월을 유지하며 매출 분석과 순이익 분석을 전환한다', as
   getSalesAvailableMonths.mockResolvedValue({ months: ['2026-08', '2026-09'] })
   getSalesAnalysis.mockResolvedValue(completedResponse)
   getProfitAnalysis.mockResolvedValue({
-    status: 'COMPLETED', message: '조회에 성공했습니다.',
+    status: 'COMPLETED',
+    message: '조회에 성공했습니다.',
     data: {
       summary: {
-        totalNetAmount: 1000, ingredientCost: 400, fixedCost: 100, totalCost: 500,
-        netProfit: 500, netProfitRate: 0.5, previousNetProfit: 400,
-        netProfitChangeRate: 0.25, previousTotalCost: 400,
-        totalCostChangeRate: 0.25, previousNetProfitRate: 0.4,
+        totalNetAmount: 1000,
+        ingredientCost: 400,
+        fixedCost: 100,
+        totalCost: 500,
+        netProfit: 500,
+        netProfitRate: 0.5,
+        previousNetProfit: 400,
+        netProfitChangeRate: 0.25,
+        previousTotalCost: 400,
+        totalCostChangeRate: 0.25,
+        previousNetProfitRate: 0.4,
         netProfitRateDifference: 0.1,
       },
       dailyProfits: [{ date: '2026-08-01', netProfit: 500 }],
@@ -838,13 +883,21 @@ test('월을 유지하며 매출 분석과 순이익 분석을 전환한다', as
     },
   })
 
-  render(<MemoryRouter><SalesAnalysisPage /></MemoryRouter>)
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
   await screen.findByText('₩7,920,000')
-  fireEvent.change(screen.getByLabelText('조회할 월'), { target: { value: '2026-08' } })
+  fireEvent.change(screen.getByLabelText('조회할 월'), {
+    target: { value: '2026-08' },
+  })
   fireEvent.click(screen.getByRole('button', { name: '순이익 분석' }))
 
   expect(await screen.findByText('순이익이 증가했어요.')).toBeInTheDocument()
-  expect(screen.getAllByText('500원', { selector: '.stat-card strong' })).toHaveLength(2)
+  expect(
+    screen.getAllByText('500원', { selector: '.stat-card strong' }),
+  ).toHaveLength(2)
   expect(screen.getByText('50.0%')).toBeInTheDocument()
   expect(screen.getByText('이전 달 대비 +10.0%p')).toBeInTheDocument()
   expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-08')
@@ -857,15 +910,24 @@ test('순이익 비용이 누락되면 해당 파일의 입력 화면으로 안�
   getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
   getSalesAnalysis.mockResolvedValue(completedResponse)
   getProfitAnalysis.mockResolvedValue({
-    status: 'COST_INPUT_REQUIRED', message: '순수익 분석 정보를 입력해주세요.',
+    status: 'COST_INPUT_REQUIRED',
+    message: '순수익 분석 정보를 입력해주세요.',
     data: { missingCostMonths: ['2026-09'] },
   })
 
-  render(<MemoryRouter><SalesAnalysisPage /></MemoryRouter>)
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
   await screen.findByText('₩7,920,000')
   fireEvent.click(screen.getByRole('button', { name: '순이익 분석' }))
 
-  expect(await screen.findByText('2026-09 비용을 확인하고 저장해주세요.')).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: '비용 입력하기' }))
-    .toHaveAttribute('href', '/sales/uploads/1/cost-items')
+  expect(
+    await screen.findByText('2026-09 비용을 확인하고 저장해주세요.'),
+  ).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: '비용 입력하기' })).toHaveAttribute(
+    'href',
+    '/sales/uploads/1/cost-items',
+  )
 })
