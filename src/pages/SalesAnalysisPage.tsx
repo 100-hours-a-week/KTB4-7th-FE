@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type TouchEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type TouchEvent,
+} from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   getSalesAnalysis,
@@ -99,7 +106,12 @@ type ChartTip = { x: number; y: number; text: string } | null
 function ChartTooltip({ tip }: { tip: ChartTip }) {
   if (!tip) return null
   return (
-    <div className="chart-tooltip" style={{ left: tip.x, top: tip.y }}>
+    <div
+      id="sales-chart-tooltip"
+      className="chart-tooltip"
+      role="tooltip"
+      style={{ left: tip.x, top: tip.y }}
+    >
       {tip.text}
     </div>
   )
@@ -202,6 +214,7 @@ export function SalesAnalysisPage() {
   const [chartIndex, setChartIndex] = useState(0)
   const [menuCursor, setMenuCursor] = useState(0)
   const [hoverTip, setHoverTip] = useState<ChartTip>(null)
+  const chartBarPointerTypeRef = useRef<string | null>(null)
   const touchStartXRef = useRef<number | null>(null)
   const hourlyChartScrollRef = useRef<HTMLDivElement>(null)
 
@@ -383,7 +396,41 @@ export function SalesAnalysisPage() {
   ] as const
 
   const goToChart = (index: number) => {
+    setHoverTip(null)
     setChartIndex(Math.max(0, Math.min(chartTabs.length - 1, index)))
+  }
+
+  const handleChartBarPointerDown = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    chartBarPointerTypeRef.current = event.pointerType
+  }
+
+  const handleChartBarPointerMove = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+    text: string,
+  ) => {
+    if (event.pointerType === 'touch') return
+    setHoverTip({ x: event.clientX, y: event.clientY, text })
+  }
+
+  const handleChartBarPointerLeave = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    if (event.pointerType === 'touch') return
+    setHoverTip(null)
+  }
+
+  const handleChartBarClick = (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    text: string,
+  ) => {
+    // Pointer clicks use the hover tooltip. Touch and keyboard activation toggle it.
+    if (event.detail > 0 && chartBarPointerTypeRef.current !== 'touch') return
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const tip = { x: rect.left + rect.width / 2, y: rect.top, text }
+    setHoverTip((current) => (current?.text === text ? null : tip))
   }
 
   const handleChartTouchStart = (event: TouchEvent) => {
@@ -419,26 +466,35 @@ export function SalesAnalysisPage() {
           aria-label="시간대별 매출 그래프 가로 스크롤 영역"
           onTouchStart={(event) => event.stopPropagation()}
           onTouchEnd={(event) => event.stopPropagation()}
+          onScroll={() => setHoverTip(null)}
         >
           <div className="hourly-chart-content">
             <div className="sales-chart" aria-label="시간대별 매출">
               {data.hourlySales.map((item) => {
                 const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
                 return (
-                  <span
+                  <button
+                    type="button"
+                    className="sales-chart-bar"
                     key={item.hour}
                     style={{
                       height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
                     }}
                     aria-label={text}
-                    title={text}
-                    onMouseEnter={(event) =>
-                      setHoverTip({ x: event.clientX, y: event.clientY, text })
+                    aria-describedby={
+                      hoverTip?.text === text
+                        ? 'sales-chart-tooltip'
+                        : undefined
                     }
-                    onMouseMove={(event) =>
-                      setHoverTip({ x: event.clientX, y: event.clientY, text })
+                    onPointerDown={handleChartBarPointerDown}
+                    onPointerEnter={(event) =>
+                      handleChartBarPointerMove(event, text)
                     }
-                    onMouseLeave={() => setHoverTip(null)}
+                    onPointerMove={(event) =>
+                      handleChartBarPointerMove(event, text)
+                    }
+                    onPointerLeave={handleChartBarPointerLeave}
+                    onClick={(event) => handleChartBarClick(event, text)}
                   />
                 )
               })}
@@ -464,20 +520,28 @@ export function SalesAnalysisPage() {
             {data.weekdaySales.map((item) => {
               const text = `${weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek} ${formatCurrency(item.salesAmount)}`
               return (
-                <span
+                <button
+                  type="button"
+                  className="sales-chart-bar"
                   key={item.dayOfWeek}
                   style={{
                     height: `${Math.max(4, (item.salesAmount / weekdayMax) * 100)}%`,
                   }}
                   aria-label={text}
-                  title={text}
-                  onMouseEnter={(event) =>
-                    setHoverTip({ x: event.clientX, y: event.clientY, text })
+                  aria-describedby={
+                    hoverTip?.text === text
+                      ? 'sales-chart-tooltip'
+                      : undefined
                   }
-                  onMouseMove={(event) =>
-                    setHoverTip({ x: event.clientX, y: event.clientY, text })
+                  onPointerDown={handleChartBarPointerDown}
+                  onPointerEnter={(event) =>
+                    handleChartBarPointerMove(event, text)
                   }
-                  onMouseLeave={() => setHoverTip(null)}
+                  onPointerMove={(event) =>
+                    handleChartBarPointerMove(event, text)
+                  }
+                  onPointerLeave={handleChartBarPointerLeave}
+                  onClick={(event) => handleChartBarClick(event, text)}
                 />
               )
             })}
