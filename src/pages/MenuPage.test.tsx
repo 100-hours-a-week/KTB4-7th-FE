@@ -81,11 +81,26 @@ function renderPage() {
   )
 }
 
-test('등록된 메뉴를 조회하고 수정 시 개정 번호와 전체 메뉴를 전송한다', async () => {
+async function openReuploadPanel() {
+  await screen.findByRole('heading', { name: '저장된 메뉴' })
+  fireEvent.click(screen.getByRole('button', { name: '사진 다시 올리기' }))
+  await screen.findByRole('heading', { name: '메뉴판 사진 올리기' })
+}
+
+test('저장된 메뉴는 조회 전용으로 보이고 수정 후 개정 번호와 전체 메뉴를 전송한다', async () => {
   renderPage()
+  await screen.findByRole('heading', { name: '저장된 메뉴' })
+  expect(screen.queryByDisplayValue('아메리카노')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
   const name = await screen.findByDisplayValue('아메리카노')
+  const saveButton = screen.getByRole('button', {
+    name: '변경사항 저장하기',
+  })
+  expect(saveButton).toBeDisabled()
+
   fireEvent.change(name, { target: { value: '아이스 아메리카노' } })
-  fireEvent.click(screen.getByRole('button', { name: '변경사항 저장하기' }))
+  expect(saveButton).toBeEnabled()
+  fireEvent.click(saveButton)
 
   await waitFor(() =>
     expect(updateMenuItems).toHaveBeenCalledWith(3, [
@@ -99,6 +114,35 @@ test('등록된 메뉴를 조회하고 수정 시 개정 번호와 전체 메뉴
   )
 })
 
+test('기존 메뉴 값을 원래대로 되돌리면 저장 버튼을 비활성화한다', async () => {
+  renderPage()
+  await screen.findByRole('heading', { name: '저장된 메뉴' })
+  fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
+  const name = await screen.findByDisplayValue('아메리카노')
+  const saveButton = screen.getByRole('button', {
+    name: '변경사항 저장하기',
+  })
+
+  fireEvent.change(name, { target: { value: '아이스 아메리카노' } })
+  expect(saveButton).toBeEnabled()
+
+  fireEvent.change(name, { target: { value: '아메리카노' } })
+  expect(saveButton).toBeDisabled()
+})
+
+test('저장된 메뉴 화면에서 사진 다시 올리기를 누르면 이미지 선택 영역을 연다', async () => {
+  renderPage()
+  await screen.findByRole('heading', { name: '저장된 메뉴' })
+
+  fireEvent.click(screen.getByRole('button', { name: '사진 다시 올리기' }))
+
+  expect(
+    await screen.findByRole('heading', { name: '메뉴판 사진 올리기' }),
+  ).toBeInTheDocument()
+  expect(screen.getByLabelText('메뉴판 이미지 선택')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '취소' })).toBeInTheDocument()
+})
+
 test('분석 후 인식된 메뉴로 이동하고 수정 없이 저장한다', async () => {
   uploadMenuImages.mockResolvedValue({
     status: 'COMPLETED',
@@ -109,7 +153,7 @@ test('분석 후 인식된 메뉴로 이동하고 수정 없이 저장한다', a
     .mockResolvedValueOnce(saved)
     .mockResolvedValueOnce({ ...saved, menuRevision: 4 })
   renderPage()
-  await screen.findByDisplayValue('아메리카노')
+  await openReuploadPanel()
 
   const image = new File(['image'], 'menu.png', { type: 'image/png' })
   fireEvent.change(screen.getByLabelText('메뉴판 이미지 선택'), {
@@ -117,6 +161,10 @@ test('분석 후 인식된 메뉴로 이동하고 수정 없이 저장한다', a
   })
   fireEvent.click(screen.getByRole('button', { name: '메뉴판 분석하기' }))
   expect(await screen.findByDisplayValue('라떼')).toBeInTheDocument()
+  expect(
+    screen.getByRole('heading', { name: '현재 저장된 메뉴' }),
+  ).toBeInTheDocument()
+  expect(screen.getByText('아메리카노')).toBeInTheDocument()
   await waitFor(() =>
     expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
       behavior: 'smooth',
@@ -143,7 +191,7 @@ test('인식된 메뉴를 수정한 뒤 저장한다', async () => {
   })
   getMenuBatch.mockResolvedValue({ status: 'COMPLETED', data: draft })
   renderPage()
-  await screen.findByDisplayValue('아메리카노')
+  await openReuploadPanel()
 
   fireEvent.change(screen.getByLabelText('메뉴판 이미지 선택'), {
     target: {
@@ -211,7 +259,8 @@ test('실패한 분석과 빈 메뉴 목록을 안내한다', async () => {
 
 test('메뉴 카테고리는 티를 포함한 여섯 종류만 제공한다', async () => {
   renderPage()
-  await screen.findByDisplayValue('아메리카노')
+  await screen.findByRole('heading', { name: '저장된 메뉴' })
+  fireEvent.click(screen.getByRole('button', { name: '수정하기' }))
   const options = screen
     .getByRole('combobox', { name: '카테고리' })
     .querySelectorAll('option')
