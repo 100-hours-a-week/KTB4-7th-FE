@@ -684,7 +684,7 @@ export function StoreProfilePage() {
             </header>
             <div className="signup-address-search">
               <ClearableInput
-                type="search"
+                type="text"
                 placeholder="도로명, 건물명 또는 지번으로 검색해주세요"
                 value={addressQuery}
                 onChange={(event) => setAddressQuery(event.target.value)}

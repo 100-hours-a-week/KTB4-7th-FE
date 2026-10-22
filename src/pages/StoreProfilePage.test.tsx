@@ -105,6 +105,22 @@ test('매장 정보를 불러와 폼에 채운다', async () => {
   ).toBeInTheDocument()
 })
 
+test('주소 검색 입력창은 브라우저 기본 취소 버튼을 표시하지 않는다', async () => {
+  getMyStore.mockResolvedValue(storeFixture)
+
+  render(
+    <MemoryRouter>
+      <StoreProfilePage />
+    </MemoryRouter>,
+  )
+
+  fireEvent.click(await screen.findByRole('button', { name: '주소 검색' }))
+
+  expect(
+    screen.getByPlaceholderText('도로명, 건물명 또는 지번으로 검색해주세요'),
+  ).toHaveAttribute('type', 'text')
+})
+
 test('저장하면 수정된 매장 정보를 서버로 전송한다', async () => {
   getMyStore.mockResolvedValue(storeFixture)
   updateMyStore.mockResolvedValue(storeFixture)

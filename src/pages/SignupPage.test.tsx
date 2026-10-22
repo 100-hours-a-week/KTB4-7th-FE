@@ -282,6 +282,16 @@ test('매장명은 15자로 제한하며 초과 값으로는 가입을 제출할
   ).toBeInTheDocument()
 })
 
+test('주소 검색 입력창은 브라우저 기본 취소 버튼을 표시하지 않는다', async () => {
+  await moveToBusinessStep()
+
+  fireEvent.click(screen.getByRole('button', { name: '주소 검색' }))
+
+  expect(
+    screen.getByPlaceholderText('도로명, 건물명 또는 지번으로 검색해주세요'),
+  ).toHaveAttribute('type', 'text')
+})
+
 test('사업자 인증 API의 400 fieldErrors를 사업자등록번호 입력칸 아래에 표시한다', async () => {
   await moveToBusinessStep()
   verifyBusinessNumber.mockRejectedValue({
