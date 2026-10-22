@@ -448,7 +448,7 @@ export function MenuPage({ preview = false }: { preview?: boolean }) {
             </div>
           </div>
           <p className="menu-section-description">
-            메뉴판을 촬영하거나 앨범에서 선택해주세요.
+            앨범에서 메뉴판 이미지를 선택해주세요.
           </p>
           <input
             id="menu-images"
