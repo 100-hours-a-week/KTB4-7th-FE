@@ -270,32 +270,72 @@ test('예측 범위 밖이면 최근 매출 업로드를 안내한다', async ()
   ).not.toBeInTheDocument()
 })
 
-test('오늘 솔루션이 아직 없으면 자정 시간을 단정하지 않는다', async () => {
-  getTodaySolution.mockResolvedValue({
-    message: '오늘의 솔루션을 준비하고 있습니다.',
-    status: 'EMPTY',
-    data: {
-      storeName: null,
-      screenTitle: null,
-      solutionBundleId: null,
-      targetDate: '2026-10-01',
-      solutionCards: [],
-    },
-  })
+test('준비 중 EMPTY 응답은 진행 모달을 유지하고 3초마다 재조회한다', async () => {
+  vi.useFakeTimers()
+  try {
+    getTodaySolution
+      .mockResolvedValueOnce({
+        message: '오늘의 솔루션을 준비하고 있습니다.',
+        status: 'EMPTY',
+        data: {
+          storeName: null,
+          screenTitle: null,
+          solutionBundleId: null,
+          targetDate: '2026-10-01',
+          solutionCards: [],
+        },
+      })
+      .mockResolvedValueOnce({
+        message: '조회에 성공했습니다.',
+        status: 'COMPLETED',
+        data: {
+          storeName: '맴매 베이커리',
+          screenTitle: '맴매 베이커리 오늘의 솔루션',
+          solutionBundleId: 82,
+          targetDate: '2026-10-01',
+          solutionCards: [
+            {
+              id: 1,
+              rankNo: 1,
+              title: '재고 점검',
+              summaryText: '재고를 확인해 보세요.',
+              detailText: '상세 내용',
+              evidence: '근거',
+              isSaved: false,
+              savedId: null,
+            },
+          ],
+        },
+      })
 
-  render(
-    <MemoryRouter>
-      <SolutionPage />
-    </MemoryRouter>,
-  )
+    render(
+      <MemoryRouter>
+        <SolutionPage />
+      </MemoryRouter>,
+    )
 
-  expect(
-    await screen.findByRole('heading', {
-      name: '오늘의 솔루션을 준비하고 있어요',
-    }),
-  ).toBeInTheDocument()
-  expect(screen.getByRole('main')).toHaveClass('solution-empty-content')
-  expect(screen.queryByText(/자정/)).not.toBeInTheDocument()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+    expect(
+      screen.getByRole('dialog', {
+        name: '오늘의 솔루션을 준비하고 있어요',
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('자동으로 확인하고 있어요')).toBeInTheDocument()
+    expect(screen.getByRole('main')).toHaveClass('solution-empty-content')
+    expect(screen.queryByText(/자정/)).not.toBeInTheDocument()
+    expect(getTodaySolution).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000)
+    })
+    expect(getTodaySolution).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole('link', { name: /재고 점검/ })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 test('솔루션 생성 중 상태를 모달로 보여준다', async () => {
