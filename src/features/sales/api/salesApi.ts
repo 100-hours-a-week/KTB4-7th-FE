@@ -43,7 +43,11 @@ export async function getSalesUploadHistory(params?: {
   ).data
 }
 
-export type SalesUploadProgress = { step: string; percent: number }
+export type SalesUploadProcessingPhase =
+  'VALIDATING' | 'NORMALIZING' | 'AGGREGATING' | 'ANALYZING'
+
+export type SalesAiInsightStatus =
+  'PENDING' | 'GENERATING' | 'COMPLETED' | 'INSUFFICIENT_DATA' | 'FAILED'
 
 export type SalesUploadStatusDetail = {
   message: string
@@ -52,30 +56,42 @@ export type SalesUploadStatusDetail = {
   data: {
     uploadId: number
     analysisRunId: number | null
-    progress: SalesUploadProgress | null
+    processingPhase: SalesUploadProcessingPhase | null
+    aiInsightStatus: SalesAiInsightStatus
     analysisId: number | null
     retryable: boolean
   }
 }
 
-export async function getSalesUploadStatus(uploadId: number) {
+export async function getSalesUploadStatus(
+  uploadId: number,
+  signal?: AbortSignal,
+) {
   return (
-    await http.get<SalesUploadStatusDetail>(`/v1/sales/uploads/${uploadId}`)
+    await http.get<SalesUploadStatusDetail>(
+      `/v1/sales/uploads/${uploadId}/status`,
+      {
+        signal,
+        timeout: 15000,
+      },
+    )
   ).data
 }
 
 export type SalesUploadResult = {
   uploadId: number
   analysisRunId: number | null
+  processingPhase: SalesUploadProcessingPhase | null
 }
 
-export async function uploadSalesFile(file: File) {
+export async function uploadSalesFile(file: File, signal?: AbortSignal) {
   const formData = new FormData()
   formData.append('file', file)
   return (
     await http.post<StatusResponse<SalesUploadResult>>(
       '/v1/sales/uploads',
       formData,
+      { signal },
     )
   ).data
 }
@@ -283,12 +299,19 @@ export type ProfitAnalysisData = {
   summary: ProfitAnalysisSummary
   dailyProfits: { date: string; netProfit: number }[]
   weekdayProfits: { dayOfWeek: string; netProfit: number }[]
-  aiInsight: { status: 'COMPLETED' | 'FAILED' | 'INSUFFICIENT_DATA'; insights: string[] }
+  aiInsight: {
+    status: 'COMPLETED' | 'FAILED' | 'INSUFFICIENT_DATA'
+    insights: string[]
+  }
 }
 
 export type ProfitAnalysisResponse =
   | { status: 'COMPLETED'; message: string; data: ProfitAnalysisData }
-  | { status: 'COST_INPUT_REQUIRED'; message: string; data: { missingCostMonths: string[] } }
+  | {
+      status: 'COST_INPUT_REQUIRED'
+      message: string
+      data: { missingCostMonths: string[] }
+    }
   | { status: 'EMPTY'; message: string; data: null }
 
 export async function getProfitAnalysis(startDate: string, endDate: string) {
