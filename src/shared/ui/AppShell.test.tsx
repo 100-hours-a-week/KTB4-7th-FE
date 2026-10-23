@@ -33,6 +33,21 @@ test('모바일 하단 탐색과 화면 제목을 표시한다', () => {
   expect(screen.getAllByText('솔루션')).toHaveLength(2)
 })
 
+test('하단 탭은 중앙 정렬된 선형 앱 아이콘과 레이블을 표시한다', () => {
+  render(
+    <MemoryRouter initialEntries={['/sales/analysis']}>
+      <AppShell title="매출">내용</AppShell>
+    </MemoryRouter>,
+  )
+
+  const navigation = screen.getByRole('navigation', { name: '하단 탐색' })
+  expect(navigation.querySelectorAll('.bottom-tab-icon')).toHaveLength(4)
+  expect(screen.getByRole('link', { name: '매출' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+})
+
 test('paper 톤을 지정하면 베이지 테마 셸을 표시한다', () => {
   const { container } = render(
     <MemoryRouter>

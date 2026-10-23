@@ -139,7 +139,7 @@ export function NotificationsPage() {
   }
 
   return (
-    <AppShell title="알림">
+    <AppShell title="알림" backTo="/solution">
       <div className="page-stack">
         <header className="page-title">
           <p className="page-eyebrow-date">확인할 소식</p>

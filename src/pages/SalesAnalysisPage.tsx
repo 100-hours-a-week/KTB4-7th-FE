@@ -101,16 +101,53 @@ function TrendBadge({ change }: { change: string | null }) {
   )
 }
 
-type ChartTip = { x: number; y: number; text: string } | null
+type ChartAnchor = {
+  left: number
+  height: number
+  /**
+   * 시간대별 차트처럼 가로로 스크롤되는 경우, 실제로 보이는 영역 안에서
+   * 툴팁을 고정하기 위한 좌표입니다.
+   */
+  top?: number
+}
+
+type ChartTip = {
+  x: number
+  y: number
+  text: string
+  anchor?: ChartAnchor
+} | null
 
 function ChartTooltip({ tip }: { tip: ChartTip }) {
   if (!tip) return null
   return (
+    <div id="sales-chart-tooltip" className="chart-tooltip" role="tooltip">
+      {tip.text}
+    </div>
+  )
+}
+
+function BarChartTooltip({ tip }: { tip: ChartTip }) {
+  if (!tip?.anchor) return null
+  const viewportTop = tip.anchor.top
+  const isViewportAnchored = viewportTop !== undefined
+  return (
     <div
       id="sales-chart-tooltip"
-      className="chart-tooltip"
+      className={
+        isViewportAnchored
+          ? 'bar-chart-tooltip bar-chart-tooltip--viewport'
+          : 'bar-chart-tooltip'
+      }
       role="tooltip"
-      style={{ left: tip.x, top: tip.y }}
+      style={{
+        left: isViewportAnchored
+          ? `clamp(78px, ${tip.anchor.left}px, calc(100% - 78px))`
+          : `clamp(78px, ${tip.anchor.left}%, calc(100% - 78px))`,
+        ...(isViewportAnchored
+          ? { top: `${viewportTop - 8}px` }
+          : { bottom: `calc(${tip.anchor.height}% + 8px)` }),
+      }}
     >
       {tip.text}
     </div>
@@ -139,6 +176,24 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
   const lastPoint = coords[coords.length - 1]
   const firstPoint = coords[0]
   const areaPath = `${linePath} L${lastPoint.x.toFixed(1)},100 L${firstPoint.x.toFixed(1)},100 Z`
+  const showNearestPoint = (
+    clientX: number,
+    clientY: number,
+    left: number,
+    width: number,
+  ) => {
+    if (!Number.isFinite(width) || width <= 0) return
+    const pointerX = Number.isFinite(clientX) ? clientX : left + width / 2
+    const pointerY = Number.isFinite(clientY) ? clientY : 0
+    const ratio = Math.min(1, Math.max(0, (pointerX - left) / width))
+    const index = Math.round(ratio * (data.length - 1))
+    const item = data[index]
+    setTip({
+      x: pointerX,
+      y: pointerY,
+      text: `${formatShortDate(item.date)} ${formatCurrency(item.salesAmount)}`,
+    })
+  }
 
   return (
     <div className="daily-trend-chart">
@@ -147,6 +202,25 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
         preserveAspectRatio="none"
         aria-label="일별 매출 추이"
         role="img"
+        onPointerMove={(event) => {
+          const bounds = event.currentTarget.getBoundingClientRect()
+          showNearestPoint(
+            event.clientX,
+            event.clientY,
+            bounds.left,
+            bounds.width,
+          )
+        }}
+        onPointerDown={(event) => {
+          const bounds = event.currentTarget.getBoundingClientRect()
+          showNearestPoint(
+            event.clientX,
+            event.clientY,
+            bounds.left,
+            bounds.width,
+          )
+        }}
+        onPointerLeave={() => setTip(null)}
       >
         <path d={areaPath} className="daily-trend-area" />
         <path d={linePath} className="daily-trend-line" fill="none" />
@@ -165,13 +239,6 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
                 cy={point.y}
                 r={8}
                 className="daily-trend-hit"
-                onMouseEnter={(event) =>
-                  setTip({ x: event.clientX, y: event.clientY, text })
-                }
-                onMouseMove={(event) =>
-                  setTip({ x: event.clientX, y: event.clientY, text })
-                }
-                onMouseLeave={() => setTip(null)}
               >
                 <title>{text}</title>
               </circle>
@@ -406,31 +473,85 @@ export function SalesAnalysisPage() {
     chartBarPointerTypeRef.current = event.pointerType
   }
 
-  const handleChartBarPointerMove = (
-    event: ReactPointerEvent<HTMLButtonElement>,
-    text: string,
+  const handleChartAreaPointerMove = <T extends { salesAmount: number }>(
+    event: ReactPointerEvent<HTMLDivElement>,
+    items: T[],
+    getText: (item: T) => string,
+    maxAmount: number,
   ) => {
-    if (event.pointerType === 'touch') return
-    setHoverTip({ x: event.clientX, y: event.clientY, text })
-  }
+    if (event.pointerType === 'touch' || items.length === 0) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    if (!Number.isFinite(bounds.width) || bounds.width <= 0) return
+    const pointerX = Number.isFinite(event.clientX)
+      ? event.clientX
+      : bounds.left + bounds.width / 2
+    const pointerY = Number.isFinite(event.clientY) ? event.clientY : 0
+    const position = Math.min(
+      1,
+      Math.max(0, (pointerX - bounds.left) / bounds.width),
+    )
+    const index = Math.round(position * (items.length - 1))
+    const item = items[index]
+    const bar =
+      event.currentTarget.querySelectorAll<HTMLButtonElement>(
+        '.sales-chart-bar',
+      )[index]
+    const tooltipViewport = event.currentTarget.closest<HTMLElement>(
+      '.hourly-chart-tooltip-layer',
+    )
+    const anchor = {
+      left: ((index + 0.5) / items.length) * 100,
+      height: Math.max(4, (item.salesAmount / maxAmount) * 100),
+    }
 
-  const handleChartBarPointerLeave = (
-    event: ReactPointerEvent<HTMLButtonElement>,
-  ) => {
-    if (event.pointerType === 'touch') return
-    setHoverTip(null)
+    if (bar && tooltipViewport) {
+      const barBounds = bar.getBoundingClientRect()
+      const viewportBounds = tooltipViewport.getBoundingClientRect()
+      setHoverTip({
+        x: pointerX,
+        y: pointerY,
+        text: getText(item),
+        anchor: {
+          ...anchor,
+          left: barBounds.left - viewportBounds.left + barBounds.width / 2,
+          top: barBounds.top - viewportBounds.top,
+        },
+      })
+      return
+    }
+
+    setHoverTip({
+      x: pointerX,
+      y: pointerY,
+      text: getText(item),
+      anchor,
+    })
   }
 
   const handleChartBarClick = (
     event: ReactMouseEvent<HTMLButtonElement>,
     text: string,
+    anchor: ChartAnchor,
   ) => {
     // Pointer clicks use the hover tooltip. Touch and keyboard activation toggle it.
     if (event.detail > 0 && chartBarPointerTypeRef.current !== 'touch') return
 
     const rect = event.currentTarget.getBoundingClientRect()
+    const tooltipViewport = event.currentTarget.closest<HTMLElement>(
+      '.hourly-chart-tooltip-layer',
+    )
+    const viewportBounds = tooltipViewport?.getBoundingClientRect()
+    const positionedAnchor = viewportBounds
+      ? {
+          ...anchor,
+          left: rect.left - viewportBounds.left + rect.width / 2,
+          top: rect.top - viewportBounds.top,
+        }
+      : anchor
     const tip = { x: rect.left + rect.width / 2, y: rect.top, text }
-    setHoverTip((current) => (current?.text === text ? null : tip))
+    setHoverTip((current) =>
+      current?.text === text ? null : { ...tip, anchor: positionedAnchor },
+    )
   }
 
   const handleChartTouchStart = (event: TouchEvent) => {
@@ -460,49 +581,71 @@ export function SalesAnalysisPage() {
         )
       }
       return (
-        <div
-          ref={hourlyChartScrollRef}
-          className="hourly-chart-scroll"
-          aria-label="시간대별 매출 그래프 가로 스크롤 영역"
-          onTouchStart={(event) => event.stopPropagation()}
-          onTouchEnd={(event) => event.stopPropagation()}
-          onScroll={() => setHoverTip(null)}
-        >
-          <div className="hourly-chart-content">
-            <div className="sales-chart" aria-label="시간대별 매출">
-              {data.hourlySales.map((item) => {
-                const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
-                return (
-                  <button
-                    type="button"
-                    className="sales-chart-bar"
-                    key={item.hour}
-                    style={{
-                      height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
-                    }}
-                    aria-label={text}
-                    aria-describedby={
-                      hoverTip?.text === text
-                        ? 'sales-chart-tooltip'
-                        : undefined
-                    }
-                    onPointerDown={handleChartBarPointerDown}
-                    onPointerEnter={(event) =>
-                      handleChartBarPointerMove(event, text)
-                    }
-                    onPointerMove={(event) =>
-                      handleChartBarPointerMove(event, text)
-                    }
-                    onPointerLeave={handleChartBarPointerLeave}
-                    onClick={(event) => handleChartBarClick(event, text)}
-                  />
-                )
-              })}
-            </div>
-            <div className="sales-chart-labels">
-              {data.hourlySales.map((item) => (
-                <span key={item.hour}>{item.hour}시</span>
-              ))}
+        <div className="hourly-chart-tooltip-layer">
+          <BarChartTooltip tip={hoverTip} />
+          <div
+            ref={hourlyChartScrollRef}
+            className="hourly-chart-scroll"
+            aria-label="시간대별 매출 그래프 가로 스크롤 영역"
+            onTouchStart={(event) => event.stopPropagation()}
+            onTouchEnd={(event) => event.stopPropagation()}
+            onScroll={() => setHoverTip(null)}
+          >
+            <div className="hourly-chart-content">
+              <div
+                className="sales-chart"
+                aria-label="시간대별 매출"
+                onPointerMove={(event) =>
+                  handleChartAreaPointerMove(
+                    event,
+                    data.hourlySales,
+                    (item) =>
+                      `${item.hour}시 ${formatCurrency(item.salesAmount)}`,
+                    hourlyMax,
+                  )
+                }
+                onPointerLeave={(event) => {
+                  if (event.pointerType !== 'touch') setHoverTip(null)
+                }}
+              >
+                {data.hourlySales.map((item) => {
+                  const text = `${item.hour}시 ${formatCurrency(item.salesAmount)}`
+                  return (
+                    <button
+                      type="button"
+                      className="sales-chart-bar"
+                      key={item.hour}
+                      style={{
+                        height: `${Math.max(4, (item.salesAmount / hourlyMax) * 100)}%`,
+                      }}
+                      aria-label={text}
+                      aria-describedby={
+                        hoverTip?.text === text
+                          ? 'sales-chart-tooltip'
+                          : undefined
+                      }
+                      onPointerDown={handleChartBarPointerDown}
+                      onClick={(event) =>
+                        handleChartBarClick(event, text, {
+                          left:
+                            ((data.hourlySales.indexOf(item) + 0.5) /
+                              data.hourlySales.length) *
+                            100,
+                          height: Math.max(
+                            4,
+                            (item.salesAmount / hourlyMax) * 100,
+                          ),
+                        })
+                      }
+                    />
+                  )
+                })}
+              </div>
+              <div className="sales-chart-labels">
+                {data.hourlySales.map((item) => (
+                  <span key={item.hour}>{item.hour}시</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -516,8 +659,23 @@ export function SalesAnalysisPage() {
     if (activeKey === 'weekday') {
       return (
         <>
-          <div className="sales-chart" aria-label="요일별 매출">
-            {data.weekdaySales.map((item) => {
+          <div
+            className="sales-chart"
+            aria-label="요일별 매출"
+            onPointerMove={(event) =>
+              handleChartAreaPointerMove(
+                event,
+                data.weekdaySales,
+                (item) =>
+                  `${weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek} ${formatCurrency(item.salesAmount)}`,
+                weekdayMax,
+              )
+            }
+            onPointerLeave={(event) => {
+              if (event.pointerType !== 'touch') setHoverTip(null)
+            }}
+          >
+            {data.weekdaySales.map((item, index) => {
               const text = `${weekdayLabels[item.dayOfWeek] ?? item.dayOfWeek} ${formatCurrency(item.salesAmount)}`
               return (
                 <button
@@ -529,22 +687,22 @@ export function SalesAnalysisPage() {
                   }}
                   aria-label={text}
                   aria-describedby={
-                    hoverTip?.text === text
-                      ? 'sales-chart-tooltip'
-                      : undefined
+                    hoverTip?.text === text ? 'sales-chart-tooltip' : undefined
                   }
                   onPointerDown={handleChartBarPointerDown}
-                  onPointerEnter={(event) =>
-                    handleChartBarPointerMove(event, text)
+                  onClick={(event) =>
+                    handleChartBarClick(event, text, {
+                      left: ((index + 0.5) / data.weekdaySales.length) * 100,
+                      height: Math.max(
+                        4,
+                        (item.salesAmount / weekdayMax) * 100,
+                      ),
+                    })
                   }
-                  onPointerMove={(event) =>
-                    handleChartBarPointerMove(event, text)
-                  }
-                  onPointerLeave={handleChartBarPointerLeave}
-                  onClick={(event) => handleChartBarClick(event, text)}
                 />
               )
             })}
+            <BarChartTooltip tip={hoverTip} />
           </div>
           <div className="sales-chart-labels">
             {data.weekdaySales.map((item) => (
@@ -843,7 +1001,6 @@ export function SalesAnalysisPage() {
                 <div className="section-card chart-card">
                   <h3>{chartTabs[chartIndex].title}</h3>
                   {renderChartBody()}
-                  <ChartTooltip tip={hoverTip} />
                 </div>
 
                 <button

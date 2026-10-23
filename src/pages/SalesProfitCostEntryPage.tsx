@@ -247,7 +247,7 @@ export function SalesProfitCostEntryPage() {
   })
 
   return (
-    <AppShell title="순이익 분석 정보 입력">
+    <AppShell title="순이익 분석 정보 입력" backTo="/sales/upload">
       <div className="page-stack profit-cost-page">
         <header className="page-title">
           <p>SALES · 순이익 분석</p>

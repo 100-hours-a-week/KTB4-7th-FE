@@ -777,6 +777,90 @@ test('화살표를 누르면 다른 분석 그래프로 이동한다', async () 
   ).toBeInTheDocument()
 })
 
+test('일별 매출 그래프의 어느 위치에 마우스를 올려도 가장 가까운 날짜와 금액을 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue({
+    ...completedResponse,
+    data: {
+      ...completedResponse.data,
+      dailySales: [
+        { date: '2026-09-01', salesAmount: 120000 },
+        { date: '2026-09-02', salesAmount: 240000 },
+        { date: '2026-09-03', salesAmount: 180000 },
+      ],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('₩7,920,000')
+  fireEvent.click(screen.getByLabelText('다음 그래프 보기'))
+
+  const chart = screen.getByRole('img', { name: '일별 매출 추이' })
+  vi.spyOn(chart, 'getBoundingClientRect').mockReturnValue({
+    left: 0,
+    width: 300,
+    right: 300,
+    top: 0,
+    bottom: 100,
+    height: 100,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  })
+
+  fireEvent.pointerMove(chart, { clientX: 150, pointerType: 'mouse' })
+
+  expect(screen.getByRole('tooltip')).toHaveTextContent('09.02 ₩240,000')
+})
+
+test('시간대별 매출 그래프의 빈 공간에 마우스를 올려도 가장 가까운 시간대 금액을 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue({
+    ...completedResponse,
+    data: {
+      ...completedResponse.data,
+      hourlySales: [
+        { hour: 10, salesAmount: 120000 },
+        { hour: 11, salesAmount: 240000 },
+        { hour: 12, salesAmount: 180000 },
+      ],
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+
+  await screen.findByText('₩7,920,000')
+  const chart = screen
+    .getAllByLabelText('시간대별 매출')
+    .find((element) => element.classList.contains('sales-chart'))
+  expect(chart).toBeDefined()
+  if (!chart) return
+  vi.spyOn(chart, 'getBoundingClientRect').mockReturnValue({
+    left: 0,
+    width: 300,
+    right: 300,
+    top: 0,
+    bottom: 132,
+    height: 132,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  })
+
+  fireEvent.pointerMove(chart, { clientX: 150, pointerType: 'mouse' })
+
+  expect(screen.getByRole('tooltip')).toHaveTextContent('11시 ₩240,000')
+})
+
 test('스와이프 동작으로도 그래프를 넘길 수 있다', async () => {
   getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
   getSalesAnalysis.mockResolvedValue(completedResponse)

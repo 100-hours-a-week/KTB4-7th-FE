@@ -3,13 +3,18 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, expect, test, vi } from 'vitest'
 import { MySolutionsPage } from './MySolutionsPage'
 
-const { getSavedSolutions, navigate } = vi.hoisted(() => ({
+const { getSavedSolutions, getNotifications, navigate } = vi.hoisted(() => ({
   getSavedSolutions: vi.fn(),
+  getNotifications: vi.fn(),
   navigate: vi.fn(),
 }))
 
 vi.mock('../features/solution/api/savedSolutionApi', () => ({
   getSavedSolutions,
+}))
+
+vi.mock('../features/notifications/api/notificationApi', () => ({
+  getNotifications,
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -20,7 +25,13 @@ vi.mock('react-router-dom', async () => {
 
 beforeEach(() => {
   getSavedSolutions.mockReset()
+  getNotifications.mockReset()
   navigate.mockReset()
+  getNotifications.mockResolvedValue({
+    message: '조회에 성공했습니다.',
+    nextCursor: null,
+    data: { items: [] },
+  })
 })
 
 function renderPage() {
@@ -31,7 +42,7 @@ function renderPage() {
   )
 }
 
-test('저장한 솔루션이 없으면 빈 화면을 보여준다', async () => {
+test('저장한 솔루션이 없으면 밝은 빈 화면을 보여준다', async () => {
   getSavedSolutions.mockResolvedValue({
     message: '아직 저장된 솔루션이 없습니다.',
     nextCursor: null,
@@ -41,15 +52,10 @@ test('저장한 솔루션이 없으면 빈 화면을 보여준다', async () => 
   renderPage()
 
   expect(screen.getByRole('main')).toHaveClass('saved-solutions-content')
-  expect(screen.queryByRole('img')).not.toBeInTheDocument()
-  expect(
-    screen.queryByText('저장한 솔루션', { exact: true }),
-  ).not.toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: '저장된 솔루션' })).toBeVisible()
   expect(await screen.findByText('저장한 솔루션이 없습니다')).toBeVisible()
 })
 
-test('연도별로 저장한 솔루션 목록을 보여주고 상세 링크를 연결한다', async () => {
+test('저장한 솔루션을 날짜와 제목 중심의 목록으로 보여주고 상세 링크를 연결한다', async () => {
   getSavedSolutions.mockResolvedValue({
     message: '조회에 성공했습니다.',
     nextCursor: null,
@@ -73,97 +79,17 @@ test('연도별로 저장한 솔루션 목록을 보여주고 상세 링크를 �
 
   renderPage()
 
-  expect(await screen.findByText('09/27 점심 시간대 할인')).toBeVisible()
-  expect(
-    document.querySelector('.saved-solution-card-visual'),
-  ).not.toBeInTheDocument()
-  expect(screen.queryByText('09.27 SAVED')).not.toBeInTheDocument()
+  expect(await screen.findByText('09/27')).toBeVisible()
   const link = screen.getByRole('link', { name: /09\/27 점심 시간대 할인/ })
   expect(link).toHaveAttribute('href', '/my-solutions/91')
+  expect(link.querySelector('strong')).toHaveTextContent('점심 시간대 할인')
+  expect(link.querySelector('strong')).not.toHaveTextContent('09/27')
+  expect(
+    document.querySelector('.saved-solution-carousel'),
+  ).not.toBeInTheDocument()
 })
 
-test('화살표로 다음 저장 솔루션 카드를 보여준다', async () => {
-  getSavedSolutions.mockResolvedValue({
-    message: '조회에 성공했습니다.',
-    nextCursor: null,
-    data: {
-      groups: [
-        {
-          year: 2026,
-          items: [
-            {
-              savedId: 91,
-              savedDate: '2026-09-27',
-              displayTitle: '첫 번째 솔루션',
-              firstTitle: '첫 번째 솔루션',
-              remainingItemCount: 0,
-            },
-            {
-              savedId: 92,
-              savedDate: '2026-09-28',
-              displayTitle: '두 번째 솔루션',
-              firstTitle: '두 번째 솔루션',
-              remainingItemCount: 2,
-            },
-          ],
-        },
-      ],
-    },
-  })
-
-  renderPage()
-
-  await screen.findByText('첫 번째 솔루션')
-  fireEvent.click(screen.getByRole('button', { name: '다음 저장 솔루션' }))
-
-  expect(screen.getByRole('link', { name: /두 번째 솔루션/ })).toHaveAttribute(
-    'aria-current',
-    'true',
-  )
-  expect(screen.getByText('02 / 02')).toBeVisible()
-})
-
-test('겹쳐진 폴더 탭을 누르면 해당 솔루션 카드가 앞으로 열린다', async () => {
-  getSavedSolutions.mockResolvedValue({
-    message: '조회에 성공했습니다.',
-    nextCursor: null,
-    data: {
-      groups: [
-        {
-          year: 2026,
-          items: [
-            {
-              savedId: 91,
-              savedDate: '2026-09-27',
-              displayTitle: '첫 번째 솔루션',
-              firstTitle: '첫 번째 솔루션',
-              remainingItemCount: 0,
-            },
-            {
-              savedId: 92,
-              savedDate: '2026-09-28',
-              displayTitle: '두 번째 솔루션',
-              firstTitle: '두 번째 솔루션',
-              remainingItemCount: 0,
-            },
-          ],
-        },
-      ],
-    },
-  })
-
-  renderPage()
-
-  const secondCard = await screen.findByRole('link', {
-    name: /두 번째 솔루션/,
-  })
-  fireEvent.click(secondCard)
-
-  expect(secondCard).toHaveAttribute('aria-current', 'true')
-  expect(navigate).not.toHaveBeenCalled()
-})
-
-test('월 필터로 해당 월의 저장 솔루션만 보여준다', async () => {
+test('월 선택 필터는 선택한 달의 저장 솔루션만 보여준다', async () => {
   getSavedSolutions.mockResolvedValue({
     message: '조회에 성공했습니다.',
     nextCursor: null,
@@ -179,17 +105,12 @@ test('월 필터로 해당 월의 저장 솔루션만 보여준다', async () =>
               firstTitle: '9월 솔루션',
               remainingItemCount: 0,
             },
-          ],
-        },
-        {
-          year: 2025,
-          items: [
             {
-              savedId: 12,
-              savedDate: '2025-12-01',
-              displayTitle: '12월 솔루션',
-              firstTitle: '12월 솔루션',
-              remainingItemCount: 0,
+              savedId: 92,
+              savedDate: '2026-10-01',
+              displayTitle: '10월 솔루션',
+              firstTitle: '10월 솔루션',
+              remainingItemCount: 1,
             },
           ],
         },
@@ -200,66 +121,13 @@ test('월 필터로 해당 월의 저장 솔루션만 보여준다', async () =>
   renderPage()
 
   await screen.findByText('9월 솔루션')
-  fireEvent.click(screen.getByRole('button', { name: '12월' }))
+  fireEvent.click(screen.getByRole('button', { name: '9월' }))
 
-  expect(screen.getByRole('link', { name: /12월 솔루션/ })).toHaveAttribute(
-    'aria-current',
-    'true',
-  )
-  expect(screen.getByText('01 / 01')).toBeVisible()
+  expect(screen.getByText('9월 솔루션')).toBeVisible()
+  expect(screen.queryByText('10월 솔루션')).not.toBeInTheDocument()
 })
 
-test('위로 스와이프하면 다음 저장 솔루션 카드를 보여준다', async () => {
-  getSavedSolutions.mockResolvedValue({
-    message: '조회에 성공했습니다.',
-    nextCursor: null,
-    data: {
-      groups: [
-        {
-          year: 2026,
-          items: [
-            {
-              savedId: 91,
-              savedDate: '2026-09-27',
-              displayTitle: '첫 번째 솔루션',
-              firstTitle: '첫 번째 솔루션',
-              remainingItemCount: 0,
-            },
-            {
-              savedId: 92,
-              savedDate: '2026-09-28',
-              displayTitle: '두 번째 솔루션',
-              firstTitle: '두 번째 솔루션',
-              remainingItemCount: 0,
-            },
-          ],
-        },
-      ],
-    },
-  })
-
-  renderPage()
-
-  const carousel = await screen.findByRole('region', {
-    name: '저장한 솔루션 카드',
-  })
-  const viewport = carousel.querySelector('.saved-solution-carousel-viewport')
-  expect(viewport).not.toBeNull()
-
-  fireEvent.touchStart(viewport as Element, {
-    touches: [{ clientY: 360 }],
-  })
-  fireEvent.touchEnd(viewport as Element, {
-    changedTouches: [{ clientY: 180 }],
-  })
-
-  expect(screen.getByRole('link', { name: /두 번째 솔루션/ })).toHaveAttribute(
-    'aria-current',
-    'true',
-  )
-})
-
-test('더보기를 누르면 다음 페이지를 이어붙인다', async () => {
+test('더보기를 누르면 다음 목록을 이어붙인다', async () => {
   getSavedSolutions.mockResolvedValueOnce({
     message: '조회에 성공했습니다.',
     nextCursor: 80,
@@ -271,7 +139,7 @@ test('더보기를 누르면 다음 페이지를 이어붙인다', async () => {
             {
               savedId: 91,
               savedDate: '2026-09-27',
-              displayTitle: '09/27 점심 시간대 할인',
+              displayTitle: '점심 시간대 할인',
               firstTitle: '점심 시간대 할인',
               remainingItemCount: 0,
             },
@@ -291,7 +159,7 @@ test('더보기를 누르면 다음 페이지를 이어붙인다', async () => {
             {
               savedId: 12,
               savedDate: '2025-12-01',
-              displayTitle: '12/01 재고 점검',
+              displayTitle: '재고 점검',
               firstTitle: '재고 점검',
               remainingItemCount: 0,
             },
@@ -303,13 +171,10 @@ test('더보기를 누르면 다음 페이지를 이어붙인다', async () => {
 
   renderPage()
 
-  await screen.findByText('09/27 점심 시간대 할인')
-  const loadMoreButton = screen.getByRole('button', { name: '더보기' })
-  loadMoreButton.click()
+  await screen.findByText('점심 시간대 할인')
+  fireEvent.click(screen.getByRole('button', { name: '더보기' }))
 
-  await waitFor(() => {
-    expect(screen.getAllByText('12/01 재고 점검').length).toBeGreaterThan(0)
-  })
+  await waitFor(() => expect(screen.getByText('재고 점검')).toBeVisible())
   expect(getSavedSolutions).toHaveBeenLastCalledWith({ size: 20, cursor: 80 })
 })
 
@@ -319,55 +184,4 @@ test('401 응답을 받으면 로그인 페이지로 이동한다', async () => 
   renderPage()
 
   await waitFor(() => expect(navigate).toHaveBeenCalledWith('/login'))
-})
-
-test('휠로 앞뒤 카드를 선택하고 연속 휠 입력과 양 끝 경계를 처리한다', async () => {
-  getSavedSolutions.mockResolvedValue({
-    nextCursor: null,
-    data: {
-      groups: [
-        {
-          year: 2026,
-          items: [1, 2, 3].map((id) => ({
-            savedId: id,
-            savedDate: '2026-10-18',
-            displayTitle: `저장 카드 ${id}`,
-            firstTitle: `카드 ${id}`,
-            remainingItemCount: 0,
-          })),
-        },
-      ],
-    },
-  })
-  renderPage()
-  await screen.findByText('저장 카드 1')
-  const viewport = document.querySelector(
-    '.saved-solution-carousel-viewport',
-  ) as Element
-  const clock = vi.spyOn(performance, 'now').mockReturnValue(1000)
-  const wheel = (deltaY: number) => {
-    const event = new WheelEvent('wheel', {
-      deltaY,
-      bubbles: true,
-      cancelable: true,
-    })
-    fireEvent(viewport, event)
-    return event
-  }
-  try {
-    expect(wheel(-80).defaultPrevented).toBe(false)
-    expect(wheel(80).defaultPrevented).toBe(true)
-    expect(screen.getByText('02 / 03')).toBeVisible()
-    wheel(80)
-    expect(screen.getByText('02 / 03')).toBeVisible()
-    clock.mockReturnValue(1600)
-    wheel(80)
-    expect(screen.getByText('03 / 03')).toBeVisible()
-    expect(wheel(80).defaultPrevented).toBe(false)
-    clock.mockReturnValue(2200)
-    wheel(-80)
-    expect(screen.getByText('02 / 03')).toBeVisible()
-  } finally {
-    clock.mockRestore()
-  }
 })

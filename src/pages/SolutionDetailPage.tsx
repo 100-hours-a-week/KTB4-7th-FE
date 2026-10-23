@@ -96,7 +96,7 @@ export function SolutionDetailPage() {
 
   if (isLoading) {
     return (
-      <AppShell title="솔루션 상세">
+      <AppShell title="솔루션 상세" backTo="/solution">
         <p>불러오는 중...</p>
       </AppShell>
     )
@@ -104,7 +104,7 @@ export function SolutionDetailPage() {
 
   if (notFound || !item) {
     return (
-      <AppShell title="솔루션 상세">
+      <AppShell title="솔루션 상세" backTo="/solution">
         <div className="detail-page">
           <h1>솔루션을 찾을 수 없습니다</h1>
           <Link to="/solution">← 솔루션 요약</Link>

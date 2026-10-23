@@ -95,7 +95,11 @@ export function GrowthRankingPage() {
     : null
 
   return (
-    <AppShell title="성장 랭킹" contentClassName="growth-ranking-content">
+    <AppShell
+      title="성장 랭킹"
+      backTo="/sales/analysis"
+      contentClassName="growth-ranking-content"
+    >
       <div className="growth-ranking-page">
         <header className="growth-ranking-heading">
           <h1>성장 랭킹</h1>
