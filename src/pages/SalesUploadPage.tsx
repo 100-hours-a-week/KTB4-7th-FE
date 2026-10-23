@@ -181,7 +181,11 @@ export function SalesUploadPage() {
   }
 
   return (
-    <AppShell title="매출 데이터 연결" contentClassName="sales-upload-content">
+    <AppShell
+      title="매출 데이터 연결"
+      backTo="/sales/analysis"
+      contentClassName="sales-upload-content"
+    >
       <div className="page-stack sales-upload-page">
         <header className="page-title sales-upload-intro">
           <p className="page-eyebrow-date">{formatEyebrowDate(new Date())}</p>

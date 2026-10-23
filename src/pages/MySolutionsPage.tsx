@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getSavedSolutions,
@@ -35,6 +35,13 @@ function mergeGroups(
   return [...merged.values()]
 }
 
+function withoutLeadingDate(title: string) {
+  return title.replace(
+    /^\s*(?:\d{1,2}[./]\d{1,2}\.?|\d{4}-\d{1,2}-\d{1,2})\s+/,
+    '',
+  )
+}
+
 export function MySolutionsPage() {
   const navigate = useNavigate()
   const [groups, setGroups] = useState<SavedSolutionYearGroup[]>([])
@@ -42,15 +49,7 @@ export function MySolutionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [error, setError] = useState('')
-  const [activeIndex, setActiveIndex] = useState(0)
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
-  const touchStartY = useRef<number | null>(null)
-  const carouselViewport = useRef<HTMLDivElement>(null)
-  const wheelGesture = useRef({
-    distance: 0,
-    lastEvent: 0,
-    lastTurn: -Infinity,
-  })
 
   useEffect(() => {
     let ignore = false
@@ -103,75 +102,13 @@ export function MySolutionsPage() {
   const availableMonths = [
     ...new Set(allSavedCards.map((item) => Number(item.savedDate.slice(5, 7)))),
   ].sort((left, right) => right - left)
-  const savedCards = allSavedCards.filter(
-    (item) =>
-      selectedMonth === null ||
-      Number(item.savedDate.slice(5, 7)) === selectedMonth,
-  )
-
-  useEffect(() => {
-    const viewport = carouselViewport.current
-    if (!viewport || savedCards.length < 2) return
-
-    const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY))
-        return
-      const direction = Math.sign(event.deltaY)
-      if (!direction) return
-      const canMove =
-        direction > 0 ? activeIndex < savedCards.length - 1 : activeIndex > 0
-      const gesture = wheelGesture.current
-      if (!canMove) {
-        gesture.distance = 0
-        return
-      }
-      event.preventDefault()
-      const now = performance.now()
-      const idle = now - gesture.lastEvent > 180
-      if (idle || Math.sign(gesture.distance) !== direction)
-        gesture.distance = 0
-      gesture.lastEvent = now
-      if (now - gesture.lastTurn < 450) return
-      const unit =
-        event.deltaMode === 1
-          ? 16
-          : event.deltaMode === 2
-            ? viewport.clientHeight
-            : 1
-      gesture.distance += event.deltaY * unit
-      if (Math.abs(gesture.distance) < 40) return
-      gesture.distance = 0
-      gesture.lastTurn = now
-      setActiveIndex((current) =>
-        Math.max(0, Math.min(savedCards.length - 1, current + direction)),
-      )
-    }
-
-    viewport.addEventListener('wheel', handleWheel, { passive: false })
-    return () => viewport.removeEventListener('wheel', handleWheel)
-  }, [activeIndex, savedCards.length])
-
-  const selectMonth = (month: number | null) => {
-    setSelectedMonth(month)
-    setActiveIndex(0)
-  }
-
-  const showPrevious = () => {
-    setActiveIndex((current) => Math.max(0, current - 1))
-  }
-
-  const showNext = () => {
-    setActiveIndex((current) => Math.min(savedCards.length - 1, current + 1))
-  }
-
-  const handleTouchEnd = (clientY: number) => {
-    if (touchStartY.current === null) return
-    const distance = clientY - touchStartY.current
-    touchStartY.current = null
-    if (Math.abs(distance) < 45) return
-    if (distance < 0) showNext()
-    else showPrevious()
-  }
+  const savedSolutions = allSavedCards
+    .filter(
+      (item) =>
+        selectedMonth === null ||
+        Number(item.savedDate.slice(5, 7)) === selectedMonth,
+    )
+    .sort((left, right) => right.savedDate.localeCompare(left.savedDate))
 
   return (
     <AppShell title="내 솔루션" contentClassName="saved-solutions-content">
@@ -200,7 +137,7 @@ export function MySolutionsPage() {
                 type="button"
                 className={selectedMonth === null ? 'active' : undefined}
                 aria-pressed={selectedMonth === null}
-                onClick={() => selectMonth(null)}
+                onClick={() => setSelectedMonth(null)}
               >
                 전체
               </button>
@@ -210,94 +147,50 @@ export function MySolutionsPage() {
                   type="button"
                   className={selectedMonth === month ? 'active' : undefined}
                   aria-pressed={selectedMonth === month}
-                  onClick={() => selectMonth(month)}
+                  onClick={() => setSelectedMonth(month)}
                 >
                   {month}월
                 </button>
               ))}
             </div>
             <section
-              className="saved-solution-carousel"
-              aria-label="저장한 솔루션 카드"
+              className="saved-solution-list"
+              aria-label="저장한 솔루션 목록"
             >
-              <div
-                className="saved-solution-carousel-viewport"
-                ref={carouselViewport}
-                onTouchStart={(event) => {
-                  touchStartY.current = event.touches[0]?.clientY ?? null
-                }}
-                onTouchEnd={(event) => {
-                  handleTouchEnd(event.changedTouches[0]?.clientY ?? 0)
-                }}
-              >
-                {savedCards.map((item, index) => {
-                  const offset = index - activeIndex
-                  const isActive = offset === 0
-                  const isVisible = Math.abs(offset) <= 2
+              {savedSolutions.length === 0 ? (
+                <p className="saved-solution-list-empty">
+                  선택한 월에 저장한 솔루션이 없습니다.
+                </p>
+              ) : (
+                savedSolutions.map((item) => {
+                  const [, month, day] = item.savedDate.split('-')
                   return (
                     <Link
                       key={item.savedId}
-                      className="saved-solution-card"
-                      data-offset={Math.max(-2, Math.min(2, offset))}
-                      data-visible={isVisible}
-                      aria-current={isActive ? 'true' : undefined}
-                      aria-hidden={!isVisible}
-                      tabIndex={isVisible ? 0 : -1}
+                      className="saved-solution-list-item"
                       to={`/my-solutions/${item.savedId}`}
-                      onClick={(event) => {
-                        if (isActive) return
-                        event.preventDefault()
-                        setActiveIndex(index)
-                      }}
                     >
-                      <span className="saved-solution-card-index">
-                        <span>
-                          {isActive ? 'MEMME SOLUTION' : item.displayTitle}
-                        </span>
-                        <span>CARD {String(index + 1).padStart(2, '0')}</span>
-                      </span>
-                      <strong>{item.displayTitle}</strong>
-                      <span className="saved-solution-card-meta">
-                        <span>
+                      <time dateTime={item.savedDate}>
+                        {month}/{day}
+                      </time>
+                      <span>
+                        <strong>{withoutLeadingDate(item.displayTitle)}</strong>
+                        <small>
                           {item.remainingItemCount > 0
-                            ? `${item.remainingItemCount + 1} SOLUTIONS`
-                            : '1 SOLUTION'}
-                        </span>
-                        <span>ARCHIVE</span>
+                            ? `함께 저장한 ${item.remainingItemCount}개 항목`
+                            : '저장한 솔루션'}
+                        </small>
                       </span>
-                      <span className="saved-solution-card-open">
-                        자세히 보기 <span aria-hidden="true">↗</span>
+                      <span
+                        className="saved-solution-list-arrow"
+                        aria-hidden="true"
+                      >
+                        ›
                       </span>
                     </Link>
                   )
-                })}
-              </div>
-
-              <div className="saved-solution-carousel-controls">
-                <button
-                  type="button"
-                  aria-label="이전 저장 솔루션"
-                  disabled={activeIndex === 0}
-                  onClick={showPrevious}
-                >
-                  ↑
-                </button>
-                <span aria-live="polite">
-                  {String(activeIndex + 1).padStart(2, '0')} /{' '}
-                  {String(savedCards.length).padStart(2, '0')}
-                </span>
-                <button
-                  type="button"
-                  aria-label="다음 저장 솔루션"
-                  disabled={activeIndex === savedCards.length - 1}
-                  onClick={showNext}
-                >
-                  ↓
-                </button>
-              </div>
-              <p className="saved-solution-swipe-hint">
-                SCROLL OR SWIPE UP / DOWN
-              </p>
+                })
+              )}
             </section>
             {nextCursor && (
               <button
