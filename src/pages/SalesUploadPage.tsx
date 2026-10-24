@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   getSalesUploadHistory,
+  getSalesUploadStatus,
   uploadSalesFile,
   type SalesUploadHistoryResponse,
   type SalesUploadStatus,
@@ -13,6 +14,7 @@ const supportedExtensions = ['xlsx']
 const MAX_REQUESTABLE_PAGE = 5
 const HISTORY_PAGE_SIZE = 5
 const API_PAGE_SIZE = 10
+const STATUS_POLL_INTERVAL_MS = 1500
 
 function isUnauthorized(error: unknown) {
   return (
@@ -93,6 +95,14 @@ export function SalesUploadPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [processingUploadId, setProcessingUploadId] = useState<number | null>(
+    null,
+  )
+  const [processingMessage, setProcessingMessage] = useState('')
+  const [statusLookupFailed, setStatusLookupFailed] = useState(false)
+  const [pollAttempt, setPollAttempt] = useState(0)
+  const [historyRevision, setHistoryRevision] = useState(0)
+  const uploadAbort = useRef<AbortController | null>(null)
   const [validatedUploadId, setValidatedUploadId] = useState<number | null>(
     null,
   )
@@ -118,7 +128,61 @@ export function SalesUploadPage() {
     return () => {
       ignore = true
     }
-  }, [navigate, historyApiPage])
+  }, [navigate, historyApiPage, historyRevision])
+
+  useEffect(() => () => uploadAbort.current?.abort(), [])
+
+  useEffect(() => {
+    if (processingUploadId === null) return
+    const controller = new AbortController()
+    let timer: ReturnType<typeof setTimeout> | undefined
+
+    const poll = async () => {
+      try {
+        const result = await getSalesUploadStatus(
+          processingUploadId,
+          controller.signal,
+        )
+        if (controller.signal.aborted) return
+        setProcessingMessage(result.message)
+        if (result.status === 'COMPLETED') {
+          setValidatedUploadId(processingUploadId)
+          setProcessingUploadId(null)
+          setIsSubmitting(false)
+          setHistoryRevision((revision) => revision + 1)
+          return
+        }
+        if (result.status === 'FAILED') {
+          setSubmitError(
+            result.message ||
+              '매출 파일 처리에 실패했습니다. 파일을 확인해 주세요.',
+          )
+          setProcessingUploadId(null)
+          setIsSubmitting(false)
+          setHistoryRevision((revision) => revision + 1)
+          return
+        }
+        timer = setTimeout(poll, STATUS_POLL_INTERVAL_MS)
+      } catch (error) {
+        if (controller.signal.aborted) return
+        setIsSubmitting(false)
+        if (isUnauthorized(error)) {
+          navigate('/login')
+          return
+        }
+        setStatusLookupFailed(true)
+        setSubmitError(
+          '처리 상태를 확인하지 못했습니다. 파일을 다시 올리지 않고 상태를 다시 확인해 주세요.',
+        )
+      }
+    }
+
+    void poll()
+    return () => {
+      controller.abort()
+      clearTimeout(timer)
+    }
+  }, [processingUploadId, pollAttempt, navigate])
 
   const selectFile = (file?: File) => {
     if (!file) return
@@ -135,26 +199,38 @@ export function SalesUploadPage() {
   }
 
   const startAnalysis = async () => {
-    if (!selectedFile) return
+    if (!selectedFile || isSubmitting || processingUploadId !== null) return
+    const controller = new AbortController()
+    uploadAbort.current = controller
     setIsSubmitting(true)
     setSubmitError('')
+    setProcessingMessage('파일을 업로드하고 있어요.')
     try {
-      const result = await uploadSalesFile(selectedFile)
-      if (result.status !== 'COMPLETED') {
-        setSubmitError(
-          '매출 파일 처리가 완료된 뒤 다음 단계로 이동할 수 있습니다.',
-        )
-        return
+      const result = await uploadSalesFile(selectedFile, controller.signal)
+      if (controller.signal.aborted) return
+      if (result.status === 'COMPLETED') {
+        setValidatedUploadId(result.data.uploadId)
+        setIsSubmitting(false)
+        setHistoryRevision((revision) => revision + 1)
+      } else if (
+        result.status === 'PENDING' ||
+        result.status === 'PROCESSING'
+      ) {
+        setProcessingMessage(result.message)
+        setStatusLookupFailed(false)
+        setProcessingUploadId(result.data.uploadId)
+      } else {
+        setSubmitError(result.message || '매출 파일 처리에 실패했습니다.')
+        setIsSubmitting(false)
       }
-      setValidatedUploadId(result.data.uploadId)
     } catch (error) {
+      if (controller.signal.aborted) return
+      setIsSubmitting(false)
       if (isUnauthorized(error)) {
         navigate('/login')
         return
       }
       setSubmitError('매출 파일 업로드에 실패했습니다. 다시 시도해 주세요.')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -197,6 +273,7 @@ export function SalesUploadPage() {
           <input
             aria-label="매출 파일 선택"
             type="file"
+            disabled={isSubmitting || processingUploadId !== null}
             accept=".xlsx"
             onChange={(event) => selectFile(event.target.files?.[0])}
           />
@@ -216,7 +293,20 @@ export function SalesUploadPage() {
           </p>
         )}
 
-        {validatedUploadId !== null ? (
+        {statusLookupFailed && processingUploadId !== null ? (
+          <button
+            type="button"
+            className="primary-action full-width"
+            onClick={() => {
+              setStatusLookupFailed(false)
+              setSubmitError('')
+              setIsSubmitting(true)
+              setPollAttempt((attempt) => attempt + 1)
+            }}
+          >
+            상태 다시 확인
+          </button>
+        ) : validatedUploadId !== null ? (
           <button
             type="button"
             className="primary-action full-width"
@@ -237,7 +327,7 @@ export function SalesUploadPage() {
             {isSubmitting ? '분석 중...' : '분석 시작'}
           </button>
         )}
-        {isSubmitting && <AnalysisLoadingDialog />}
+        {isSubmitting && <AnalysisLoadingDialog message={processingMessage} />}
 
         <section className="connection-status">
           <p className="section-label">누적 반영 매출</p>

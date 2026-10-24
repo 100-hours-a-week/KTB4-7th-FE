@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { CoffeePourLoader } from './CoffeePourLoader'
 
-export function AnalysisLoadingDialog() {
+export function AnalysisLoadingDialog({ message }: { message?: string }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function AnalysisLoadingDialog() {
       <div role="status" aria-live="polite">
         <h2 id="analysis-loading-title">매출을 분석하고 있어요</h2>
         <p id="analysis-loading-description">
-          파일을 확인하고 분석을 준비하고 있어요.
+          {message || '파일을 확인하고 분석을 준비하고 있어요.'}
           <br />
           잠시만 기다려 주세요.
         </p>

@@ -7,19 +7,26 @@ import {
   within,
 } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { beforeEach, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { SalesUploadPage } from './SalesUploadPage'
 
-const { getSalesUploadHistory, uploadSalesFile, getNotifications, navigate } =
-  vi.hoisted(() => ({
-    getSalesUploadHistory: vi.fn(),
-    uploadSalesFile: vi.fn(),
-    getNotifications: vi.fn(),
-    navigate: vi.fn(),
-  }))
+const {
+  getSalesUploadHistory,
+  getSalesUploadStatus,
+  uploadSalesFile,
+  getNotifications,
+  navigate,
+} = vi.hoisted(() => ({
+  getSalesUploadHistory: vi.fn(),
+  getSalesUploadStatus: vi.fn(),
+  uploadSalesFile: vi.fn(),
+  getNotifications: vi.fn(),
+  navigate: vi.fn(),
+}))
 
 vi.mock('../features/sales/api/salesApi', () => ({
   getSalesUploadHistory,
+  getSalesUploadStatus,
   uploadSalesFile,
 }))
 
@@ -61,6 +68,7 @@ beforeEach(() => {
   })
   getSalesUploadHistory.mockReset()
   uploadSalesFile.mockReset()
+  getSalesUploadStatus.mockReset()
   getNotifications.mockReset()
   navigate.mockReset()
   getSalesUploadHistory.mockResolvedValue(emptyHistory)
@@ -71,12 +79,16 @@ beforeEach(() => {
   })
 })
 
+afterEach(() => vi.useRealTimers())
+
 test('지원하지 않는 매출 파일을 선택하면 오류를 표시한다', async () => {
   render(
     <MemoryRouter>
       <SalesUploadPage />
     </MemoryRouter>,
   )
+
+  await waitFor(() => expect(getSalesUploadHistory).toHaveBeenCalled())
 
   fireEvent.change(screen.getByLabelText('매출 파일 선택'), {
     target: {
@@ -315,4 +327,146 @@ test('분석 요청을 기다리는 동안 진행 상태를 알리고 중복 제
   })
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(navigate).not.toHaveBeenCalled()
+})
+
+function uploadStatus(
+  status: string,
+  message = '매출 파일을 처리하고 있습니다.',
+) {
+  return {
+    message,
+    status,
+    failReason: null,
+    data: {
+      uploadId: 10,
+      analysisRunId: 20,
+      processingPhase: null,
+      analysisId: status === 'COMPLETED' ? 30 : null,
+      aiInsightStatus: 'PENDING',
+      retryable: false,
+    },
+  }
+}
+
+async function startAcceptedUpload() {
+  uploadSalesFile.mockResolvedValue({
+    status: 'PENDING',
+    message: '접수했습니다.',
+    data: { uploadId: 10, analysisRunId: 20, processingPhase: null },
+  })
+  const result = render(
+    <MemoryRouter>
+      <SalesUploadPage />
+    </MemoryRouter>,
+  )
+  await act(async () => {})
+  await act(async () => {
+    fireEvent.change(screen.getByLabelText('매출 파일 선택'), {
+      target: { files: [new File(['x'], 'sales.xlsx')] },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '분석 시작' }))
+  })
+  return result
+}
+
+test('비동기 접수 후 상태를 반복 조회하고 완료된 다음에만 다음 단계를 허용한다', async () => {
+  vi.useFakeTimers()
+  getSalesUploadStatus
+    .mockResolvedValueOnce(uploadStatus('PENDING', '처리를 기다리고 있습니다.'))
+    .mockResolvedValueOnce(
+      uploadStatus('PROCESSING', '파일을 검증하고 있습니다.'),
+    )
+    .mockResolvedValueOnce(uploadStatus('COMPLETED'))
+  await startAcceptedUpload()
+  expect(screen.getByRole('dialog')).toHaveTextContent(
+    '처리를 기다리고 있습니다.',
+  )
+  expect(
+    screen.queryByRole('button', { name: '다음 단계' }),
+  ).not.toBeInTheDocument()
+  expect(screen.getByLabelText('매출 파일 선택')).toBeDisabled()
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1500)
+  })
+  expect(screen.getByRole('dialog')).toHaveTextContent(
+    '파일을 검증하고 있습니다.',
+  )
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1500)
+  })
+  expect(screen.getByRole('button', { name: '다음 단계' })).toBeEnabled()
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(6000)
+  })
+  expect(getSalesUploadStatus).toHaveBeenCalledTimes(3)
+  expect(uploadSalesFile).toHaveBeenCalledTimes(1)
+})
+
+test('비동기 처리 실패는 상태 응답의 안내를 표시하고 조회를 종료한다', async () => {
+  vi.useFakeTimers()
+  getSalesUploadStatus.mockResolvedValue(
+    uploadStatus('FAILED', '필수 시트가 없습니다.'),
+  )
+  await startAcceptedUpload()
+  expect(screen.getByRole('alert')).toHaveTextContent('필수 시트가 없습니다.')
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('button', { name: '다음 단계' }),
+  ).not.toBeInTheDocument()
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(5000)
+  })
+  expect(getSalesUploadStatus).toHaveBeenCalledTimes(1)
+})
+
+test('상태 조회 오류는 같은 업로드를 다시 조회하고 파일을 재전송하지 않는다', async () => {
+  getSalesUploadStatus.mockRejectedValueOnce(new Error('offline'))
+  await startAcceptedUpload()
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    '상태를 다시 확인해 주세요.',
+  )
+  getSalesUploadStatus.mockResolvedValueOnce(uploadStatus('COMPLETED'))
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: '상태 다시 확인' }))
+  })
+  expect(screen.getByRole('button', { name: '다음 단계' })).toBeEnabled()
+  expect(uploadSalesFile).toHaveBeenCalledTimes(1)
+  expect(getSalesUploadStatus).toHaveBeenCalledTimes(2)
+})
+
+test('상태 조회 중 인증이 만료되면 로그인으로 이동한다', async () => {
+  getSalesUploadStatus.mockRejectedValue({ response: { status: 401 } })
+  await startAcceptedUpload()
+  expect(navigate).toHaveBeenCalledWith('/login')
+})
+
+test('화면을 벗어나면 예약된 상태 조회를 중단한다', async () => {
+  vi.useFakeTimers()
+  getSalesUploadStatus.mockResolvedValue(uploadStatus('PROCESSING'))
+  const { unmount } = await startAcceptedUpload()
+  const signal = getSalesUploadStatus.mock.calls[0][1] as AbortSignal
+  unmount()
+  expect(signal.aborted).toBe(true)
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(5000)
+  })
+  expect(getSalesUploadStatus).toHaveBeenCalledTimes(1)
+})
+
+test('진행 중인 상태 조회 응답이 늦게 도착해도 화면 종료 후 다시 조회하지 않는다', async () => {
+  vi.useFakeTimers()
+  let resolveStatus!: (value: unknown) => void
+  getSalesUploadStatus.mockReturnValue(
+    new Promise((resolve) => {
+      resolveStatus = resolve
+    }),
+  )
+  const { unmount } = await startAcceptedUpload()
+  unmount()
+  await act(async () => {
+    resolveStatus(uploadStatus('PROCESSING'))
+    await vi.advanceTimersByTimeAsync(5000)
+  })
+  expect(getSalesUploadStatus).toHaveBeenCalledTimes(1)
 })
