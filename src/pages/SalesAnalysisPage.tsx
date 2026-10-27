@@ -267,6 +267,7 @@ export function SalesAnalysisPage() {
   )
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null)
   const [analysisView, setAnalysisView] = useState<'sales' | 'profit'>('sales')
+  const [hasVisitedProfitView, setHasVisitedProfitView] = useState(false)
   const [status, setStatus] = useState<'COMPLETED' | 'EMPTY' | null>(null)
   const [data, setData] = useState<SalesAnalysisData | null>(null)
   const [expectedForecast, setExpectedForecast] =
@@ -835,22 +836,29 @@ export function SalesAnalysisPage() {
               type="button"
               className={analysisView === 'profit' ? 'active' : ''}
               aria-pressed={analysisView === 'profit'}
-              onClick={() => setAnalysisView('profit')}
+              onClick={() => {
+                setAnalysisView('profit')
+                setHasVisitedProfitView(true)
+              }}
             >
               순이익 분석
             </button>
           </div>
         )}
-        {analysisView === 'profit' && selectedMonth ? (
-          <SalesProfitAnalysisContent
-            targetMonth={selectedMonth}
-            uploadId={
-              monthOptions.find(
-                (option) => option.targetMonth === selectedMonth,
-              )?.uploadId ?? 0
-            }
-          />
-        ) : !isLoading && (status === 'EMPTY' || error) ? (
+        {hasVisitedProfitView && selectedMonth && (
+          <div hidden={analysisView !== 'profit'}>
+            <SalesProfitAnalysisContent
+              targetMonth={selectedMonth}
+              uploadId={
+                monthOptions.find(
+                  (option) => option.targetMonth === selectedMonth,
+                )?.uploadId ?? 0
+              }
+            />
+          </div>
+        )}
+        {analysisView === 'profit' ? null : !isLoading &&
+          (status === 'EMPTY' || error) ? (
           <EmptyState
             title={
               error
