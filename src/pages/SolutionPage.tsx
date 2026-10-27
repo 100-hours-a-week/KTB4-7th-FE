@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   getTodaySolution,
@@ -315,10 +315,8 @@ function SolutionResults({
   helperText: string | null
 }) {
   const carouselRef = useRef<HTMLDivElement>(null)
-  const settleTimerRef = useRef<number | undefined>(undefined)
   const [activeIndex, setActiveIndex] = useState(0)
   const isCarousel = cards.length > 1
-  const visibleCards = isCarousel ? [...cards, ...cards, ...cards] : cards
 
   function getSlideStep(element: HTMLDivElement) {
     const first = element.children[0] as HTMLElement | undefined
@@ -326,48 +324,19 @@ function SolutionResults({
     return first && second ? second.offsetLeft - first.offsetLeft : 0
   }
 
-  useLayoutEffect(() => {
-    const element = carouselRef.current
-    if (!element || !isCarousel) return
-    element.scrollLeft = getSlideStep(element) * cards.length
-  }, [cards.length, isCarousel])
-
-  useEffect(() => () => window.clearTimeout(settleTimerRef.current), [])
-
   function handleCarouselScroll(element: HTMLDivElement) {
     const step = getSlideStep(element)
     if (!step) return
     const position = Math.round(element.scrollLeft / step)
-    setActiveIndex(((position % cards.length) + cards.length) % cards.length)
-    window.clearTimeout(settleTimerRef.current)
-    settleTimerRef.current = window.setTimeout(() => {
-      const settledPosition = Math.round(element.scrollLeft / step)
-      if (settledPosition < cards.length) {
-        element.scrollLeft += cards.length * step
-      } else if (settledPosition >= cards.length * 2) {
-        element.scrollLeft -= cards.length * step
-      }
-    }, 140)
+    const clamped = Math.min(Math.max(position, 0), cards.length - 1)
+    setActiveIndex(clamped)
   }
 
   function goToCard(index: number) {
     const element = carouselRef.current
     if (!element) return
     const step = getSlideStep(element)
-    const position = Math.round(element.scrollLeft / step)
-    const currentIndex =
-      ((position % cards.length) + cards.length) % cards.length
-    const difference = index - currentIndex
-    const shortestDifference =
-      Math.abs(difference) > cards.length / 2
-        ? difference > 0
-          ? difference - cards.length
-          : difference + cards.length
-        : difference
-    element.scrollTo({
-      left: element.scrollLeft + shortestDifference * step,
-      behavior: 'smooth',
-    })
+    element.scrollTo({ left: index * step, behavior: 'smooth' })
   }
 
   return (
@@ -409,18 +378,13 @@ function SolutionResults({
             onScroll={(event) => handleCarouselScroll(event.currentTarget)}
             aria-label="오늘의 솔루션 카드"
           >
-            {visibleCards.map((card, position) => {
-              const index = position % cards.length
+            {cards.map((card, index) => {
               const keyword = getSolutionCardKeyword(card.title)
-              const isCopy =
-                isCarousel && Math.floor(position / cards.length) !== 1
               return (
                 <Link
                   className={`solution-results-card${index === 0 ? ' solution-results-card--first' : ''}`}
-                  key={`${position}-${card.id}`}
+                  key={card.id}
                   to={`/solution/${bundleId}/${card.id}`}
-                  aria-hidden={isCopy || undefined}
-                  tabIndex={isCopy ? -1 : undefined}
                 >
                   <div className="solution-results-card-top">
                     <span className="solution-results-card-rank">
