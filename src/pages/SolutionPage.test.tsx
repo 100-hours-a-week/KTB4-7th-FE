@@ -109,7 +109,7 @@ test('페이지 표시로 솔루션을 선택하고 스크롤 위치를 반영�
       fireEvent.scroll(carousel)
     },
   })
-  carousel.scrollLeft = 900
+  carousel.scrollLeft = 0
   fireEvent.scroll(carousel)
 
   expect(
@@ -119,11 +119,17 @@ test('페이지 표시로 솔루션을 선택하고 스크롤 위치를 반영�
     screen.queryByRole('button', { name: '이전 솔루션' }),
   ).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: '2번 솔루션 보기' }))
-  expect(carousel.scrollLeft).toBe(1200)
+  expect(carousel.scrollLeft).toBe(300)
   expect(
     screen.getByRole('button', { name: '2번 솔루션 보기' }),
   ).toHaveAttribute('aria-current', 'true')
-  carousel.scrollLeft = 1500
+  carousel.scrollLeft = 600
+  fireEvent.scroll(carousel)
+  expect(
+    screen.getByRole('button', { name: '3번 솔루션 보기' }),
+  ).toHaveAttribute('aria-current', 'true')
+
+  carousel.scrollLeft = 900
   fireEvent.scroll(carousel)
   expect(
     screen.getByRole('button', { name: '3번 솔루션 보기' }),
