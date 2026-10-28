@@ -990,6 +990,55 @@ test('월을 유지하며 매출 분석과 순이익 분석을 전환한다', as
   expect(screen.getByLabelText('조회할 월')).toHaveValue('2026-08')
 })
 
+test('순이익 분석 탭을 다시 방문해도 재조회하지 않고 즉시 표시한다', async () => {
+  getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
+  getSalesAnalysis.mockResolvedValue(completedResponse)
+  getProfitAnalysis.mockResolvedValue({
+    status: 'COMPLETED',
+    message: '조회에 성공했습니다.',
+    data: {
+      summary: {
+        totalNetAmount: 1000,
+        ingredientCost: 400,
+        fixedCost: 100,
+        totalCost: 500,
+        netProfit: 500,
+        netProfitRate: 0.5,
+        previousNetProfit: 400,
+        netProfitChangeRate: 0.25,
+        previousTotalCost: 400,
+        totalCostChangeRate: 0.25,
+        previousNetProfitRate: 0.4,
+        netProfitRateDifference: 0.1,
+      },
+      dailyProfits: [{ date: '2026-09-01', netProfit: 500 }],
+      weekdayProfits: [{ dayOfWeek: 'SATURDAY', netProfit: 500 }],
+      aiInsight: { status: 'COMPLETED', insights: ['순이익이 증가했어요.'] },
+    },
+  })
+
+  render(
+    <MemoryRouter>
+      <SalesAnalysisPage />
+    </MemoryRouter>,
+  )
+  await screen.findByText('₩7,920,000')
+
+  fireEvent.click(screen.getByRole('button', { name: '순이익 분석' }))
+  expect(await screen.findByText('순이익이 증가했어요.')).toBeInTheDocument()
+  expect(getProfitAnalysis).toHaveBeenCalledTimes(1)
+
+  fireEvent.click(screen.getByRole('button', { name: '매출 분석' }))
+  expect(await screen.findByText('₩7,920,000')).toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: '순이익 분석' }))
+  expect(screen.getByText('순이익이 증가했어요.')).toBeInTheDocument()
+  expect(
+    screen.queryByText('순이익 분석을 불러오는 중...'),
+  ).not.toBeInTheDocument()
+  expect(getProfitAnalysis).toHaveBeenCalledTimes(1)
+})
+
 test('순이익 비용이 누락되면 해당 파일의 입력 화면으로 안내한다', async () => {
   getSalesAvailableMonths.mockResolvedValue({ months: ['2026-09'] })
   getSalesAnalysis.mockResolvedValue(completedResponse)
