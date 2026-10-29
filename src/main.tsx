@@ -5,6 +5,7 @@ import { App } from './app/App'
 import { initializeCsrfToken } from './shared/api/http'
 import { initializeGoogleAnalytics } from './shared/lib/googleAnalytics'
 import { initializeSentry } from './shared/lib/sentry'
+import { initializeForegroundPushMessages } from './features/notifications/lib/firebaseMessaging'
 import './index.css'
 import './solution-results.css'
 
@@ -21,6 +22,7 @@ if (rootElement === null) {
 
 void initializeCsrfToken().catch(() => undefined)
 initializeGoogleAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID)
+void initializeForegroundPushMessages().catch(() => undefined)
 
 createRoot(rootElement, {
   onCaughtError: reactErrorHandler(),

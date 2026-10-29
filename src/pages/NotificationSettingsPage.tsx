@@ -7,6 +7,15 @@ import {
 } from '../features/notifications/api/notificationApi'
 import { AppShell } from '../shared/ui/AppShell'
 import { ToggleSwitch } from '../shared/ui/ToggleSwitch'
+import {
+  disableBrowserPush,
+  enableBrowserPush,
+  getFcmAvailability,
+  registerPushTokenIfPermitted,
+  shouldRegisterPushAfterLogin,
+} from '../features/notifications/lib/firebaseMessaging'
+
+type FcmAvailability = 'ready' | 'missing-config' | 'unsupported'
 
 function isUnauthorized(error: unknown) {
   return (
@@ -26,6 +35,12 @@ export function NotificationSettingsPage() {
   const [pendingKey, setPendingKey] = useState<
     keyof NotificationPreferences | null
   >(null)
+  const [fcmAvailability, setFcmAvailability] =
+    useState<FcmAvailability | null>(null)
+  const [isPushEnabled, setIsPushEnabled] = useState(false)
+  const [isPushPending, setIsPushPending] = useState(false)
+  const [pushError, setPushError] = useState('')
+  const [pushMessage, setPushMessage] = useState('')
 
   useEffect(() => {
     let ignore = false
@@ -49,6 +64,37 @@ export function NotificationSettingsPage() {
     }
   }, [navigate])
 
+  useEffect(() => {
+    let ignore = false
+
+    const initializePush = async () => {
+      const availability = await getFcmAvailability()
+      if (ignore) return
+      setFcmAvailability(availability)
+
+      if (availability !== 'ready' || !shouldRegisterPushAfterLogin()) return
+
+      setIsPushPending(true)
+      try {
+        const registered = await registerPushTokenIfPermitted()
+        if (!ignore && registered) setIsPushEnabled(true)
+      } catch {
+        if (!ignore) {
+          setPushError(
+            '브라우저 푸시 토큰을 등록하지 못했습니다. 다시 시도해 주세요.',
+          )
+        }
+      } finally {
+        if (!ignore) setIsPushPending(false)
+      }
+    }
+
+    void initializePush()
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   const handleToggle = async (
     key: keyof NotificationPreferences,
     value: boolean,
@@ -70,6 +116,43 @@ export function NotificationSettingsPage() {
       setError('알림 설정을 변경하지 못했습니다. 다시 시도해 주세요.')
     } finally {
       setPendingKey(null)
+    }
+  }
+
+  const handlePushToggle = async (enabled: boolean) => {
+    setIsPushPending(true)
+    setPushError('')
+    setPushMessage('')
+
+    try {
+      if (enabled) {
+        await enableBrowserPush()
+        setIsPushEnabled(true)
+        setPushMessage('이 브라우저에서 푸시 알림을 받을 수 있어요.')
+      } else {
+        const serverTokenRemoved = await disableBrowserPush()
+        setIsPushEnabled(false)
+        setPushMessage(
+          serverTokenRemoved
+            ? '이 브라우저의 푸시 알림을 껐어요.'
+            : '브라우저 토큰은 삭제했지만 서버 등록 해제는 확인하지 못했습니다.',
+        )
+      }
+    } catch (pushRequestError) {
+      if (
+        pushRequestError instanceof Error &&
+        pushRequestError.message === 'fcm_permission_denied'
+      ) {
+        setPushError(
+          '브라우저 알림 권한이 거부되어 있어요. 브라우저 설정에서 권한을 허용해 주세요.',
+        )
+      } else {
+        setPushError(
+          '푸시 알림 설정을 변경하지 못했습니다. 다시 시도해 주세요.',
+        )
+      }
+    } finally {
+      setIsPushPending(false)
     }
   }
 
@@ -126,6 +209,28 @@ export function NotificationSettingsPage() {
                 onChange={(value) =>
                   handleToggle('rankingChangeEnabled', value)
                 }
+              />
+            </div>
+            <div className="notification-preference-row">
+              <div>
+                <strong>브라우저 푸시 알림</strong>
+                <p>
+                  {fcmAvailability === 'missing-config'
+                    ? 'Firebase 웹 설정이 연결되면 사용할 수 있어요.'
+                    : fcmAvailability === 'unsupported'
+                      ? '현재 브라우저에서는 웹 푸시를 지원하지 않아요.'
+                      : isPushEnabled
+                        ? '이 브라우저에서 새 알림을 푸시로 받고 있어요.'
+                        : '알림 권한을 허용하면 새 알림을 푸시로 받을 수 있어요.'}
+                </p>
+                {pushError && <p role="alert">{pushError}</p>}
+                {pushMessage && <p role="status">{pushMessage}</p>}
+              </div>
+              <ToggleSwitch
+                label="브라우저 푸시 알림"
+                checked={isPushEnabled}
+                disabled={isPushPending || fcmAvailability !== 'ready'}
+                onChange={(value) => void handlePushToggle(value)}
               />
             </div>
           </div>

@@ -7,6 +7,7 @@ import {
   type UserProfile,
 } from '../features/auth/api/userApi'
 import { AppShell } from '../shared/ui/AppShell'
+import { disableBrowserPush } from '../features/notifications/lib/firebaseMessaging'
 
 type LocationState = { passwordChanged?: boolean } | null
 
@@ -56,6 +57,10 @@ export function ProfilePage() {
   }, [navigate])
 
   const handleLogout = async () => {
+    await disableBrowserPush({
+      forceLocalRemoval: true,
+      preservePreference: true,
+    }).catch(() => undefined)
     try {
       await logout()
     } finally {
