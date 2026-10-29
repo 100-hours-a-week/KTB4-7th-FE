@@ -10,12 +10,27 @@ import { EmptyState } from '../shared/ui/EmptyState'
 import { AppShell } from '../shared/ui/AppShell'
 import { getSolutionCardKeyword } from './solutionCardVisual'
 
+const SOLUTION_PREPARING_MESSAGE = '오늘의 솔루션을 준비하고 있습니다.'
+const LEGACY_SOLUTION_PREPARING_MESSAGE =
+  '오늘의 솔루션은 매일 자정에 준비됩니다.'
+
 function isUnauthorized(error: unknown) {
   return (
     typeof error === 'object' &&
     error !== null &&
     'response' in error &&
     (error as { response?: { status?: number } }).response?.status === 401
+  )
+}
+
+function isSolutionInProgress(
+  status: SolutionTodayStatus | null,
+  message: string,
+) {
+  return (
+    status === 'PENDING' ||
+    status === 'GENERATING' ||
+    (status === 'EMPTY' && message === SOLUTION_PREPARING_MESSAGE)
   )
 }
 
@@ -61,7 +76,7 @@ export function SolutionPage() {
         setBundleId(response.data.solutionBundleId)
         setCards(response.data.solutionCards)
         setHelperText(response.data.helperText ?? null)
-        if (response.status === 'PENDING' || response.status === 'GENERATING') {
+        if (isSolutionInProgress(response.status, response.message)) {
           refreshTimer = window.setTimeout(() => {
             if (!ignore) setRefreshKey((previous) => previous + 1)
           }, 3000)
@@ -165,11 +180,9 @@ export function SolutionPage() {
     )
   }
 
-  if (
-    status === 'EMPTY' &&
-    (message === '오늘의 솔루션은 매일 자정에 준비됩니다.' ||
-      message === '오늘의 솔루션을 준비하고 있습니다.')
-  ) {
+  const isInProgress = isSolutionInProgress(status, message)
+
+  if (status === 'EMPTY' && message === LEGACY_SOLUTION_PREPARING_MESSAGE) {
     return (
       <AppShell title="솔루션" contentClassName="solution-empty-content">
         <EmptyState
@@ -193,7 +206,10 @@ export function SolutionPage() {
     )
   }
 
-  if (status === 'EMPTY' || status === 'INSUFFICIENT_HISTORY') {
+  if (
+    (status === 'EMPTY' && !isInProgress) ||
+    status === 'INSUFFICIENT_HISTORY'
+  ) {
     return (
       <AppShell title="솔루션">
         <EmptyState
@@ -209,43 +225,49 @@ export function SolutionPage() {
     )
   }
 
-  if (status === 'PENDING' || status === 'GENERATING' || status === 'FAILED') {
-    const isGenerating = status === 'PENDING' || status === 'GENERATING'
+  if (isInProgress || status === 'FAILED') {
     return (
-      <AppShell title="솔루션">
+      <AppShell
+        title="솔루션"
+        contentClassName={
+          status === 'EMPTY' ? 'solution-empty-content' : undefined
+        }
+      >
         <div className="solution-page solution-status-page">
           <section
             className={`solution-status-modal solution-status-modal--${
-              isGenerating ? 'progress' : 'failed'
+              isInProgress ? 'progress' : 'failed'
             }`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="solution-status-title"
           >
             <p className="solution-status-kicker">
-              {isGenerating ? 'STATUS REPORT / 01' : 'ISSUE REPORT / 01'}
+              {isInProgress ? 'STATUS REPORT / 01' : 'ISSUE REPORT / 01'}
             </p>
             <p className="solution-status-icon" aria-hidden="true">
-              {isGenerating ? '…' : '!'}
+              {isInProgress ? '…' : '!'}
             </p>
             <h2 id="solution-status-title">
-              {isGenerating
-                ? '오늘의 솔루션을 생성하고 있어요'
+              {isInProgress
+                ? status === 'EMPTY'
+                  ? '오늘의 솔루션을 준비하고 있어요'
+                  : '오늘의 솔루션을 생성하고 있어요'
                 : '솔루션 생성에 실패했어요'}
             </h2>
             <p>
               {message ||
-                (isGenerating
+                (isInProgress
                   ? '잠시만 기다리면 준비된 솔루션을 보여드릴게요.'
                   : '잠시 후 다시 확인해 주세요.')}
             </p>
-            {!isGenerating && helperText && (
+            {!isInProgress && helperText && (
               <div className="solution-status-note">
                 <span>DATA NOTE</span>
                 <p>{helperText}</p>
               </div>
             )}
-            {isGenerating ? (
+            {isInProgress ? (
               <span className="solution-status-polling">
                 자동으로 확인하고 있어요
               </span>
