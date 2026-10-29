@@ -53,6 +53,14 @@ export type NotificationPreferenceUpdateRequest = {
   rankingChangeEnabled?: boolean
 }
 
+export async function registerFcmToken(token: string) {
+  await http.post('/v3/notifications/fcm-tokens', { token })
+}
+
+export async function unregisterFcmToken(token: string) {
+  await http.delete('/v3/notifications/fcm-tokens', { data: { token } })
+}
+
 export async function getNotificationPreferences() {
   return (
     await http.get<ApiResponse<{ preferences: NotificationPreferences }>>(

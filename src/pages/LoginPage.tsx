@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { login } from '../features/auth/api/loginApi'
+import { registerPushTokenIfPermitted } from '../features/notifications/lib/firebaseMessaging'
 import { ClearableInput } from '../shared/ui/ClearableInput'
 
 type LoginForm = {
@@ -51,6 +52,7 @@ export function LoginPage() {
     setError('')
     try {
       await login(values)
+      void registerPushTokenIfPermitted().catch(() => undefined)
       navigate(
         returnTo
           ? `${returnTo.pathname}${returnTo.search ?? ''}${returnTo.hash ?? ''}`
