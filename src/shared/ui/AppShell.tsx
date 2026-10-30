@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getNotifications } from '../../features/notifications/api/notificationApi'
 
 function BellIcon() {
@@ -104,6 +104,7 @@ export function AppShell({
   children: ReactNode
 }) {
   const [hasUnread, setHasUnread] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     let ignore = false
@@ -154,7 +155,14 @@ export function AppShell({
           </span>
           <span>솔루션</span>
         </NavLink>
-        <NavLink to="/sales/analysis">
+        <NavLink
+          to="/sales/analysis"
+          className={
+            location.pathname === '/sales/calendar'
+              ? 'sales-tab-active'
+              : undefined
+          }
+        >
           <span className="bottom-tab-icon">
             <TabIcon name="sales" />
           </span>

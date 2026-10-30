@@ -440,6 +440,7 @@ export function SalesAnalysisPage() {
             description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
             action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
           />
+          <Link to="/sales/calendar">매출 달력 보기</Link>
           <GrowthRankingEntry />
         </div>
       </AppShell>
@@ -801,6 +802,7 @@ export function SalesAnalysisPage() {
             <p>SALES ANALYSIS</p>
             <h1>매출 분석</h1>
             <span>월을 선택해서 매출 흐름을 한눈에 확인해보세요</span>
+            <Link to="/sales/calendar">매출 달력 보기</Link>
           </div>
           {availableMonths && availableMonths.length > 0 && (
             <select
