@@ -16,6 +16,7 @@ import { StoreProfilePage } from '../pages/StoreProfilePage'
 import { MenuPage } from '../pages/MenuPage'
 import { SalesUploadPage } from '../pages/SalesUploadPage'
 import { SalesAnalysisPage } from '../pages/SalesAnalysisPage'
+import { SalesCalendarPage } from '../pages/SalesCalendarPage'
 import { GrowthRankingPage } from '../pages/GrowthRankingPage'
 import { SalesProfitCostEntryPage } from '../pages/SalesProfitCostEntryPage'
 import { NotFoundPage } from '../pages/NotFoundPage'
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
         element: <SalesProfitCostEntryPage />,
       },
       { path: '/sales/analysis', element: <SalesAnalysisPage /> },
+      { path: '/sales/calendar', element: <SalesCalendarPage /> },
       { path: '/ranking', element: <GrowthRankingPage /> },
     ],
   },
