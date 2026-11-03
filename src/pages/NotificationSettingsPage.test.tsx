@@ -8,11 +8,20 @@ const {
   getNotificationPreferences,
   updateNotificationPreferences,
   navigate,
+  enableBrowserPush,
+  getFcmAvailability,
 } = vi.hoisted(() => ({
   getNotifications: vi.fn(),
   getNotificationPreferences: vi.fn(),
   updateNotificationPreferences: vi.fn(),
   navigate: vi.fn(),
+  enableBrowserPush: vi.fn(),
+  getFcmAvailability: vi.fn(),
+}))
+
+vi.mock('../features/notifications/lib/firebaseMessaging', () => ({
+  enableBrowserPush,
+  getFcmAvailability,
 }))
 
 vi.mock('../features/notifications/api/notificationApi', () => ({
@@ -32,6 +41,10 @@ beforeEach(() => {
   getNotificationPreferences.mockReset()
   updateNotificationPreferences.mockReset()
   navigate.mockReset()
+  enableBrowserPush.mockReset()
+  getFcmAvailability.mockReset()
+  getFcmAvailability.mockResolvedValue('ready')
+  enableBrowserPush.mockResolvedValue(undefined)
 
   // AppShell이 알림 배지 확인용으로 같은 모듈의 getNotifications를 호출하므로
   // 이 페이지의 동작과 무관하게 항상 안전한 기본 응답을 준다.
@@ -40,6 +53,25 @@ beforeEach(() => {
     nextCursor: null,
     data: { items: [] },
   })
+})
+
+test('웹푸시 토글 없이 브라우저 푸시를 자동 등록한다', async () => {
+  getNotificationPreferences.mockResolvedValue({
+    solutionEnabled: true,
+    salesUploadReminderEnabled: true,
+    rankingChangeEnabled: true,
+  })
+
+  render(
+    <MemoryRouter>
+      <NotificationSettingsPage />
+    </MemoryRouter>,
+  )
+
+  await waitFor(() => expect(enableBrowserPush).toHaveBeenCalledTimes(1))
+  expect(
+    screen.queryByRole('switch', { name: '브라우저 푸시 알림' }),
+  ).not.toBeInTheDocument()
 })
 
 test('알림 설정을 불러와 토글 상태로 표시한다', async () => {
