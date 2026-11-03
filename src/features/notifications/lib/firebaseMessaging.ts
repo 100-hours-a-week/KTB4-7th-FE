@@ -62,14 +62,6 @@ function canUseBrowserPush() {
   )
 }
 
-function isPushExplicitlyDisabled() {
-  try {
-    return window.localStorage.getItem(pushPreferenceKey) === 'false'
-  } catch {
-    return false
-  }
-}
-
 function setPushPreference(enabled: boolean) {
   try {
     window.localStorage.setItem(pushPreferenceKey, String(enabled))
@@ -103,7 +95,8 @@ function getPendingUnregisterTokens() {
     const parsed: unknown = JSON.parse(raw)
     if (Array.isArray(parsed)) {
       return parsed.filter(
-        (token): token is string => typeof token === 'string' && token.length > 0,
+        (token): token is string =>
+          typeof token === 'string' && token.length > 0,
       )
     }
 
@@ -116,7 +109,10 @@ function getPendingUnregisterTokens() {
 function setPendingUnregisterTokens(tokens: string[]) {
   try {
     if (tokens.length > 0) {
-      window.localStorage.setItem(pendingUnregisterTokenKey, JSON.stringify(tokens))
+      window.localStorage.setItem(
+        pendingUnregisterTokenKey,
+        JSON.stringify(tokens),
+      )
     } else {
       window.localStorage.removeItem(pendingUnregisterTokenKey)
     }
@@ -136,7 +132,9 @@ async function retryPendingUnregisterTokens() {
   for (const token of pendingTokens) {
     await unregisterFcmToken(token)
     setPendingUnregisterTokens(
-      getPendingUnregisterTokens().filter((pendingToken) => pendingToken !== token),
+      getPendingUnregisterTokens().filter(
+        (pendingToken) => pendingToken !== token,
+      ),
     )
   }
 }
@@ -209,11 +207,7 @@ export async function getFcmAvailability(): Promise<FcmAvailability> {
 }
 
 export function shouldRegisterPushAfterLogin() {
-  return (
-    canUseBrowserPush() &&
-    Notification.permission === 'granted' &&
-    !isPushExplicitlyDisabled()
-  )
+  return canUseBrowserPush() && Notification.permission === 'granted'
 }
 
 export async function registerPushTokenIfPermitted() {
