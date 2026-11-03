@@ -55,7 +55,7 @@ beforeEach(() => {
   })
 })
 
-test('웹푸시 토글 없이 브라우저 푸시를 자동 등록한다', async () => {
+test('웹푸시 설정 행 없이 브라우저 푸시를 자동 등록한다', async () => {
   getNotificationPreferences.mockResolvedValue({
     solutionEnabled: true,
     salesUploadReminderEnabled: true,
@@ -72,6 +72,7 @@ test('웹푸시 토글 없이 브라우저 푸시를 자동 등록한다', async
   expect(
     screen.queryByRole('switch', { name: '브라우저 푸시 알림' }),
   ).not.toBeInTheDocument()
+  expect(screen.queryByText('브라우저 푸시 알림')).not.toBeInTheDocument()
 })
 
 test('알림 설정을 불러와 토글 상태로 표시한다', async () => {

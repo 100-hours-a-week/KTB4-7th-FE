@@ -12,8 +12,6 @@ import {
   getFcmAvailability,
 } from '../features/notifications/lib/firebaseMessaging'
 
-type FcmAvailability = 'ready' | 'missing-config' | 'unsupported'
-
 function isUnauthorized(error: unknown) {
   return (
     typeof error === 'object' &&
@@ -32,11 +30,7 @@ export function NotificationSettingsPage() {
   const [pendingKey, setPendingKey] = useState<
     keyof NotificationPreferences | null
   >(null)
-  const [fcmAvailability, setFcmAvailability] =
-    useState<FcmAvailability | null>(null)
-  const [isPushPending, setIsPushPending] = useState(false)
   const [pushError, setPushError] = useState('')
-  const [isPushEnabled, setIsPushEnabled] = useState(false)
 
   useEffect(() => {
     let ignore = false
@@ -66,14 +60,11 @@ export function NotificationSettingsPage() {
     const initializePush = async () => {
       const availability = await getFcmAvailability()
       if (ignore) return
-      setFcmAvailability(availability)
 
       if (availability !== 'ready') return
 
-      setIsPushPending(true)
       try {
         await enableBrowserPush()
-        if (!ignore) setIsPushEnabled(true)
       } catch (requestError) {
         if (!ignore) {
           const status =
@@ -92,8 +83,6 @@ export function NotificationSettingsPage() {
                 : '웹푸시 등록에 실패했습니다. 잠시 후 다시 시도해 주세요.',
           )
         }
-      } finally {
-        if (!ignore) setIsPushPending(false)
       }
     }
 
@@ -135,6 +124,7 @@ export function NotificationSettingsPage() {
           <h1>알림 설정</h1>
         </header>
         {error && <p role="alert">{error}</p>}
+        {pushError && <p role="alert">{pushError}</p>}
         {isLoading || !preferences ? (
           <p>불러오는 중...</p>
         ) : (
@@ -181,23 +171,6 @@ export function NotificationSettingsPage() {
                   handleToggle('rankingChangeEnabled', value)
                 }
               />
-            </div>
-            <div className="notification-preference-row">
-              <div>
-                <strong>브라우저 푸시 알림</strong>
-                <p>
-                  {fcmAvailability === 'missing-config'
-                    ? 'Firebase 웹 설정이 연결되면 사용할 수 있어요.'
-                    : fcmAvailability === 'unsupported'
-                      ? '현재 브라우저에서는 웹 푸시를 지원하지 않아요.'
-                      : isPushPending
-                        ? '웹푸시를 연결하고 있어요.'
-                        : isPushEnabled
-                          ? '이 브라우저에서 새 알림을 푸시로 받고 있어요.'
-                          : '브라우저 알림 권한을 허용하면 자동으로 웹푸시를 받을 수 있어요.'}
-                </p>
-                {pushError && <p role="alert">{pushError}</p>}
-              </div>
             </div>
           </div>
         )}
