@@ -66,6 +66,32 @@ function formatMonthLabel(month: string) {
   return `${year}년 ${Number(monthNumber)}월`
 }
 
+function SalesCalendarEntry() {
+  return (
+    <Link className="sales-calendar-entry" to="/sales/calendar">
+      <span className="sales-calendar-entry-icon" aria-hidden="true">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="5" width="18" height="16" rx="3" />
+          <path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2M8 18h2" />
+        </svg>
+      </span>
+      <strong>매출 달력 보기</strong>
+      <span className="sales-calendar-entry-arrow" aria-hidden="true">
+        →
+      </span>
+    </Link>
+  )
+}
+
 function GrowthRankingEntry() {
   return (
     <Link className="growth-ranking-entry" to="/ranking">
@@ -440,7 +466,7 @@ export function SalesAnalysisPage() {
             description="매출 파일을 업로드하면 매장의 흐름을 한눈에 확인할 수 있어요."
             action={<Link to="/sales/upload">매출 데이터 업로드</Link>}
           />
-          <Link to="/sales/calendar">매출 달력 보기</Link>
+          <SalesCalendarEntry />
           <GrowthRankingEntry />
         </div>
       </AppShell>
@@ -802,7 +828,7 @@ export function SalesAnalysisPage() {
             <p>SALES ANALYSIS</p>
             <h1>매출 분석</h1>
             <span>월을 선택해서 매출 흐름을 한눈에 확인해보세요</span>
-            <Link to="/sales/calendar">매출 달력 보기</Link>
+            <SalesCalendarEntry />
           </div>
           {availableMonths && availableMonths.length > 0 && (
             <select
