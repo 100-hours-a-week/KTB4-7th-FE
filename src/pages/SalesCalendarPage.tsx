@@ -95,7 +95,11 @@ export function SalesCalendarPage() {
   }
 
   return (
-    <AppShell title="매출 달력" contentClassName="sales-calendar-content">
+    <AppShell
+      title="매출 달력"
+      backTo="/sales/analysis"
+      contentClassName="sales-calendar-content"
+    >
       <div className="sales-calendar-page">
         <header className="sales-calendar-intro">
           <p className="sales-calendar-eyebrow">SALES / CALENDAR</p>

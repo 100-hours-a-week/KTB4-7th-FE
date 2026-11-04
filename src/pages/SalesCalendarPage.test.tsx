@@ -81,6 +81,7 @@ function mount() {
         <Routes>
           <Route path="/sales/calendar" element={<SalesCalendarPage />} />
           <Route path="/login" element={<p>로그인 화면</p>} />
+          <Route path="/sales/analysis" element={<p>매출 분석 화면</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -209,4 +210,13 @@ test('세션 만료 시 로그인 화면으로 이동한다', async () => {
   mount()
   expect(await screen.findByText('로그인 화면')).toBeInTheDocument()
   expect(getSalesCalendar).toHaveBeenCalledTimes(1)
+})
+
+test('달력에 직접 진입해도 헤더 뒤로가기로 매출 분석 화면에 돌아간다', async () => {
+  mount()
+  await screen.findByRole('button', { name: /2026년 10월 30일/ })
+
+  fireEvent.click(screen.getByRole('link', { name: '뒤로가기' }))
+
+  expect(await screen.findByText('매출 분석 화면')).toBeInTheDocument()
 })
