@@ -234,13 +234,9 @@
 .sales-calendar-detail {
   margin-top: 13px;
   padding: 15px 14px 14px;
-  border: 1px solid rgba(110, 110, 110, 0.24);
+  border: 1px solid #cfe5f3;
   border-radius: 15px;
-  background: linear-gradient(
-    145deg,
-    rgba(115, 115, 115, 0.16),
-    rgba(115, 115, 115, 0.08)
-  );
+  background: linear-gradient(145deg, #e7f4fc, #f2f9fe);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
@@ -320,4 +316,20 @@
   color: #111;
   background: #fff;
   cursor: pointer;
+}
+
+.sales-calendar-weather-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sales-calendar-metrics .sales-calendar-weather-value > span {
+  color: inherit;
+  font-size: inherit;
+}
+
+.sales-calendar-metrics .sales-calendar-detail-weather-icon {
+  font-family:
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }

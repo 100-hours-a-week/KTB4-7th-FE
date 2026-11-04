@@ -131,7 +131,19 @@ export function SalesCalendarPage() {
               <div className="sales-calendar-head">
                 <div className="sales-calendar-month">
                   <span className="sales-calendar-icon" aria-hidden="true">
-                    ▦
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="5" width="18" height="16" rx="3" />
+                      <path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2M8 18h2" />
+                    </svg>
                   </span>
                   <strong>
                     {year}년 {monthNumber}월
@@ -261,10 +273,30 @@ export function SalesCalendarPage() {
                   </div>
                   <div>
                     <span>날씨 · 12시</span>
-                    <strong>
-                      {selectedCalendarDay?.weather
-                        ? weatherLabels[selectedCalendarDay.weather.condition]
-                        : '-'}
+                    <strong className="sales-calendar-weather-value">
+                      {selectedCalendarDay?.weather ? (
+                        <>
+                          <span
+                            className="sales-calendar-detail-weather-icon"
+                            aria-hidden="true"
+                          >
+                            {
+                              weatherSymbols[
+                                selectedCalendarDay.weather.condition
+                              ]
+                            }
+                          </span>
+                          <span>
+                            {
+                              weatherLabels[
+                                selectedCalendarDay.weather.condition
+                              ]
+                            }
+                          </span>
+                        </>
+                      ) : (
+                        '-'
+                      )}
                     </strong>
                     <small>매장 주소 기준</small>
                   </div>
