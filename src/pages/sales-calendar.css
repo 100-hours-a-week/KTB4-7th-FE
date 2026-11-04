@@ -172,6 +172,8 @@
 
 .sales-calendar-weather {
   min-height: 14px;
+  font-family:
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
   color: #8b8b8b;
   font-size: 13px;
   line-height: 14px;
@@ -200,7 +202,8 @@
   text-underline-offset: 3px;
 }
 
-.sales-calendar-day.is-low:not(.is-selected):not(:hover) .sales-calendar-amount {
+.sales-calendar-day.is-low:not(.is-selected):not(:hover)
+  .sales-calendar-amount {
   color: #929292;
 }
 
