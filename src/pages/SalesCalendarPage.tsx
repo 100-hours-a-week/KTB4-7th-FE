@@ -20,7 +20,7 @@ const longWeekdays = [
   '토요일',
 ]
 const weatherLabels = { SUNNY: '맑음', CLOUDY: '흐림', RAIN: '비', SNOW: '눈' }
-const weatherSymbols = { SUNNY: '☀', CLOUDY: '☁', RAIN: '☂', SNOW: '❄' }
+const weatherSymbols = { SUNNY: '☀️', CLOUDY: '☁️', RAIN: '☔️', SNOW: '❄️' }
 
 function seoulToday() {
   const parts = new Intl.DateTimeFormat('en-US', {
