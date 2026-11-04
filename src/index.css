@@ -4062,10 +4062,10 @@ input {
   background: var(--paper);
 }
 .sales-analysis-page .daily-trend-area {
-  fill: rgba(17, 17, 17, 0.1);
+  fill: rgba(66, 75, 87, 0.045);
 }
 .sales-analysis-page .daily-trend-line {
-  stroke: var(--ink);
+  stroke: #424b57;
 }
 .sales-analysis-page .daily-trend-dot {
   fill: var(--ink);
@@ -4092,13 +4092,24 @@ input {
 }
 .daily-trend-line {
   stroke: var(--teal);
-  stroke-width: 2.2;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 .daily-trend-dot {
   fill: var(--teal);
+  opacity: 0;
+}
+.daily-trend-dot.is-active {
+  opacity: 1;
+}
+.daily-trend-grid line {
+  stroke: #cdd3da;
+  stroke-width: 1;
+  stroke-dasharray: 1 5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 .daily-trend-hit {
   fill: transparent;
@@ -4145,10 +4156,17 @@ input {
   display: flex;
   justify-content: space-between;
   padding-top: 8px;
-  border-top: 1px solid var(--line);
-  margin-top: 8px;
-  color: var(--ink-soft);
+  margin-top: 4px;
+  color: #7b8490;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.daily-trend-chart .chart-tooltip {
+  border-color: #dce2e8;
+  background: #eef2f6;
+  color: #354150;
   font-size: 11px;
+  font-weight: 600;
 }
 .menu-ranking-list {
   display: grid;

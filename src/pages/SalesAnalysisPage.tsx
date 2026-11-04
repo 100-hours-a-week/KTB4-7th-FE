@@ -248,6 +248,14 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
         }}
         onPointerLeave={() => setTip(null)}
       >
+        <g className="daily-trend-grid" aria-hidden="true" pointerEvents="none">
+          {[12, 33, 54, 75, 96].map((y) => (
+            <line key={`row-${y}`} x1="0" y1={y} x2="300" y2={y} />
+          ))}
+          {[0, 50, 100, 150, 200, 250, 300].map((x) => (
+            <line key={`column-${x}`} x1={x} y1="12" x2={x} y2="96" />
+          ))}
+        </g>
         <path d={areaPath} className="daily-trend-area" />
         <path d={linePath} className="daily-trend-line" fill="none" />
         {coords.map((point) => {
@@ -257,8 +265,8 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
               <circle
                 cx={point.x}
                 cy={point.y}
-                r={2.4}
-                className="daily-trend-dot"
+                r={2}
+                className={`daily-trend-dot${tip?.text === text ? ' is-active' : ''}`}
               />
               <circle
                 cx={point.x}
@@ -273,8 +281,18 @@ function DailyTrendChart({ data }: { data: SalesDailyPoint[] }) {
         })}
       </svg>
       <div className="daily-trend-range">
-        <span>{formatShortDate(data[0].date)}</span>
-        <span>{formatShortDate(data[data.length - 1].date)}</span>
+        {[
+          ...new Set([
+            0,
+            Math.round((data.length - 1) / 3),
+            Math.round(((data.length - 1) * 2) / 3),
+            data.length - 1,
+          ]),
+        ].map((index) => (
+          <span key={data[index].date}>
+            {formatShortDate(data[index].date)}
+          </span>
+        ))}
       </div>
       <ChartTooltip tip={tip} />
     </div>
