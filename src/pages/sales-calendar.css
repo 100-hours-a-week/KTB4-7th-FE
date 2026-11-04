@@ -194,7 +194,10 @@
   font-size: 9px;
 }
 
-.sales-calendar-day.is-high:not(.is-selected) .sales-calendar-amount {
+.sales-calendar-day.is-high:not(.is-selected):not(.is-month-max):not(
+    .is-month-min
+  )
+  .sales-calendar-amount {
   color: #111;
   font-weight: 850;
   text-decoration: underline;
@@ -202,7 +205,9 @@
   text-underline-offset: 3px;
 }
 
-.sales-calendar-day.is-low:not(.is-selected):not(:hover)
+.sales-calendar-day.is-low:not(.is-selected):not(:hover):not(.is-month-max):not(
+    .is-month-min
+  )
   .sales-calendar-amount {
   color: #929292;
 }
@@ -332,4 +337,22 @@
 .sales-calendar-metrics .sales-calendar-detail-weather-icon {
   font-family:
     'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.sales-calendar-day.is-month-max .sales-calendar-amount {
+  color: #c83232;
+  font-weight: 800;
+}
+
+.sales-calendar-day.is-month-min .sales-calendar-amount {
+  color: #2464c5;
+  font-weight: 800;
+}
+
+.sales-calendar-legend .sales-calendar-max-marker {
+  background: #c83232;
+}
+
+.sales-calendar-legend .sales-calendar-min-marker {
+  background: #2464c5;
 }

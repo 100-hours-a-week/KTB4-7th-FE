@@ -220,3 +220,52 @@ test('달력에 직접 진입해도 헤더 뒤로가기로 매출 분석 화면�
 
   expect(await screen.findByText('매출 분석 화면')).toBeInTheDocument()
 })
+
+test.each([
+  {
+    amounts: [30000, 10000, null, 30000, 10000, 20000],
+    highest: [1, 4],
+    lowest: [2, 5],
+  },
+  { amounts: [0, -10000, 20000], highest: [3], lowest: [2] },
+  { amounts: [10000, 10000, null], highest: [], lowest: [] },
+  { amounts: [null, 10000], highest: [], lowest: [] },
+  { amounts: [null, null], highest: [], lowest: [] },
+])(
+  '월 최고·최저 매출을 동률·0원·음수·빈 데이터까지 구분한다: $amounts',
+  async ({ amounts, highest, lowest }) => {
+    const data = response('2026-10', '2026-10-01')
+    data.days = amounts.map((amount, index) => ({
+      ...data.days[0],
+      date: `2026-10-${String(index + 1).padStart(2, '0')}`,
+      salesAmount: amount,
+      dataStatus: amount === null ? 'UNKNOWN' : 'COMPLETE',
+      isSelected: index === 0,
+    }))
+    getSalesCalendar.mockResolvedValue(data)
+    mount()
+    await screen.findByLabelText('월간 매출 달력')
+
+    const calendar = within(screen.getByLabelText('월간 매출 달력'))
+    expect(
+      calendar.queryAllByRole('button', { name: /월 최고 매출/ }),
+    ).toHaveLength(highest.length)
+    expect(
+      calendar.queryAllByRole('button', { name: /월 최저 매출/ }),
+    ).toHaveLength(lowest.length)
+    for (const date of highest) {
+      expect(
+        calendar.getByRole('button', {
+          name: new RegExp(`2026년 10월 ${date}일.*월 최고 매출`),
+        }),
+      ).toBeInTheDocument()
+    }
+    for (const date of lowest) {
+      expect(
+        calendar.getByRole('button', {
+          name: new RegExp(`2026년 10월 ${date}일.*월 최저 매출`),
+        }),
+      ).toBeInTheDocument()
+    }
+  },
+)
