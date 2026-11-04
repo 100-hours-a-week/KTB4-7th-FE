@@ -133,3 +133,51 @@ test('CSRF 오류는 사용자 안내로 바꿔 보여준다', async () => {
   )
   expect(screen.queryByText(/CSRF/)).not.toBeInTheDocument()
 })
+
+function submitLoginForm() {
+  fireEvent.change(screen.getByLabelText('이메일'), {
+    target: { value: 'owner@memme.kr' },
+  })
+  fireEvent.change(screen.getByLabelText('비밀번호'), {
+    target: { value: 'password' },
+  })
+  fireEvent.click(screen.getByRole('button', { name: '로그인' }))
+}
+
+test('응답 없이 실패하면 비밀번호 오류 대신 연결 실패 안내를 보여준다', async () => {
+  login.mockRejectedValue(
+    Object.assign(new Error('Network Error'), {
+      isAxiosError: true,
+      code: 'ERR_NETWORK',
+    }),
+  )
+  renderLoginPage()
+  submitLoginForm()
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '지금 로그인할 수 없습니다. 잠시 후 다시 시도해주세요.',
+  )
+  expect(
+    screen.queryByText('이메일 또는 비밀번호가 올바르지 않습니다.'),
+  ).not.toBeInTheDocument()
+  expect(navigate).not.toHaveBeenCalled()
+})
+
+test('요청 수 제한(429)은 비밀번호 오류 대신 재시도 안내를 보여준다', async () => {
+  login.mockRejectedValue({
+    response: {
+      status: 429,
+      data: { message: '요청이 너무 많습니다.' },
+    },
+  })
+  renderLoginPage()
+  submitLoginForm()
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    '로그인 요청이 많아 잠시 제한되었습니다. 1분 후 다시 시도해주세요.',
+  )
+  expect(
+    screen.queryByText('이메일 또는 비밀번호가 올바르지 않습니다.'),
+  ).not.toBeInTheDocument()
+  expect(navigate).not.toHaveBeenCalled()
+})

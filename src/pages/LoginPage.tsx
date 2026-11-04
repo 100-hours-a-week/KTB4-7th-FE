@@ -16,19 +16,22 @@ type LocationState = {
 } | null
 
 function getApiErrorMessage(error: unknown, fallback: string) {
-  if (typeof error !== 'object' || error === null || !('response' in error))
-    return fallback
-
-  const response = (
-    error as {
-      response?: { status?: number; data?: ApiErrorResponse }
-    }
-  ).response
-  if (response?.status === 403 || /csrf/i.test(response?.data?.message ?? '')) {
-    return '로그인 연결이 만료되었습니다. 새로고침 후 다시 시도해주세요.'
-  }
+  const response =
+    typeof error === 'object' && error !== null && 'response' in error
+      ? (
+          error as {
+            response?: { status?: number; data?: ApiErrorResponse }
+          }
+        ).response
+      : undefined
   if (!response || (response.status ?? 0) >= 500) {
     return '지금 로그인할 수 없습니다. 잠시 후 다시 시도해주세요.'
+  }
+  if (response.status === 429) {
+    return '로그인 요청이 많아 잠시 제한되었습니다. 1분 후 다시 시도해주세요.'
+  }
+  if (response.status === 403 || /csrf/i.test(response.data?.message ?? '')) {
+    return '로그인 연결이 만료되었습니다. 새로고침 후 다시 시도해주세요.'
   }
   return fallback
 }
