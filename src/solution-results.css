@@ -974,10 +974,10 @@ body:has(.growth-ranking-page) {
   min-height: 68px;
   margin-top: 14px;
   padding: 12px 16px;
-  border: 1px solid #d9d4c8;
+  border: 1px solid #dedede;
   border-radius: 16px;
-  background: #fffdf7;
-  color: #292d26;
+  background: #f7f7f7;
+  color: #292929;
   text-decoration: none;
   transition:
     background-color 150ms ease,
@@ -991,8 +991,8 @@ body:has(.growth-ranking-page) {
   height: 42px;
   place-items: center;
   border-radius: 50%;
-  background: #e7eddd;
-  color: #465b36;
+  background: #e5e5e5;
+  color: #555555;
 }
 
 .sales-calendar-entry strong {
@@ -1004,16 +1004,16 @@ body:has(.growth-ranking-page) {
 
 .sales-calendar-entry-arrow {
   flex-shrink: 0;
-  color: #657158;
+  color: #666666;
   font-size: 20px;
 }
 
 .sales-calendar-entry:hover {
-  border-color: #a7b395;
-  background: #f4f6ed;
+  border-color: #b5b5b5;
+  background: #eeeeee;
 }
 
 .sales-calendar-entry:focus-visible {
-  outline: 3px solid #657b4e;
+  outline: 3px solid #666666;
   outline-offset: 3px;
 }
