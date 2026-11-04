@@ -72,6 +72,12 @@ export function SalesCalendarPage() {
     retry: false,
   })
   const data = calendar.data
+  const amounts = (data?.days ?? []).flatMap((day) =>
+    day.salesAmount === null ? [] : [day.salesAmount],
+  )
+  const highestAmount = amounts.length ? Math.max(...amounts) : null
+  const lowestAmount = amounts.length ? Math.min(...amounts) : null
+  const hasDistinctAmounts = highestAmount !== lowestAmount
   const selected = data?.selectedDay
   const selectedCalendarDay = data?.days.find(
     (day) => day.date === selected?.date,
@@ -186,13 +192,22 @@ export function SalesCalendarPage() {
                 ))}
                 {data.days.map((day) => {
                   const weather = day.weather?.condition
+                  const isHighest =
+                    hasDistinctAmounts && day.salesAmount === highestAmount
+                  const isLowest =
+                    hasDistinctAmounts && day.salesAmount === lowestAmount
+                  const extremeLabel = isHighest
+                    ? ', 월 최고 매출'
+                    : isLowest
+                      ? ', 월 최저 매출'
+                      : ''
                   return (
                     <button
                       type="button"
-                      className={`sales-calendar-day${day.date === data.selectedDate ? ' is-selected' : ''}${day.isToday ? ' is-today' : ''}${day.salesLevel === 'HIGH' ? ' is-high' : ''}${day.salesLevel === 'LOW' ? ' is-low' : ''}`}
+                      className={`sales-calendar-day${day.date === data.selectedDate ? ' is-selected' : ''}${day.isToday ? ' is-today' : ''}${day.salesLevel === 'HIGH' ? ' is-high' : ''}${day.salesLevel === 'LOW' ? ' is-low' : ''}${isHighest ? ' is-month-max' : ''}${isLowest ? ' is-month-min' : ''}`}
                       key={day.date}
                       aria-pressed={day.date === data.selectedDate}
-                      aria-label={`${dateLabel(day.date)}, 매출 ${day.salesAmount === null ? '데이터 없음' : shortAmount(day.salesAmount)}, 주문 ${day.orderCount === null ? '데이터 없음' : `${day.orderCount}건`}`}
+                      aria-label={`${dateLabel(day.date)}, 매출 ${day.salesAmount === null ? '데이터 없음' : shortAmount(day.salesAmount)}, 주문 ${day.orderCount === null ? '데이터 없음' : `${day.orderCount}건`}${extremeLabel}`}
                       onClick={() => setSelectedDate(day.date)}
                     >
                       <span className="sales-calendar-date">
@@ -219,6 +234,12 @@ export function SalesCalendarPage() {
                 })}
               </div>
               <div className="sales-calendar-legend">
+                <span>
+                  <i className="sales-calendar-max-marker" />월 최고 매출
+                </span>
+                <span>
+                  <i className="sales-calendar-min-marker" />월 최저 매출
+                </span>
                 <span>
                   <i />
                   월평균보다 높은 매출
